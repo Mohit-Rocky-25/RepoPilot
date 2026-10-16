@@ -4,49 +4,69 @@
 
 @layer base {
   :root {
-    --console-bg: #F3F3EE;
-    --console-surface: #FFFFFF;
-    --console-subtle: #F8F8F6;
-    --console-elevated: #FFFFFF;
-    --console-border: #E7E5E4;
-    --console-border-hover: #D6D3D1;
-    --console-text: #0C0A09;
-    --console-muted: #57534E;
-    --console-dim: #A8A29E;
-    --console-accent: #F55036;
-    --console-accent-hover: #E03E26;
-    --console-violet: #6366F1;
-    --console-success: #16A34A;
-    --console-warning: #D97706;
-    --console-danger: #DC2626;
+    --linear-canvas: #010102;
+    --linear-surface-1: #0F1011;
+    --linear-surface-2: #141516;
+    --linear-surface-3: #18191A;
+    --linear-surface-4: #191A1B;
+    --linear-accent: #5E6AD2;
+    --linear-accent-hover: #828FFF;
+    --linear-text-main: #F7F8F8;
+    --linear-text-secondary: #D0D6E0;
+    --linear-text-muted: #8A8F98;
+    --linear-text-tertiary: #62666D;
+    --linear-border-subtle: #23252A;
+    --linear-border-default: #34343A;
+    --linear-border-strong: #3E3E44;
+    --linear-success: #27A644;
+    --linear-warning: #F59E0B;
+    --linear-danger: #EF4444;
+
+    /* Mappings for console-* compatibility */
+    --console-bg: #010102;
+    --console-surface: #0F1011;
+    --console-subtle: #141516;
+    --console-elevated: #18191A;
+    --console-border: #23252A;
+    --console-border-hover: #34343A;
+    --console-text: #F7F8F8;
+    --console-muted: #8A8F98;
+    --console-dim: #62666D;
+    --console-accent: #5E6AD2;
+    --console-accent-hover: #828FFF;
+    --console-violet: #5E6AD2;
+    --console-success: #27A644;
+    --console-warning: #F59E0B;
+    --console-danger: #EF4444;
   }
 
   body {
-    background-color: #F3F3EE;
-    color: #0C0A09;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #010102;
+    color: #F7F8F8;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
   }
 
-  /* Clean editorial scrollbars */
+  /* Linear precision scrollbars */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #F3F3EE;
+    background: #010102;
   }
   ::-webkit-scrollbar-thumb {
-    background: #D6D3D1;
+    background: #23252A;
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #A8A29E;
+    background: #34343A;
   }
 }
 
-/* Monospace code highlights */
+/* Monospace code styling */
 pre, code, kbd, samp {
-  font-family: "JetBrains Mono", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: "JetBrains Mono", "Geist Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }

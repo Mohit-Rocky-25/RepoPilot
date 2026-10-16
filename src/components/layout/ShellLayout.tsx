@@ -6,7 +6,6 @@ import { Header } from "./Header";
 import { ImportModal } from "@/components/modals/ImportModal";
 import { SearchModal } from "@/components/modals/SearchModal";
 import { useRepository } from "@/context/RepositoryContext";
-
 import { usePathname } from "next/navigation";
 
 export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -22,7 +21,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
 
   if (isLandingPage) {
     return (
-      <div className="min-h-screen w-full bg-[#F3F3EE] text-[#0C0A09] font-sans antialiased selection:bg-[#F55036]/20">
+      <div className="min-h-screen w-full bg-[#010102] text-[#F7F8F8] font-sans antialiased selection:bg-[#5E6AD2]/30 selection:text-[#F7F8F8]">
         {children}
         <ImportModal />
         <SearchModal />
@@ -31,12 +30,12 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-console-bg text-console-text font-sans antialiased selection:bg-[#F55036]/20">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#010102] text-[#F7F8F8] font-sans antialiased selection:bg-[#5E6AD2]/30 selection:text-[#F7F8F8]">
       {/* Pinned Left Sidebar */}
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-[#010102]">
         {/* Top Header */}
         <Header
           currentRepo={currentRepo}
@@ -47,8 +46,8 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         />
 
         {/* Dynamic Page Content */}
-        <main className="flex-1 overflow-y-auto bg-console-bg p-6">
-          <div className="max-w-7xl mx-auto">{children}</div>
+        <main className="flex-1 overflow-y-auto bg-[#010102] p-6 lg:p-8">
+          <div className="max-w-[1340px] mx-auto">{children}</div>
         </main>
       </div>
 

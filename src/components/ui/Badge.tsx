@@ -16,23 +16,23 @@ export const Badge: React.FC<BadgeProps> = ({
   icon
 }) => {
   const sizeStyles = {
-    sm: "text-[11px] px-2 py-0.5 font-mono",
-    md: "text-xs px-2.5 py-1 font-mono"
+    sm: "text-[11px] px-2 py-0.5 font-mono tracking-tight",
+    md: "text-xs px-2.5 py-1 font-mono tracking-tight"
   };
 
   const variantStyles = {
-    neutral: "bg-stone-100 text-stone-700 border border-stone-200",
-    primary: "bg-orange-50 text-[#F55036] border border-orange-200",
-    cyan: "bg-orange-50 text-[#F55036] border border-orange-200",
-    success: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-    warning: "bg-amber-50 text-amber-700 border border-amber-200",
-    danger: "bg-red-50 text-red-700 border border-red-200",
-    violet: "bg-indigo-50 text-indigo-700 border border-indigo-200"
+    neutral: "bg-[#141516] text-[#8A8F98] border border-[#23252A]",
+    primary: "bg-[#5E6AD2]/10 text-[#828FFF] border border-[#5E6AD2]/30",
+    cyan: "bg-[#0284C7]/10 text-[#38BDF8] border border-[#0284C7]/30",
+    success: "bg-[#27A644]/10 text-[#27A644] border border-[#27A644]/30",
+    warning: "bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/30",
+    danger: "bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/30",
+    violet: "bg-[#8B5CF6]/10 text-[#A78BFA] border border-[#8B5CF6]/30"
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-medium rounded ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
+      className={`inline-flex items-center gap-1.5 font-medium rounded-[4px] select-none ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
     >
       {icon && <span className="shrink-0">{icon}</span>}
       {children}

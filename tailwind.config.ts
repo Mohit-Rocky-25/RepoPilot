@@ -9,40 +9,54 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        groq: {
-          bg: "#F3F3EE",
-          surface: "#FFFFFF",
-          subtle: "#F8F8F6",
-          border: "#E7E5E4",
-          borderHover: "#D6D3D1",
-          text: "#0C0A09",
-          muted: "#57534E",
-          dim: "#A8A29E",
-          coral: "#F55036",
-          coralHover: "#E03E26",
-          black: "#1E1E1E"
+        linear: {
+          canvas: "#010102",
+          surface1: "#0F1011",
+          surface2: "#141516",
+          surface3: "#18191A",
+          surface4: "#191A1B",
+          accent: "#5E6AD2",
+          accentHover: "#828FFF",
+          textMain: "#F7F8F8",
+          textSecondary: "#D0D6E0",
+          textMuted: "#8A8F98",
+          textTertiary: "#62666D",
+          borderSubtle: "#23252A",
+          borderDefault: "#34343A",
+          borderStrong: "#3E3E44",
+          success: "#27A644",
+          warning: "#F59E0B",
+          danger: "#EF4444"
         },
         console: {
-          bg: "#F3F3EE",
-          surface: "#FFFFFF",
-          subtle: "#F8F8F6",
-          elevated: "#FFFFFF",
-          border: "#E7E5E4",
-          borderHover: "#D6D3D1",
-          text: "#0C0A09",
-          muted: "#57534E",
-          dim: "#A8A29E",
-          accent: "#F55036",
-          accentHover: "#E03E26",
-          violet: "#6366F1",
-          success: "#16A34A",
-          warning: "#D97706",
-          danger: "#DC2626"
+          bg: "#010102",
+          surface: "#0F1011",
+          subtle: "#141516",
+          elevated: "#18191A",
+          border: "#23252A",
+          borderHover: "#34343A",
+          text: "#F7F8F8",
+          muted: "#8A8F98",
+          dim: "#62666D",
+          accent: "#5E6AD2",
+          accentHover: "#828FFF",
+          violet: "#5E6AD2",
+          success: "#27A644",
+          warning: "#F59E0B",
+          danger: "#EF4444"
         }
       },
+      borderRadius: {
+        xs: "4px",
+        sm: "6px",
+        DEFAULT: "8px",
+        md: "8px",
+        lg: "12px",
+        xl: "16px"
+      },
       fontFamily: {
-        sans: ["var(--font-sans)", "system-ui", "-apple-system", "sans-serif"],
-        mono: ["var(--font-mono)", "JetBrains Mono", "SFMono-Regular", "Menlo", "monospace"]
+        sans: ["Inter", "Geist Sans", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+        mono: ["JetBrains Mono", "Geist Mono", "SFMono-Regular", "Menlo", "monospace"]
       }
     }
   },

@@ -102,15 +102,15 @@ export default function DebuggingPage() {
 
   if (!currentRepo) {
     return (
-      <Card className="p-8 text-center max-w-xl mx-auto my-12 space-y-4">
-        <div className="w-12 h-12 rounded-full bg-console-accent/15 border border-console-accent/40 flex items-center justify-center text-console-accent mx-auto">
+      <Card className="p-8 text-center max-w-xl mx-auto my-12 space-y-4 bg-linear-surface-1 border border-linear-border-1">
+        <div className="w-12 h-12 rounded-full bg-linear-accent/15 border border-linear-accent/30 flex items-center justify-center text-linear-accent mx-auto">
           <Bug className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-base font-semibold text-console-text">
+          <h2 className="text-base font-semibold text-linear-text-main">
             No Active Repository
           </h2>
-          <p className="text-xs text-console-muted mt-1 leading-relaxed">
+          <p className="text-xs text-linear-text-muted mt-1 leading-relaxed">
             Import a public GitHub repository to map error stack traces directly to source code lines and formulate candidate bug fixes.
           </p>
         </div>
@@ -129,21 +129,21 @@ export default function DebuggingPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="pb-3 border-b border-console-border">
-        <h1 className="text-lg font-semibold text-console-text font-mono flex items-center gap-2">
-          <Bug className="w-5 h-5 text-console-danger" />
+      <div className="pb-3 border-b border-linear-border-1">
+        <h1 className="text-lg font-semibold text-linear-text-main font-mono flex items-center gap-2">
+          <Bug className="w-5 h-5 text-linear-danger" />
           <span>Bug Investigation & Stack Trace Analyzer</span>
         </h1>
-        <p className="text-xs text-console-muted mt-0.5">
+        <p className="text-xs text-linear-text-muted mt-0.5">
           Correlate runtime exceptions with repository source lines, formulate root causes, and propose testable patches.
         </p>
       </div>
 
       {/* Input Form */}
-      <Card className="p-5 space-y-4">
+      <Card className="p-5 space-y-4 bg-linear-surface-1 border-linear-border-1">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-mono text-console-muted mb-1">
+            <label className="block text-xs font-mono text-linear-text-muted mb-1 font-medium">
               Issue Title / Summary
             </label>
             <Input
@@ -155,7 +155,7 @@ export default function DebuggingPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-mono text-console-muted mb-1">
+            <label className="block text-xs font-mono text-linear-text-muted mb-1 font-medium">
               Issue Context / Description
             </label>
             <Input
@@ -169,10 +169,10 @@ export default function DebuggingPage() {
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs font-mono text-stone-700 font-medium">
+            <label className="text-xs font-mono text-linear-text-secondary font-medium">
               Stack Trace / Error Log
             </label>
-            <span className="text-[11px] font-mono text-stone-500">
+            <span className="text-[11px] font-mono text-linear-text-subtle">
               Format: Node/V8, Python tracebacks, Go panics, Rust backtraces
             </span>
           </div>
@@ -180,13 +180,13 @@ export default function DebuggingPage() {
             rows={5}
             value={stackTrace}
             onChange={(e) => setStackTrace(e.target.value)}
-            className="w-full bg-white border border-stone-200 text-stone-900 font-mono text-xs p-3 rounded-md focus:outline-none focus:border-[#F55036] focus:ring-1 focus:ring-[#F55036] placeholder:text-stone-400"
+            className="w-full bg-linear-surface-1 border border-linear-border-2 text-linear-text-main font-mono text-xs p-3 rounded-lg focus:outline-none focus:border-linear-accent focus:ring-1 focus:ring-linear-accent placeholder:text-linear-text-subtle transition-colors"
             placeholder="Paste your actual runtime error log or stack trace here (e.g. TypeError: Cannot read properties of undefined...)"
           />
         </div>
 
         {error && (
-          <p className="text-xs text-console-danger font-mono">{error}</p>
+          <p className="text-xs text-linear-danger font-mono">{error}</p>
         )}
 
         <div className="flex justify-end">
@@ -206,11 +206,11 @@ export default function DebuggingPage() {
       {analysisResult && (
         <div className="space-y-6">
           {/* Parsed Frames */}
-          <Card className="p-5 space-y-3">
+          <Card className="p-5 space-y-3 bg-linear-surface-1 border-linear-border-1">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <AlertOctagon className="w-4 h-4 text-console-danger" />
-                <h2 className="text-sm font-semibold text-console-text font-mono uppercase">
+                <AlertOctagon className="w-4 h-4 text-linear-danger" />
+                <h2 className="text-sm font-semibold text-linear-text-main font-mono uppercase">
                   Parsed Stack Frames ({analysisResult.parsedTrace.frames.length})
                 </h2>
               </div>
@@ -221,25 +221,25 @@ export default function DebuggingPage() {
               )}
             </div>
 
-            <div className="divide-y divide-console-border border border-console-border rounded-md overflow-hidden font-mono text-xs">
+            <div className="divide-y divide-linear-border-1 border border-linear-border-1 rounded-lg overflow-hidden font-mono text-xs">
               {analysisResult.parsedTrace.frames.map((frame: StackFrame, idx: number) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-2.5 bg-console-surface hover:bg-console-subtle/60 transition-colors"
+                  className="flex items-center justify-between p-2.5 bg-linear-surface-2 hover:bg-linear-surface-3 transition-colors"
                 >
                   <div className="flex items-center gap-2 truncate">
-                    <span className="text-console-dim w-6 text-right">
+                    <span className="text-linear-text-subtle w-6 text-right">
                       #{idx + 1}
                     </span>
-                    <FileCode className="w-3.5 h-3.5 text-console-accent shrink-0" />
-                    <span className="text-console-text font-medium truncate">
+                    <FileCode className="w-3.5 h-3.5 text-linear-accent shrink-0" />
+                    <span className="text-linear-text-main font-medium truncate">
                       {frame.filePath}
                     </span>
-                    <span className="text-console-dim">
+                    <span className="text-linear-text-subtle">
                       :line {frame.lineNumber}
                     </span>
                     {frame.functionName && (
-                      <span className="text-[11px] text-console-muted">
+                      <span className="text-[11px] text-linear-text-muted">
                         in {frame.functionName}()
                       </span>
                     )}
@@ -247,7 +247,7 @@ export default function DebuggingPage() {
 
                   <Link
                     href={`/explore?file=${encodeURIComponent(frame.filePath)}&line=${frame.lineNumber}`}
-                    className="text-[11px] text-console-accent hover:underline flex items-center gap-1 shrink-0 ml-2"
+                    className="text-[11px] text-linear-accent hover:text-linear-accent-hover hover:underline flex items-center gap-1 shrink-0 ml-2"
                   >
                     <span>View in Code</span>
                     <ArrowRight className="w-3 h-3" />
@@ -259,19 +259,19 @@ export default function DebuggingPage() {
 
           {/* Hypotheses */}
           <div className="space-y-3">
-            <h2 className="text-xs font-mono uppercase tracking-wider text-console-dim">
+            <h2 className="text-xs font-mono uppercase tracking-wider text-linear-text-subtle font-semibold">
               Ranked Root-Cause Hypotheses
             </h2>
 
             <div className="grid grid-cols-1 gap-3">
               {analysisResult.hypotheses.map((hypo) => (
-                <Card key={hypo.id} className="p-4 space-y-2">
+                <Card key={hypo.id} className="p-4 space-y-2 bg-linear-surface-1 border-linear-border-1">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Badge variant="cyan" size="sm">
+                      <Badge variant="primary" size="sm">
                         Rank #{hypo.rank}
                       </Badge>
-                      <span className="text-xs font-mono font-semibold text-console-text">
+                      <span className="text-xs font-mono font-semibold text-linear-text-main">
                         {hypo.culpritFile}
                         {hypo.startLine ? `:line ${hypo.startLine}` : ""}
                       </span>
@@ -291,7 +291,7 @@ export default function DebuggingPage() {
                     </Badge>
                   </div>
 
-                  <p className="text-xs font-mono text-console-muted leading-relaxed">
+                  <p className="text-xs font-mono text-linear-text-muted leading-relaxed">
                     {hypo.explanation}
                   </p>
                 </Card>
@@ -301,11 +301,11 @@ export default function DebuggingPage() {
 
           {/* Candidate Patch Proposal */}
           {analysisResult.candidatePatch && (
-            <Card className="p-5 space-y-3">
+            <Card className="p-5 space-y-3 bg-linear-surface-1 border-linear-border-1">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <GitPullRequest className="w-4 h-4 text-console-success" />
-                  <h2 className="text-sm font-semibold text-console-text font-mono uppercase">
+                  <GitPullRequest className="w-4 h-4 text-linear-success" />
+                  <h2 className="text-sm font-semibold text-linear-text-main font-mono uppercase">
                     Proposed Minimal Candidate Patch
                   </h2>
                 </div>
@@ -314,13 +314,13 @@ export default function DebuggingPage() {
                 </Badge>
               </div>
 
-              <p className="text-xs text-console-muted">
+              <p className="text-xs text-linear-text-muted">
                 {analysisResult.candidatePatch.rationale}
               </p>
 
               {/* Unified Diff View */}
-              <div className="bg-[#FAFAF9] border border-stone-200 rounded-md p-3 overflow-x-auto font-mono text-xs">
-                <pre className="text-stone-900 leading-relaxed">
+              <div className="bg-linear-canvas border border-linear-border-1 rounded-lg p-3 overflow-x-auto font-mono text-xs">
+                <pre className="text-linear-text-main leading-relaxed">
                   {analysisResult.candidatePatch.diff.split("\n").map((line, idx) => {
                     const isAdd = line.startsWith("+");
                     const isDel = line.startsWith("-");
@@ -329,10 +329,10 @@ export default function DebuggingPage() {
                         key={idx}
                         className={
                           isAdd
-                            ? "bg-emerald-50 text-emerald-800 font-medium px-1 rounded-xs"
+                            ? "bg-emerald-950/40 text-emerald-300 font-medium px-1.5 py-0.5 rounded-xs"
                             : isDel
-                            ? "bg-red-50 text-red-800 font-medium px-1 rounded-xs"
-                            : "text-stone-600"
+                            ? "bg-rose-950/40 text-rose-300 font-medium px-1.5 py-0.5 rounded-xs"
+                            : "text-linear-text-muted px-1.5 py-0.5"
                         }
                       >
                         {line || " "}
@@ -346,17 +346,17 @@ export default function DebuggingPage() {
 
           {/* Regression Test Suggestions */}
           {analysisResult.suggestedTests.length > 0 && (
-            <Card className="p-5 space-y-3">
+            <Card className="p-5 space-y-3 bg-linear-surface-1 border-linear-border-1">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-console-accent" />
-                <h2 className="text-sm font-semibold text-console-text font-mono uppercase">
+                <CheckCircle2 className="w-4 h-4 text-linear-accent" />
+                <h2 className="text-sm font-semibold text-linear-text-main font-mono uppercase">
                   Suggested Regression Tests
                 </h2>
               </div>
-              <ul className="space-y-1.5 font-mono text-xs text-console-muted">
+              <ul className="space-y-1.5 font-mono text-xs text-linear-text-muted">
                 {analysisResult.suggestedTests.map((test, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="text-console-accent">✓</span>
+                    <span className="text-linear-accent">✓</span>
                     <span>{test}</span>
                   </li>
                 ))}
@@ -369,7 +369,7 @@ export default function DebuggingPage() {
             <Button
               variant="secondary"
               size="sm"
-              icon={copied ? <Check className="w-3.5 h-3.5 text-console-success" /> : <Copy className="w-3.5 h-3.5" />}
+              icon={copied ? <Check className="w-3.5 h-3.5 text-linear-success" /> : <Copy className="w-3.5 h-3.5" />}
               onClick={copyReport}
             >
               {copied ? "Copied Report!" : "Copy Markdown Report"}
