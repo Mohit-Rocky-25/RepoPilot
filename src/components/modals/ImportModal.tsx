@@ -7,6 +7,7 @@ import { useRepository } from "@/context/RepositoryContext";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import { clientFetch } from "@/lib/api";
 
 export const ImportModal: React.FC = () => {
   const { isImportModalOpen, setIsImportModalOpen, saveRecentRepo, setRateLimit, recentRepos } = useRepository();
@@ -22,7 +23,7 @@ export const ImportModal: React.FC = () => {
       const parsedUrl = GitHubUrlSchema.parse(repoUrl);
       setLoading(true);
 
-      const res = await fetch("/api/github/import", {
+      const res = await clientFetch("/api/github/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: parsedUrl })

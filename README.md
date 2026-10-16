@@ -15,6 +15,7 @@
     <a href="#architecture--design-decisions">Architecture</a> •
     <a href="#zero-hosted-api-operating-model">Zero-Budget Model</a> •
     <a href="#quick-start">Quick Start</a> •
+    <a href="DEPLOYMENT.md">Deployment</a> •
     <a href="#security--limitations">Security</a> •
     <a href="#contributing">Contributing</a>
   </p>

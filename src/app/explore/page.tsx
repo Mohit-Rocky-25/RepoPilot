@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import type { RepositoryFile, IndexedSymbol } from "@repopilot/core";
 import { extractSymbols } from "@repopilot/indexer";
+import { clientFetch } from "@/lib/api";
 
 function ExploreContent() {
   const searchParams = useSearchParams();
@@ -40,7 +41,7 @@ function ExploreContent() {
   useEffect(() => {
     if (currentRepo && files.length === 0) {
       setLoadingTree(true);
-      fetch("/api/github/import", {
+      clientFetch("/api/github/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: currentRepo.url })
@@ -91,7 +92,7 @@ function ExploreContent() {
       sha
     )}&path=${encodeURIComponent(selectedFile.path)}`;
 
-    fetch(url)
+    clientFetch(url)
       .then((res) => res.json())
       .then((data) => {
         if (data.content !== undefined) {

@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import type { SourceReference } from "@repopilot/core";
+import { clientFetch } from "@/lib/api";
 
 interface QAItem {
   id: string;
@@ -56,7 +57,7 @@ export default function AssistantPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/ai/ask", {
+      const res = await clientFetch("/api/ai/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import type { BugHypothesis, PatchProposal } from "@repopilot/core";
 import type { ParsedTrace, StackFrame } from "@repopilot/debugging";
+import { clientFetch } from "@/lib/api";
 
 export default function DebuggingPage() {
   const router = useRouter();
@@ -49,7 +50,7 @@ export default function DebuggingPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/debugging/analyze", {
+      const res = await clientFetch("/api/debugging/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

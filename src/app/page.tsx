@@ -37,6 +37,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
+import { clientFetch } from "@/lib/api";
 
 export default function HomePage() {
   const router = useRouter();
@@ -53,7 +54,7 @@ export default function HomePage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/github/import", {
+      const res = await clientFetch("/api/github/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: repoUrl.trim() })

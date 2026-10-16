@@ -25,3 +25,7 @@ Thumbs.db
 # Environment Local Overrides
 .env*.local
 .env
+
+# IDE Workspaces
+HEXON.code-workspace
+

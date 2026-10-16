@@ -58,13 +58,17 @@ export class GitHubClient {
     const res = await fetch(url, { headers: this.getHeaders() });
     this.updateRateLimit(res);
 
+    if (res.status === 401) {
+      throw new Error("GitHub API authentication failed (401 Bad credentials). Please verify your GitHub Token in Settings or remove it to use unauthenticated public access.");
+    }
+
     if (res.status === 404) {
       throw new Error(`Repository "${owner}/${repo}" was not found on GitHub or is private.`);
     }
 
     if (res.status === 403) {
       throw new Error(
-        `GitHub API rate limit exceeded. Remaining quota: ${this.lastRateLimit.remaining}/${this.lastRateLimit.limit}. Reset at ${this.lastRateLimit.resetAt}. Consider providing a GitHub Token in settings.`
+        `GitHub API rate limit exceeded. Remaining quota: ${this.lastRateLimit.remaining}/${this.lastRateLimit.limit}. Reset at ${this.lastRateLimit.resetAt}. Configure a GitHub Token in settings to raise quota to 5,000 req/hr.`
       );
     }
 
@@ -102,6 +106,14 @@ export class GitHubClient {
     const res = await fetch(url, { headers: this.getHeaders() });
     this.updateRateLimit(res);
 
+    if (res.status === 401) {
+      throw new Error("GitHub API authentication failed (401 Bad credentials). Please verify your GitHub Token in Settings.");
+    }
+
+    if (res.status === 403) {
+      throw new Error(`GitHub API rate limit exceeded (${this.lastRateLimit.remaining}/${this.lastRateLimit.limit}). Reset at ${this.lastRateLimit.resetAt}. Configure a GitHub Token in settings to raise quota to 5,000 req/hr.`);
+    }
+
     if (!res.ok) {
       throw new Error(`Could not resolve commit revision for "${targetRef}" in ${owner}/${repo}`);
     }
@@ -128,6 +140,14 @@ export class GitHubClient {
     const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(treeSha)}?recursive=1`;
     const res = await fetch(url, { headers: this.getHeaders() });
     this.updateRateLimit(res);
+
+    if (res.status === 401) {
+      throw new Error("GitHub API authentication failed (401 Bad credentials). Please verify your GitHub Token in Settings.");
+    }
+
+    if (res.status === 403) {
+      throw new Error(`GitHub API rate limit exceeded (${this.lastRateLimit.remaining}/${this.lastRateLimit.limit}). Reset at ${this.lastRateLimit.resetAt}. Configure a GitHub Token in settings to raise quota to 5,000 req/hr.`);
+    }
 
     if (!res.ok) {
       throw new Error(`Could not retrieve repository tree for sha ${treeSha}`);

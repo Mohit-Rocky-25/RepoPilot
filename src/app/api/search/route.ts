@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
       pathPrefix
     });
 
-    const client = new GitHubClient();
+    const token = req.headers.get("x-github-token") || process.env.GITHUB_TOKEN;
+    const client = new GitHubClient({ token });
     const tree = await client.fetchTree(owner, repo, sha || "HEAD");
 
     // Extract symbols from matching or key files

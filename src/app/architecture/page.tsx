@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ArchitectureMap3D } from "@/components/architecture/ArchitectureMap3D";
 import type { ArchitectureSummary, ArchitectureGraph } from "@repopilot/core";
+import { clientFetch } from "@/lib/api";
 
 export default function ArchitecturePage() {
   const { currentRepo, setIsImportModalOpen } = useRepository();
@@ -40,7 +41,7 @@ export default function ArchitecturePage() {
     setLoading(true);
     setError(null);
 
-    fetch("/api/architecture", {
+    clientFetch("/api/architecture", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
