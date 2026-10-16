@@ -1,111 +1,113 @@
-# RepoPilot — System Architecture & Implementation Plan
+# RepoPilot — System Architecture & Technical Specifications
 
-## 1. Executive Summary & Mission
-**RepoPilot** is an open-source, zero-budget repository intelligence, code understanding, and debugging platform.
-Designed for students, open-source contributors, and software engineers investigating unfamiliar codebases, RepoPilot enables users to import any public GitHub repository and progressively:
-1. **Explore structure & code**: Browse tree hierarchies, view syntax-highlighted files with exact line numbers and commit-pinned references.
-2. **Search deterministically**: Instant file, symbol, and regex/text search with ranking without requiring AI.
-3. **Analyze architecture**: Identify entry points, frameworks, module trees, import graphs, and configuration files deterministically.
-4. **Interactive Q&A & Code Intelligence**: Ask questions grounded directly in indexed code files with exact citations (using optional local Ollama models; no paid APIs required).
-5. **Investigate bugs & stack traces**: Correlate error logs and stack traces with repository source lines, formulating evidence-backed hypotheses and testable patch proposals.
-6. **Contribution assistance**: Generate pull request descriptions, reproduce steps, and contribution checklists aligned with project guidelines (`CONTRIBUTING.md`).
+## 1. Executive Summary & Objectives
 
----
+**RepoPilot** is an open-source codebase intelligence and developer productivity platform. Engineered for software engineers, open-source contributors, and researchers investigating unfamiliar repositories, RepoPilot provides an evidence-grounded workflow from repository ingestion to architectural mapping, code search, runtime error investigation, and pull request draft generation.
 
-## 2. Hard Constraints & Zero-Budget Operating Model
-
-| Constraint | Policy |
-| :--- | :--- |
-| **Budget** | **₹0**. Zero mandatory paid APIs, zero hosted LLM dependencies. |
-| **Repository Ingestion** | Public GitHub REST API (with rate-limit awareness and optional user-provided GitHub Token). |
-| **Search Engine** | SQLite FTS5 + deterministic symbol indexers + in-memory fast matching. |
-| **Optional AI Inference** | Local Ollama endpoint (`http://localhost:11434` or custom URL). System is 100% functional without AI. |
-| **Workspace Isolation** | Strict sandboxing inside current directory. Zero access to unrelated projects. |
-| **Security Boundary** | Untrusted code is never executed by default. Code execution is sandboxed or replaced with reproducible manual commands and patch diffs. |
+### Core Problems Addressed:
+1. **Comprehending Unfamiliar Repositories**: Pinpoints framework entry points, active modules, configuration schemas, and package dependencies without requiring days of manual reading.
+2. **Deterministic Code Navigation**: Provides fast file tree browsing, exact line number referencing, and AST-extracted symbol definitions (functions, classes, interfaces) across TypeScript, JavaScript, Python, Go, and Rust.
+3. **Traceable Architecture Visualization**: Renders interactive 3D spatial maps and 2D planar fallbacks of modules and relationships derived from repository manifests and directory hierarchies.
+4. **Evidence-Grounded Local AI**: Supports private, zero-cost conversational code intelligence via local Ollama models with verified source file citations, falling back to deterministic search when offline.
+5. **Runtime Error Investigation**: Correlates runtime stack traces directly with source files, formulates ranked root-cause hypotheses, and drafts candidate minimal unified diffs.
+6. **Reproducible PR Preparation**: Generates structured Markdown pull request drafts with verified regression test procedures for human review.
 
 ---
 
-## 3. Visual Design System: GroqCloud Console Reference
+## 2. Hard Constraints & Operating Model
 
-Inspired by the **GroqCloud Developer Console** (https://console.groq.com/):
-- **Palette**: Monochromatic obsidian dark mode (`#07090e`, `#0d1117`, `#161b22`) with high-contrast neutral borders (`#30363d`), crisp white headers (`#f0f6fc`), muted secondary text (`#8b949e`), and precision status accents (Terminal Cyan `#00f2fe`, Emerald `#3fb950`, Amber `#d29922`, Coral `#f85149`, Electric Violet `#a371f7`).
-- **Typography**: Inter / Plus Jakarta Sans for UI, JetBrains Mono / SFMono-Regular for code and metrics. High technical information density.
-- **Controls**: Restrained rectangular buttons with subtle borders, tabbed toolbars, monospace status badges, split panes with resizable dividers, pinned sidebars, and keyboard shortcut indicators (`Ctrl+K` / `⌘K`).
-- **No Fluff**: No cartoonish animations, no bloated gradient cards, no fake telemetry. Real data, real commits, real line numbers.
+| Dimension | Policy | Technical Implementation |
+| :--- | :--- | :--- |
+| **Infrastructure Spend** | **₹0 / $0** | No required paid APIs, hosted vector databases, or recurring cloud compute bills. |
+| **Repository Ingestion** | Public GitHub REST | Calls `/repos/{owner}/{repo}/git/trees/{sha}?recursive=1` with response header rate-limit tracking. |
+| **Commit Pinning** | Immutable Revisions | Resolves default branch HEAD to an immutable commit SHA so citations remain permanently valid. |
+| **Search Engine** | Deterministic Local | Client-side ranked search with symbol boosts, path scoring, and language filters without vector hallucination. |
+| **Optional Inference** | Local Open-Weights | Connects to local Ollama (`http://localhost:11434`) running models such as `qwen2.5-coder:1.5b`. Fully operational offline. |
+| **Execution Sandbox** | Safe Boundaries | Untrusted code is never executed automatically. Proposed patches are provided as unified diffs for human review. |
 
 ---
 
-## 4. Modular Monolith Architecture
+## 3. Visual Design System & Surface Hierarchy
+
+RepoPilot implements a high-density, dark-themed developer workspace:
+- **Canvas Base**: `#010102` deep obsidian black.
+- **Surface Elevation**:
+  - Surface 1: `#0F1011` (Primary application containers, cards, and sidebar)
+  - Surface 2: `#141516` (Input fields, nested lists, secondary panels)
+  - Surface 3: `#18191A` (Hover states, active card items)
+  - Surface 4: `#191A1B` (Interactive controls, highlighted rows)
+- **Border System**: 1px crisp dividers (`#23252A` subtle, `#34343A` default component borders, `#3E3E44` hover/active borders).
+- **Single Brand Accent**: Restrained lavender-blue (`#5E6AD2`, hover `#828FFF`, active `#4D58B4`) reserved for primary actions, active navigation states, and focus rings.
+- **Typography**: Clean sans-serif UI typography with tight letter spacing paired with monospace typography for commit SHAs, line numbers, file paths, and code snippets.
+
+---
+
+## 4. System Architecture & Directory Structure
 
 ```
 RepoPilot/
-├── apps/
-│   └── web/
-│       ├── app/                     # Next.js App Router (Layouts, Pages, Route Handlers)
-│       │   ├── layout.tsx           # Global console shell & navigation
-│       │   ├── page.tsx             # Home / Import / Quick Launch
-│       │   ├── overview/            # Repository metadata & health overview
-│       │   ├── repositories/        # Repository switcher & management
-│       │   ├── explore/             # File tree & high-performance code viewer
-│       │   ├── search/              # Full-text & symbol search console
-│       │   ├── architecture/        # Module dependencies, entry points, tech stack
-│       │   ├── assistant/           # Grounded Q&A workspace
-│       │   ├── debugging/           # Bug investigation, stack trace analyzer
-│       │   ├── patches/             # Proposed patches & diff viewer
-│       │   ├── history/             # Indexed repositories & analysis history
-│       │   ├── settings/            # Local AI / Ollama configuration & diagnostics
-│       │   └── api/                 # Next.js Route Handlers
-│       ├── components/              # UI components (Groq-inspired design system)
-│       ├── hooks/                   # Custom React hooks (keyboard shortcuts, data fetching)
-│       ├── public/                  # Assets, brand emblems, and static icons
-│       └── tests/                   # End-to-end and component tests
-├── packages/
-│   ├── core/                        # Domain models, validated Zod schemas, errors
-│   ├── github/                      # GitHub API client, tree fetcher, rate-limit manager
-│   ├── indexer/                     # Deterministic symbol extractor, language classifier
-│   ├── search/                      # SQLite FTS5 engine, BM25 ranking, text matcher
-│   ├── analysis/                    # Architecture detection, entry point finder, import parser
-│   ├── ai/                          # Ollama client, prompt engineering, citation verifier
-│   ├── debugging/                   # Stack trace parser, bug hypothesis engine, patch builder
-│   └── storage/                     # SQLite persistence, schema migrations, local cache
-├── docs/                            # Architecture specifications, security model, user guides
+├── src/
+│   ├── app/                         # Next.js 14 App Router
+│   │   ├── layout.tsx               # Root layout with RepositoryProvider & font configuration
+│   │   ├── page.tsx                 # Landing page with pipeline overview & workflow demo
+│   │   ├── architecture/page.tsx    # 3D Spatial Map & Architecture Evidence Brief
+│   │   ├── explore/page.tsx         # Dual-pane directory tree & code viewer
+│   │   ├── search/page.tsx          # Deterministic ranked symbol & text search
+│   │   ├── assistant/page.tsx       # Evidence-grounded code assistant with verified citations
+│   │   ├── debugging/page.tsx       # Stack trace parser & root-cause hypothesis analyzer
+│   │   ├── patches/page.tsx         # Candidate patch review & PR draft export
+│   │   ├── settings/page.tsx        # Token quotas & execution safety policies
+│   │   ├── settings/ai/page.tsx     # Local Ollama diagnostics & model configuration
+│   │   ├── docs/page.tsx            # Documentation, feature matrix & honest limitations
+│   │   └── api/                     # API Route Handlers
+│   │       ├── ai/ask/route.ts      # Bounded context prompt builder & citation verifier
+│   │       ├── ai/status/route.ts   # Local Ollama daemon health & model probe
+│   │       ├── architecture/route.ts# Framework & entry point detection engine
+│   │       ├── debugging/analyze/   # Stack frame correlation & hypothesis generation
+│   │       ├── github/file/route.ts # File content retrieval with size bounds
+│   │       ├── github/import/       # Public repo ingestion & commit SHA resolver
+│   │       └── search/route.ts      # Multi-modal ranked search endpoint
+│   ├── components/
+│   │   ├── architecture/            # ArchitectureMap3D (WebGL / Three.js)
+│   │   ├── explorer/                # FileTree navigation
+│   │   ├── layout/                  # ShellLayout, Sidebar, Header
+│   │   ├── modals/                  # ImportModal, SearchModal (Command Palette)
+│   │   └── ui/                      # Button, Card, Badge, Input, CodeViewer
+│   ├── context/                     # RepositoryContext (State persistence across routes)
+│   └── styles/                      # globals.css (Design tokens, dark scrollbars)
+├── packages/                        # Domain Engines (Modular Monolith)
+│   ├── core/                        # Strict Zod schemas & TypeScript domain contracts
+│   ├── github/                      # Rate-limit-aware GitHub REST client & SSRF validator
+│   ├── indexer/                     # Deterministic symbol extractor (TS, JS, Py, Go, Rust)
+│   ├── search/                      # Ranked text & symbol search engine
+│   ├── analysis/                    # Framework, entry point, & directory role detector
+│   ├── ai/                          # Bounded Ollama client & citation validation engine
+│   ├── debugging/                   # Stack trace parser & candidate diff generator
+│   └── execution/                   # Sandbox safety policies & manual reproduction steps
+├── docs/                            # Architecture documentation & decision records
 └── tests/                           # Vitest unit & integration test suites
 ```
 
 ---
 
-## 5. Domain Models & Contracts (Zod-Validated)
+## 5. Security Architecture & Threat Model
 
-- **`RepositoryReference`**: `owner`, `repo`, `url`, `defaultBranch`, `selectedRevision`
-- **`RepositoryRevision`**: `commitSha`, `treeSha`, `author`, `date`, `message`
-- **`RepositoryFile`**: `path`, `size`, `type` (`blob` | `tree`), `language`, `extension`, `sha`
-- **`IndexedSymbol`**: `name`, `kind` (`function` | `class` | `interface` | `variable` | `type` | `import`), `filePath`, `startLine`, `endLine`, `signature`
-- **`SourceReference`**: `repoKey`, `commitSha`, `filePath`, `startLine`, `endLine`, `codeSnippet`, `url`
-- **`SearchQuery` & `SearchResult`**: query string, file filter, language filter, matched lines, score, context snippet
-- **`ArchitectureSummary`**: detected frameworks, entry points, configuration manifests, module graph
-- **`BugHypothesis` & `PatchProposal`**: issue description, error stack trace, ranked culprit files, unified diff proposal, verification status
-
----
-
-## 6. Security Boundaries & Risk Mitigation
-
-1. **SSRF Prevention**: Validate all GitHub repository URLs strictly against `https://github.com/([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)`. Reject internal IP addresses, local network URLs, or private loopbacks.
-2. **Path Traversal Protection**: Ensure all relative file paths inside repositories resolve safely within the repository virtual root. Reject `..`, null bytes, and absolute Windows/Unix paths.
-3. **Execution Policy**: Repository source code is treated as strictly untrusted. **No automated arbitrary code execution**. Tests and execution checks are generated as safe reproducible scripts or sandboxed instructions.
-4. **Secret Protection**: Automatically detect and mask accidental API tokens, private keys, or passwords when indexing files.
+1. **SSRF Boundary Enforcement**:
+   - Every imported URL is validated against strict regex: `https://github.com/([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)`.
+   - Private IPv4/IPv6 ranges, loopback addresses (`127.0.0.1`, `localhost`), and cloud metadata IP addresses (`169.254.169.254`) are rejected before initiating network requests.
+2. **Directory Traversal Mitigation**:
+   - Internal file path lookups are validated against null bytes, directory navigation sequences (`..`), and absolute path indicators.
+3. **Zero Automated Code Execution**:
+   - Third-party repository code is treated as untrusted. RepoPilot never runs `npm install`, build scripts, or test runners automatically on the server.
+   - All bug patches are formulated as unified diffs and verified locally by the developer.
+4. **Client-Side Secret Isolation**:
+   - Personal Access Tokens (PATs) configured for GitHub rate limit expansion remain exclusively inside browser `LocalStorage`. They are never stored in a server database or transmitted to third parties.
 
 ---
 
-## 7. Stage-by-Stage Verification Strategy
+## 6. Verification & Quality Gates
 
-| Stage | Name | Key Deliverables | Verification Check |
-| :--- | :--- | :--- | :--- |
-| **Stage 0** | Inspection & Architecture | Architecture spec, tool verification, baseline preservation | Git checkpoint clean, spec written |
-| **Stage 1** | Foundation & Design System | Next.js App Router, Tailwind, GroqConsole design tokens, shell layout | `npm run build`, `vitest` pass |
-| **Stage 2** | Public Repository Ingestion | GitHub API client, tree fetcher, rate-limit cache, revision pinning | Unit tests with mock & public repo tree |
-| **Stage 3** | Code Exploration & Search | File tree navigator, code viewer with line numbers, FTS5 & symbol search | Test file navigation & query matches |
-| **Stage 4** | Architecture Intelligence | Framework detection, entry point discovery, dependency graph | Test against standard JS/TS/Python fixtures |
-| **Stage 5** | Optional Local AI (Ollama) | Local AI adapter, prompt grounding, citation validator, fallback UI | Test with Ollama mock / offline mode |
-| **Stage 6** | Bug Investigation & Patches | Stack trace parser, culprit discovery, diff generator | Test trace parsing & unified diff output |
-| **Stage 7** | Execution & Validation | Safe execution policy, manual verification guides, test generators | Security audit tests pass |
-| **Stage 8** | Product Quality & Release | Visual refinement, full test suite, documentation, LICENSE, CI workflow | All tests green, production build verified |
+The codebase enforces three automated verification gates:
+1. **Type Safety**: `npm run typecheck` (`tsc --noEmit`) validates all components, hooks, and domain packages against TypeScript strict mode.
+2. **Unit & Integration Testing**: `npm test` (`vitest run`) executes 27 unit tests across all 10 domain engines.
+3. **Production Build**: `npm run build` verifies that all 20 Next.js routes compile and statically prerender cleanly.

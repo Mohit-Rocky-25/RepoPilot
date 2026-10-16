@@ -1,8 +1,16 @@
 {
-  "name": "repo-pilot",
+  "name": "repopilot",
   "version": "1.0.0",
-  "description": "Repo Pilot - Next-Gen Collaborative Digital Workplace & Productivity Platform",
+  "description": "Open-source codebase intelligence, architecture visualization, and evidence-grounded debugging platform",
   "main": "index.html",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mohit-Rocky-25/RepoPilot.git"
+  },
+  "homepage": "https://github.com/Mohit-Rocky-25/RepoPilot#readme",
+  "bugs": {
+    "url": "https://github.com/Mohit-Rocky-25/RepoPilot/issues"
+  },
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
@@ -12,15 +20,17 @@
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
-    "repo-pilot",
-    "git",
-    "workplace",
-    "productivity",
-    "kanban",
-    "collaboration",
-    "dashboard"
+    "codebase-intelligence",
+    "repository-analysis",
+    "code-explorer",
+    "ast-indexer",
+    "3d-architecture",
+    "debugging",
+    "developer-tools",
+    "open-source",
+    "git"
   ],
-  "author": "Repo Pilot Team",
+  "author": "Mohit-Rocky-25",
   "license": "MIT",
   "dependencies": {
     "lucide-react": "^0.453.0",
