@@ -53,7 +53,8 @@ export const RepositoryFileSchema = z.object({
   language: z.string().optional(),
   extension: z.string().optional(),
   isBinary: z.boolean().default(false),
-  lineCount: z.number().nonnegative().optional()
+  lineCount: z.number().nonnegative().optional(),
+  content: z.string().optional()
 });
 
 export const IndexedSymbolSchema = z.object({

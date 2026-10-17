@@ -189,7 +189,7 @@ ${summary.dependencies.slice(0, 30).map((d) => `- ${d.name} (${d.isDev ? "dev" :
           }`}
         >
           <Network className="w-3.5 h-3.5" />
-          <span>Interactive 3D Spatial Map</span>
+          <span>Interactive Architecture Graph (2D/3D)</span>
         </button>
 
         <button

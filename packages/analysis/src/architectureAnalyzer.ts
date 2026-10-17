@@ -314,6 +314,57 @@ export class ArchitectureAnalyzer {
       });
     });
 
+    // Build real dependency edges from import statements when content is present
+    const filePathToId = new Map<string, string>();
+    nodes.forEach((n) => {
+      if (n.path) filePathToId.set(n.path, n.id);
+    });
+
+    for (const { file } of scoredFiles) {
+      if (!file.content) continue;
+      const sourceId = filePathToId.get(file.path);
+      if (!sourceId) continue;
+
+      // Extract JS/TS imports
+      const jsImportRegex = /(?:import\s+(?:(?:[\w*\s{},]*)\s+from\s+)?|require\s*\(\s*)['"]([./][^'"]+)['"]/g;
+      let match: RegExpExecArray | null;
+      while ((match = jsImportRegex.exec(file.content)) !== null) {
+        const importSpecifier = match[1];
+        const dir = file.path.includes("/") ? file.path.slice(0, file.path.lastIndexOf("/")) : "";
+        const candidateRelative = dir ? `${dir}/${importSpecifier}` : importSpecifier;
+
+        const parts = candidateRelative.split("/");
+        const resolvedParts: string[] = [];
+        for (const p of parts) {
+          if (p === "." || p === "") continue;
+          if (p === "..") resolvedParts.pop();
+          else resolvedParts.push(p);
+        }
+        const resolvedPath = resolvedParts.join("/");
+
+        for (const [targetPath, targetId] of filePathToId.entries()) {
+          if (
+            targetPath === resolvedPath ||
+            targetPath.startsWith(`${resolvedPath}.`) ||
+            targetPath === `${resolvedPath}/index.ts` ||
+            targetPath === `${resolvedPath}/index.js`
+          ) {
+            if (targetId !== sourceId) {
+              const exists = edges.some((e) => e.source === sourceId && e.target === targetId);
+              if (!exists) {
+                edges.push({
+                  source: sourceId,
+                  target: targetId,
+                  type: "dependency"
+                });
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
+
     return { nodes, edges };
   }
 }

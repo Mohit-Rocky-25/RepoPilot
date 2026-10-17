@@ -84,4 +84,37 @@ describe("Architecture Analyzer", () => {
     expect(compNode).toBeDefined();
     expect(compNode?.type).toBe("component");
   });
+
+  it("extracts real dependency edges from import statements", () => {
+    const filesWithImports: RepositoryFile[] = [
+      {
+        path: "src/index.ts",
+        size: 500,
+        type: "blob",
+        sha: "sha1",
+        language: "TypeScript",
+        isBinary: false,
+        content: `import { Header } from "./components/Header";\nconsole.log(Header);`
+      },
+      {
+        path: "src/components/Header.tsx",
+        size: 300,
+        type: "blob",
+        sha: "sha2",
+        language: "TypeScript",
+        isBinary: false,
+        content: `export const Header = () => null;`
+      }
+    ];
+
+    const graph = ArchitectureAnalyzer.generateGraph(filesWithImports, "test/repo");
+    const depEdge = graph.edges.find((e) => e.type === "dependency");
+
+    expect(depEdge).toBeDefined();
+    const sourceNode = graph.nodes.find((n) => n.id === depEdge?.source);
+    const targetNode = graph.nodes.find((n) => n.id === depEdge?.target);
+
+    expect(sourceNode?.path).toBe("src/index.ts");
+    expect(targetNode?.path).toBe("src/components/Header.tsx");
+  });
 });

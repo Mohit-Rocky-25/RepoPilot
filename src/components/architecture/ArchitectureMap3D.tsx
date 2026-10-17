@@ -9,7 +9,12 @@ import {
   Layers,
   Search,
   ExternalLink,
-  Compass
+  Compass,
+  List,
+  Eye,
+  GitBranch,
+  Folder,
+  FileCode
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -42,16 +47,22 @@ const TYPE_LABELS: Record<ArchitectureGraphNode["type"], string> = {
   source: "Source Code"
 };
 
+const NODE_CAP = 50;
+
 export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Camera & view state
-  const [yaw, setYaw] = useState(0.45);
-  const [pitch, setPitch] = useState(0.38);
+  // Default to 2D Mode as required by Phase 8
+  const [is2DMode, setIs2DMode] = useState(true);
+  const [yaw, setYaw] = useState(0);
+  const [pitch, setPitch] = useState(0);
   const [distance, setDistance] = useState(420);
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [is2DMode, setIs2DMode] = useState(false);
+
+  // Node cap & view format
+  const [showAllNodes, setShowAllNodes] = useState(false);
+  const [viewFormat, setViewFormat] = useState<"canvas" | "text-list">("canvas");
 
   // Interaction state
   const [hoveredNode, setHoveredNode] = useState<ArchitectureGraphNode | null>(null);
@@ -61,6 +72,18 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragMode, setDragMode] = useState<"orbit" | "pan">("orbit");
   const dragStartRef = useRef({ x: 0, y: 0, yaw: 0, pitch: 0, panX: 0, panY: 0 });
+
+  // Reduced motion preference
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+      setPrefersReducedMotion(mq.matches);
+      const listener = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+      mq.addEventListener("change", listener);
+      return () => mq.removeEventListener("change", listener);
+    }
+  }, []);
 
   // Filtered nodes
   const filteredNodes = useMemo(() => {
@@ -81,12 +104,32 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
     });
   }, [graph.nodes, filterType, searchQuery]);
 
-  const filteredNodeIds = useMemo(() => new Set(filteredNodes.map((n) => n.id)), [filteredNodes]);
+  // Capped visible nodes (Rule 3: Cap rendered nodes with a "show more" control)
+  const displayNodes = useMemo(() => {
+    if (showAllNodes || filteredNodes.length <= NODE_CAP) {
+      return filteredNodes;
+    }
+    const priority: Record<string, number> = {
+      root: 0,
+      entry: 1,
+      dir: 2,
+      config: 3,
+      route: 4,
+      component: 5,
+      test: 6,
+      source: 7
+    };
+    return [...filteredNodes]
+      .sort((a, b) => (priority[a.type] ?? 9) - (priority[b.type] ?? 9))
+      .slice(0, NODE_CAP);
+  }, [filteredNodes, showAllNodes]);
+
+  const displayNodeIds = useMemo(() => new Set(displayNodes.map((n) => n.id)), [displayNodes]);
 
   // Edges between visible nodes
   const visibleEdges = useMemo(() => {
-    return graph.edges.filter((e) => filteredNodeIds.has(e.source) && filteredNodeIds.has(e.target));
-  }, [graph.edges, filteredNodeIds]);
+    return graph.edges.filter((e) => displayNodeIds.has(e.source) && displayNodeIds.has(e.target));
+  }, [graph.edges, displayNodeIds]);
 
   // Map node lookup
   const nodeById = useMemo(() => {
@@ -97,7 +140,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
 
   // Reset Camera
   const handleResetCamera = () => {
-    setYaw(0.45);
+    setYaw(is2DMode ? 0 : 0.45);
     setPitch(is2DMode ? 0 : 0.38);
     setDistance(420);
     setPan({ x: 0, y: 0 });
@@ -111,8 +154,8 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
       setYaw(0);
     } else {
       setIs2DMode(false);
-      setPitch(0.38);
-      setYaw(0.45);
+      setPitch(prefersReducedMotion ? 0.2 : 0.38);
+      setYaw(prefersReducedMotion ? 0.2 : 0.45);
     }
   };
 
@@ -167,6 +210,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
 
   // Render loop
   useEffect(() => {
+    if (viewFormat !== "canvas") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -181,11 +225,11 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
 
-    // Linear Deep Obsidian Canvas
+    // Dark Obsidian Canvas
     ctx.fillStyle = "#010102";
     ctx.fillRect(0, 0, width, height);
 
-    // Subtle Perspective Grid in 3D Mode
+    // Perspective Grid in 3D Mode
     if (!is2DMode) {
       ctx.strokeStyle = "rgba(35, 37, 42, 0.45)";
       ctx.lineWidth = 1;
@@ -213,7 +257,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
     }
 
     // Project all nodes
-    const projectedNodes = filteredNodes.map((node) => {
+    const projectedNodes = displayNodes.map((node) => {
       const proj = project3D(node.x || 0, node.y || 0, node.z || 0, width, height);
       return { node, proj };
     });
@@ -236,15 +280,24 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
 
       if (isHighlighted) {
         ctx.strokeStyle = "#828FFF";
+        ctx.setLineDash([]);
         ctx.lineWidth = 2;
+      } else if (edge.type === "dependency") {
+        // Emerald dashed edge for real import dependency relationships
+        ctx.strokeStyle = "rgba(52, 211, 153, 0.65)";
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1.5;
       } else if (edge.type === "entry") {
-        ctx.strokeStyle = "rgba(94, 106, 210, 0.45)";
+        ctx.strokeStyle = "rgba(94, 106, 210, 0.5)";
+        ctx.setLineDash([]);
         ctx.lineWidth = 1.5;
       } else {
         ctx.strokeStyle = "rgba(52, 52, 58, 0.4)";
+        ctx.setLineDash([]);
         ctx.lineWidth = 1;
       }
       ctx.stroke();
+      ctx.setLineDash([]);
     });
 
     // Depth sort nodes
@@ -290,14 +343,14 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
         distance < 300;
 
       if (shouldDrawLabel) {
-        ctx.font = isHovered || isSelected ? "bold 11px JetBrains Mono, monospace" : "10px JetBrains Mono, monospace";
+        ctx.font = isHovered || isSelected ? "bold 11px monospace" : "10px monospace";
         ctx.fillStyle = isSelected ? "#828FFF" : isHovered ? "#F7F8F8" : "#8A8F98";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
         ctx.fillText(node.name, proj.screenX, proj.screenY + radius + 4);
       }
     });
-  }, [filteredNodes, visibleEdges, hoveredNode, selectedNode, distance, is2DMode, project3D]);
+  }, [displayNodes, visibleEdges, hoveredNode, selectedNode, distance, is2DMode, project3D, viewFormat]);
 
   // Mouse interaction: Hover & Drag
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -349,7 +402,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
     let closestNode: ArchitectureGraphNode | null = null;
     let minDistance = 16;
 
-    for (const node of filteredNodes) {
+    for (const node of displayNodes) {
       const proj = project3D(node.x || 0, node.y || 0, node.z || 0, width, height);
       if (!proj.visible) continue;
 
@@ -379,6 +432,36 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
     setDistance((prev) => Math.max(140, Math.min(850, prev + delta)));
   };
 
+  // Keyboard navigation for accessibility (Rule 5)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      setYaw((y) => y + 0.1);
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      setYaw((y) => y - 0.1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!is2DMode) setPitch((p) => Math.min(Math.PI / 2.2, p + 0.1));
+      else setPan((p) => ({ ...p, y: p.y - 20 }));
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (!is2DMode) setPitch((p) => Math.max(-Math.PI / 2.2, p - 0.1));
+      else setPan((p) => ({ ...p, y: p.y + 20 }));
+    } else if (e.key === "+" || e.key === "=") {
+      e.preventDefault();
+      setDistance((d) => Math.max(140, d - 40));
+    } else if (e.key === "-") {
+      e.preventDefault();
+      setDistance((d) => Math.min(850, d + 40));
+    } else if (e.key === "Escape") {
+      setSelectedNode(null);
+      setHoveredNode(null);
+    } else if (e.key === "Enter" && hoveredNode) {
+      setSelectedNode(hoveredNode);
+    }
+  };
+
   const selectedNodeRelations = useMemo(() => {
     if (!selectedNode) return { incoming: [], outgoing: [] };
     const incoming: ArchitectureGraphNode[] = [];
@@ -404,7 +487,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#0F1011] border border-[#23252A] rounded-xl shadow-xs">
         {/* Search & Filter pills */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-48 sm:w-56">
+          <div className="relative w-44 sm:w-52">
             <Search className="w-3.5 h-3.5 text-[#62666D] absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -438,188 +521,307 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
               </button>
             ))}
           </div>
+
+          {/* Show more / cap toggle (Rule 3) */}
+          {filteredNodes.length > NODE_CAP && (
+            <button
+              onClick={() => setShowAllNodes(!showAllNodes)}
+              className="px-2 py-1 rounded-md text-[11px] font-mono bg-[#141516] text-[#828FFF] hover:text-[#F7F8F8] border border-[#23252A] hover:border-[#5E6AD2] transition-colors"
+            >
+              {showAllNodes
+                ? `Showing All (${filteredNodes.length})`
+                : `Showing ${displayNodes.length} of ${filteredNodes.length} (Show All)`}
+            </button>
+          )}
         </div>
 
-        {/* View mode actions */}
+        {/* View mode actions (Rule 1: 2D Default, 3D opt-in; Rule 5: Text list alternative) */}
         <div className="flex items-center gap-1.5 font-mono text-xs">
           <Button
-            variant={is2DMode ? "primary" : "secondary"}
+            variant={viewFormat === "text-list" ? "primary" : "secondary"}
             size="sm"
-            onClick={toggle2D}
-            icon={<Layers className="w-3.5 h-3.5" />}
+            onClick={() => setViewFormat(viewFormat === "canvas" ? "text-list" : "canvas")}
+            icon={viewFormat === "text-list" ? <Eye className="w-3.5 h-3.5" /> : <List className="w-3.5 h-3.5" />}
+            title="Toggle Accessible Text List Alternative"
           >
-            {is2DMode ? "2D Mode" : "3D Perspective"}
+            {viewFormat === "text-list" ? "Graph View" : "Accessible List"}
           </Button>
 
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setDistance((d) => Math.max(140, d - 60))}
-            icon={<ZoomIn className="w-3.5 h-3.5" />}
-          />
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setDistance((d) => Math.min(850, d + 60))}
-            icon={<ZoomOut className="w-3.5 h-3.5" />}
-          />
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleResetCamera}
-            icon={<RotateCcw className="w-3.5 h-3.5" />}
-            title="Reset Camera View"
-          />
+          {viewFormat === "canvas" && (
+            <>
+              <Button
+                variant={is2DMode ? "primary" : "secondary"}
+                size="sm"
+                onClick={toggle2D}
+                icon={<Layers className="w-3.5 h-3.5" />}
+                title="Toggle between 2D Planar and 3D Perspective map"
+              >
+                {is2DMode ? "2D Mode" : "3D Mode"}
+              </Button>
+
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setDistance((d) => Math.max(140, d - 60))}
+                icon={<ZoomIn className="w-3.5 h-3.5" />}
+                title="Zoom In"
+              />
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setDistance((d) => Math.min(850, d + 60))}
+                icon={<ZoomOut className="w-3.5 h-3.5" />}
+                title="Zoom Out"
+              />
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleResetCamera}
+                icon={<RotateCcw className="w-3.5 h-3.5" />}
+                title="Reset Camera View"
+              />
+            </>
+          )}
         </div>
       </div>
 
-      {/* Main Graph Viewport */}
-      <div className="relative border border-[#23252A] rounded-xl overflow-hidden bg-[#010102] h-[520px]">
-        <canvas
-          ref={canvasRef}
-          className="w-full h-full cursor-grab active:cursor-grabbing block"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onClick={handleClick}
-          onWheel={handleWheel}
-          onContextMenu={(e) => e.preventDefault()}
-        />
-
-        {/* Instructions Overlay */}
-        <div className="absolute left-3 bottom-3 p-2.5 bg-[#0F1011]/85 backdrop-blur-xs border border-[#23252A] rounded-lg shadow-md font-mono text-[11px] text-[#8A8F98] pointer-events-none space-y-0.5">
-          <div className="flex items-center gap-1.5 font-semibold text-[#F7F8F8]">
-            <Compass className="w-3.5 h-3.5 text-[#5E6AD2]" />
-            <span>Interactive Controls</span>
+      {/* Main Viewport: Canvas OR Accessible Text List Alternative */}
+      {viewFormat === "text-list" ? (
+        /* Accessible Text List Alternative (Rule 5) */
+        <div
+          role="tree"
+          aria-label="Repository Architecture Tree Structure"
+          className="border border-[#23252A] rounded-xl bg-[#010102] p-5 h-[520px] overflow-y-auto space-y-3 font-mono text-xs"
+        >
+          <div className="pb-2 border-b border-[#23252A] flex items-center justify-between text-[#8A8F98]">
+            <span>Accessible Hierarchy Tree ({displayNodes.length} nodes)</span>
+            <span className="text-[11px]">Navigate with Tab / Enter</span>
           </div>
-          <p>• Click + Drag to Orbit • Shift/Right-Click to Pan</p>
-          <p>• Scroll to Zoom • Click Node to Inspect</p>
+
+          <div className="space-y-1.5">
+            {displayNodes.map((node) => {
+              const isSelected = selectedNode?.id === node.id;
+              return (
+                <div
+                  key={node.id}
+                  role="treeitem"
+                  aria-selected={isSelected}
+                  tabIndex={0}
+                  onClick={() => setSelectedNode(node)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setSelectedNode(node);
+                    }
+                  }}
+                  className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors focus:outline-none focus:ring-1 focus:ring-[#5E6AD2] ${
+                    isSelected
+                      ? "bg-[#5E6AD2]/20 border border-[#5E6AD2]/50 text-[#F7F8F8]"
+                      : "bg-[#0F1011] hover:bg-[#141516] border border-[#23252A] text-[#D0D6E0]"
+                  }`}
+                  style={{ paddingLeft: `${Math.max(8, node.depth * 16)}px` }}
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    {node.type === "dir" ? (
+                      <Folder className="w-3.5 h-3.5 text-[#8A8F98] shrink-0" />
+                    ) : (
+                      <FileCode className="w-3.5 h-3.5 text-[#5E6AD2] shrink-0" />
+                    )}
+                    <span className="font-medium truncate">{node.name}</span>
+                    <span className="text-[10px] text-[#62666D] truncate">{node.path}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant="neutral" size="sm">
+                      {TYPE_LABELS[node.type]}
+                    </Badge>
+                    {node.path && (
+                      <Link
+                        href={`/explore?file=${encodeURIComponent(node.path)}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[11px] text-[#828FFF] hover:underline"
+                      >
+                        inspect →
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-
-        {/* Hover Tooltip */}
-        {hoveredNode && !selectedNode && (
-          <div className="absolute top-3 right-3 p-3 bg-[#141516] border border-[#34343A] rounded-xl shadow-2xl font-mono text-xs space-y-1.5 max-w-xs pointer-events-none animate-fadeIn">
-            <div className="flex items-center gap-2">
-              <span
-                className="w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: TYPE_COLORS[hoveredNode.type] }}
-              />
-              <span className="font-semibold text-[#F7F8F8] truncate">
-                {hoveredNode.name}
-              </span>
-            </div>
-            <p className="text-[11px] text-[#8A8F98] truncate">
-              {hoveredNode.path || "Repository Root"}
+      ) : (
+        <div className="relative border border-[#23252A] rounded-xl overflow-hidden bg-[#010102] h-[520px]">
+          <canvas
+            ref={canvasRef}
+            role="img"
+            aria-label="Interactive architecture graph. Arrow keys pan/orbit, +/- zoom, Enter selects, Esc clears."
+            tabIndex={0}
+            onKeyDown={handleKeyDown}
+            className="w-full h-full cursor-grab active:cursor-grabbing block focus:outline-none focus:ring-1 focus:ring-[#5E6AD2]"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onClick={handleClick}
+            onWheel={handleWheel}
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            <p className="text-xs text-[#8A8F98] p-4">
+              Interactive canvas is not supported in this environment. Please switch to the Accessible List view above.
             </p>
-            <div className="flex items-center gap-2 pt-1">
-              <Badge variant="neutral" size="sm">
-                {TYPE_LABELS[hoveredNode.type]}
-              </Badge>
-              {hoveredNode.language && (
-                <span className="text-[11px] text-[#D0D6E0] font-medium">
-                  {hoveredNode.language}
-                </span>
-              )}
+          </canvas>
+
+          {/* Instructions Overlay */}
+          <div className="absolute left-3 bottom-3 p-2.5 bg-[#0F1011]/85 backdrop-blur-xs border border-[#23252A] rounded-lg shadow-md font-mono text-[11px] text-[#8A8F98] pointer-events-none space-y-0.5">
+            <div className="flex items-center gap-1.5 font-semibold text-[#F7F8F8]">
+              <Compass className="w-3.5 h-3.5 text-[#5E6AD2]" />
+              <span>{is2DMode ? "2D Mode Controls" : "3D Perspective Controls"}</span>
             </div>
+            <p>• Click + Drag to {is2DMode ? "Pan" : "Orbit"} • Shift/Right-Click to Pan</p>
+            <p>• Scroll to Zoom • Arrow Keys for Keyboard Nav</p>
           </div>
-        )}
 
-        {/* Selected Node Details Drawer */}
-        {selectedNode && (
-          <div className="absolute top-3 right-3 w-80 bg-[#0F1011] border border-[#34343A] rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.9)] font-mono text-xs p-4 space-y-3 max-h-[480px] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-[#23252A] pb-2.5">
-              <div className="flex items-center gap-2 truncate">
+          {/* Hover Tooltip */}
+          {hoveredNode && !selectedNode && (
+            <div className="absolute top-3 right-3 p-3 bg-[#141516] border border-[#34343A] rounded-xl shadow-2xl font-mono text-xs space-y-1.5 max-w-xs pointer-events-none animate-fadeIn">
+              <div className="flex items-center gap-2">
                 <span
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: TYPE_COLORS[selectedNode.type] }}
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: TYPE_COLORS[hoveredNode.type] }}
                 />
-                <h3 className="font-semibold text-[#F7F8F8] truncate text-xs">
-                  {selectedNode.name}
-                </h3>
+                <span className="font-semibold text-[#F7F8F8] truncate">
+                  {hoveredNode.name}
+                </span>
               </div>
-              <button
-                onClick={() => setSelectedNode(null)}
-                className="text-[#8A8F98] hover:text-[#F7F8F8] text-sm font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-1">
-              <span className="text-[10px] text-[#62666D] uppercase block">
-                Repository Path
-              </span>
-              <p className="p-1.5 bg-[#141516] border border-[#23252A] rounded text-[#D0D6E0] break-all text-[11px]">
-                {selectedNode.path || "/ (Root)"}
+              <p className="text-[11px] text-[#8A8F98] truncate">
+                {hoveredNode.path || "Repository Root"}
               </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <div>
-                <span className="text-[#62666D] block">Type</span>
-                <Badge variant="neutral" size="sm" className="mt-0.5">
-                  {TYPE_LABELS[selectedNode.type]}
+              <div className="flex items-center gap-2 pt-1">
+                <Badge variant="neutral" size="sm">
+                  {TYPE_LABELS[hoveredNode.type]}
                 </Badge>
-              </div>
-              <div>
-                <span className="text-[#62666D] block">Depth</span>
-                <span className="font-semibold text-[#D0D6E0] mt-0.5 block">
-                  Level {selectedNode.depth}
-                </span>
+                {hoveredNode.language && (
+                  <span className="text-[11px] text-[#D0D6E0] font-medium">
+                    {hoveredNode.language}
+                  </span>
+                )}
               </div>
             </div>
+          )}
 
-            {selectedNodeRelations.outgoing.length > 0 && (
-              <div className="space-y-1 pt-1">
+          {/* Selected Node Details Drawer */}
+          {selectedNode && (
+            <div className="absolute top-3 right-3 w-80 bg-[#0F1011] border border-[#34343A] rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.9)] font-mono text-xs p-4 space-y-3 max-h-[480px] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-[#23252A] pb-2.5">
+                <div className="flex items-center gap-2 truncate">
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ backgroundColor: TYPE_COLORS[selectedNode.type] }}
+                  />
+                  <h3 className="font-semibold text-[#F7F8F8] truncate text-xs">
+                    {selectedNode.name}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setSelectedNode(null)}
+                  className="text-[#8A8F98] hover:text-[#F7F8F8] text-sm font-bold"
+                  aria-label="Close details"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-1">
                 <span className="text-[10px] text-[#62666D] uppercase block">
-                  Contains ({selectedNodeRelations.outgoing.length})
+                  Repository Path
                 </span>
-                <div className="max-h-24 overflow-y-auto divide-y divide-[#23252A] border border-[#23252A] rounded bg-[#141516]">
-                  {selectedNodeRelations.outgoing.slice(0, 10).map((rel) => (
-                    <div
-                      key={rel.id}
-                      onClick={() => setSelectedNode(rel)}
-                      className="p-1.5 hover:bg-[#18191A] cursor-pointer flex items-center justify-between text-[11px]"
-                    >
-                      <span className="text-[#D0D6E0] truncate">{rel.name}</span>
-                      <span className="text-[10px] text-[#62666D]">view</span>
-                    </div>
-                  ))}
+                <p className="p-1.5 bg-[#141516] border border-[#23252A] rounded text-[#D0D6E0] break-all text-[11px]">
+                  {selectedNode.path || "/ (Root)"}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div>
+                  <span className="text-[#62666D] block">Type</span>
+                  <Badge variant="neutral" size="sm" className="mt-0.5">
+                    {TYPE_LABELS[selectedNode.type]}
+                  </Badge>
+                </div>
+                <div>
+                  <span className="text-[#62666D] block">Depth</span>
+                  <span className="font-semibold text-[#D0D6E0] mt-0.5 block">
+                    Level {selectedNode.depth}
+                  </span>
                 </div>
               </div>
-            )}
 
-            {selectedNode.path && (
-              <div className="pt-2">
-                <Link
-                  href={`/explore?file=${encodeURIComponent(selectedNode.path)}`}
-                  className="w-full"
-                >
-                  <Button
-                    variant="primary"
-                    size="sm"
+              {selectedNodeRelations.outgoing.length > 0 && (
+                <div className="space-y-1 pt-1">
+                  <span className="text-[10px] text-[#62666D] uppercase block">
+                    Outgoing Relations ({selectedNodeRelations.outgoing.length})
+                  </span>
+                  <div className="max-h-24 overflow-y-auto divide-y divide-[#23252A] border border-[#23252A] rounded bg-[#141516]">
+                    {selectedNodeRelations.outgoing.slice(0, 10).map((rel) => (
+                      <div
+                        key={rel.id}
+                        onClick={() => setSelectedNode(rel)}
+                        className="p-1.5 hover:bg-[#18191A] cursor-pointer flex items-center justify-between text-[11px]"
+                      >
+                        <span className="text-[#D0D6E0] truncate">{rel.name}</span>
+                        <span className="text-[10px] text-[#62666D]">view</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedNode.path && (
+                <div className="pt-2">
+                  <Link
+                    href={`/explore?file=${encodeURIComponent(selectedNode.path)}`}
                     className="w-full"
-                    icon={<ExternalLink className="w-3.5 h-3.5" />}
                   >
-                    Open in Code Explorer →
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="w-full"
+                      icon={<ExternalLink className="w-3.5 h-3.5" />}
+                    >
+                      Open in Code Explorer →
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* Legend Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-[#0F1011] border border-[#23252A] rounded-xl font-mono text-[11px] text-[#8A8F98]">
-        <span className="font-semibold text-[#D0D6E0]">Node Legend:</span>
+      {/* Legend Bar (Rule 4: Edge types labeled) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5 bg-[#0F1011] border border-[#23252A] rounded-xl font-mono text-[11px] text-[#8A8F98]">
         <div className="flex flex-wrap items-center gap-3">
+          <span className="font-semibold text-[#D0D6E0]">Nodes:</span>
           {Object.entries(TYPE_COLORS).map(([type, color]) => (
             <div key={type} className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
               <span className="capitalize">{type}</span>
             </div>
           ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 border-t sm:border-t-0 sm:border-l border-[#23252A] pt-1 sm:pt-0 sm:pl-3">
+          <span className="font-semibold text-[#D0D6E0]">Edges:</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3.5 h-0.5 bg-[#52525A] inline-block" />
+            <span>Contains</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3.5 h-0.5 bg-[#5E6AD2] inline-block" />
+            <span>Entry Path</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3.5 h-0.5 border-t border-dashed border-[#34D399] inline-block" />
+            <span>Import Dependency</span>
+          </div>
         </div>
       </div>
     </div>
