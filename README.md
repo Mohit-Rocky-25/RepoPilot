@@ -1,12 +1,24 @@
 # RepoPilot
 
 <div align="center">
-  <img src="assets/repo_pilot_banner.jpg" alt="RepoPilot Banner" width="100%" style="border-radius: 12px; border: 1px solid #23252A;" />
+  <a href="https://repo-pilot-git.vercel.app">
+    <img src="assets/repopilot_banner.svg" alt="RepoPilot Banner" width="100%" style="border-radius: 12px; border: 1px solid #23252A;" />
+  </a>
   <br />
   <br />
 
   <p align="center">
-    <strong>Open-Source Codebase Intelligence, Architecture Visualization, and Evidence-Grounded Debugging Platform</strong>
+    <strong>Open-Source Codebase Intelligence, 3D Architecture Visualization, and Evidence-Grounded Debugging Platform</strong>
+  </p>
+
+  <p align="center">
+    <a href="https://repo-pilot-git.vercel.app">
+      <img src="https://img.shields.io/badge/Live_App-repo--pilot--git.vercel.app-5E6AD2?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
+    </a>
+  </p>
+
+  <p align="center">
+    <strong>🌐 Official Production Deployment: <a href="https://repo-pilot-git.vercel.app">https://repo-pilot-git.vercel.app</a></strong>
   </p>
 
   <p align="center">
@@ -21,7 +33,6 @@
   </p>
 
   <p align="center">
-    <a href="https://repo-pilot-git.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-repo--pilot--git.vercel.app-5E6AD2.svg?logo=vercel&logoColor=white" alt="Live Demo" /></a>
     <img src="https://img.shields.io/badge/License-MIT-5E6AD2.svg" alt="License: MIT" />
     <img src="https://img.shields.io/badge/TypeScript-Strict_Mode-3178C6.svg" alt="TypeScript Strict" />
     <img src="https://img.shields.io/badge/Next.js-14.2.15-000000.svg" alt="Next.js 14" />
