@@ -1088,7 +1088,7 @@ export default function HomePage() {
             <span>·</span>
             <span>Grounded In Pinned Commits</span>
             <span>·</span>
-            <span>Open Source Portfolio Project</span>
+            <span>Independent Open-Source · Not affiliated with GitHub, Inc.</span>
           </div>
         </div>
       </section>

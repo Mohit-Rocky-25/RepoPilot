@@ -3,16 +3,22 @@ import { GitHubClient } from "@repopilot/github";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = req.headers.get("x-github-token") || process.env.GITHUB_TOKEN;
-    const client = new GitHubClient({ token });
+    const clientToken = req.headers.get("x-github-token");
+    const hasUserToken = Boolean(clientToken && clientToken.trim());
+    const token = hasUserToken ? clientToken : process.env.GITHUB_TOKEN;
 
+    const client = new GitHubClient({ token: token || undefined });
     const status = await client.checkRateLimit();
 
+    // PRIVACY & SECURITY SHIELD:
+    // Only expose user identity (@username) if the client provided their OWN personal access token.
+    // Never leak the server owner's GitHub username to random public visitors on the internet.
     return NextResponse.json({
       success: true,
       rateLimit: status.rateLimit,
-      authenticated: status.authenticated,
-      user: status.user
+      authenticated: hasUserToken ? status.authenticated : false,
+      user: hasUserToken ? status.user : undefined,
+      mode: hasUserToken ? "personal-token" : "public-tier"
     });
   } catch (error: any) {
     return NextResponse.json(
