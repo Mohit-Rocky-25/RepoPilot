@@ -306,8 +306,8 @@ export default function DebuggingPage() {
             </div>
           </div>
 
-          {/* Candidate Patch Proposal */}
-          {analysisResult.candidatePatch && (
+          {/* Candidate Patch Proposal or Suggestion Scaffold */}
+          {analysisResult.candidatePatch ? (
             <Card className="p-5 space-y-3 bg-linear-surface-1 border-linear-border-1">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -316,8 +316,8 @@ export default function DebuggingPage() {
                     Proposed Minimal Candidate Patch
                   </h2>
                 </div>
-                <Badge variant="neutral" size="sm">
-                  Human Review Required
+                <Badge variant="warning" size="sm">
+                  Unverified: review before applying
                 </Badge>
               </div>
 
@@ -348,6 +348,23 @@ export default function DebuggingPage() {
                   })}
                 </pre>
               </div>
+            </Card>
+          ) : (
+            <Card className="p-5 space-y-3 bg-linear-surface-1 border-linear-border-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <GitPullRequest className="w-4 h-4 text-linear-text-muted" />
+                  <h2 className="text-sm font-semibold text-linear-text-main font-mono uppercase">
+                    Suggestion Scaffold (No Diff Generated)
+                  </h2>
+                </div>
+                <Badge variant="warning" size="sm">
+                  Unverified: review before applying
+                </Badge>
+              </div>
+              <p className="text-xs text-linear-text-muted">
+                No AI model was configured or automated patch validation did not produce an applicable diff. Review the ranked hypotheses above and verify the stack frames.
+              </p>
             </Card>
           )}
 

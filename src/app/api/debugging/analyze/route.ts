@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GitHubClient } from "@repopilot/github";
 import { StackTraceParser, HypothesisEngine } from "@repopilot/debugging";
+import { createModelProvider, redactSecret } from "@repopilot/ai";
 import {
   validateGitHubOwner,
   validateGitHubRepo,
@@ -10,6 +11,8 @@ import {
 import { enforceRateLimit, checkPayloadSize } from "@/lib/rateLimiter";
 
 export async function POST(req: NextRequest) {
+  let customApiKey: string | undefined;
+
   try {
     // 1. DoS Defense: Body size cap (64 KB)
     const sizeCheck = checkPayloadSize(req, 65536);
@@ -21,10 +24,16 @@ export async function POST(req: NextRequest) {
       return rateCheck.response;
     }
 
+    // Read optional AI headers
+    customApiKey = req.headers.get("x-ai-key") || undefined;
+    const headerProvider = req.headers.get("x-ai-provider") as any;
+    const headerBaseUrl = req.headers.get("x-ai-base-url") || undefined;
+    const headerModel = req.headers.get("x-ai-model") || undefined;
+
     const body = await req.json();
     const { owner, repo, sha, title, description, stackTrace } = body;
 
-    // 2. Strict Input Validation
+    // 3. Strict Input Validation
     if (!validateGitHubOwner(owner) || !validateGitHubRepo(repo)) {
       return NextResponse.json(
         { error: "Invalid repository identifier. Owner and repo must be alphanumeric." },
@@ -35,14 +44,6 @@ export async function POST(req: NextRequest) {
     if (!stackTrace || typeof stackTrace !== "string" || !stackTrace.trim()) {
       return NextResponse.json(
         { error: "Stack trace is required." },
-        { status: 400 }
-      );
-    }
-
-    // DoS Defense: Bound stack trace size
-    if (stackTrace.length > 64000) {
-      return NextResponse.json(
-        { error: "Stack trace payload exceeds maximum allowed size (64 KB)." },
         { status: 400 }
       );
     }
@@ -62,10 +63,10 @@ export async function POST(req: NextRequest) {
     const tree = await client.fetchTree(owner, repo, sha || "HEAD");
     const repoFilePaths = tree.map((f) => f.path);
 
-    // 1. Parse Stack Trace
+    // 4. Parse Stack Trace across Node, Python, Go, Rust
     const parsedTrace = StackTraceParser.parse(stackTrace, repoFilePaths);
 
-    // 2. Fetch snippets for culprit frames concurrently (ensuring frame path is validated)
+    // 5. Fetch snippets for culprit frames concurrently
     const fileSnippets = new Map<string, string>();
     const framesToFetch = parsedTrace.frames
       .filter((f) => validateFilePath(f.filePath))
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
     const snippetResults = await Promise.allSettled(
       framesToFetch.map(async (frame) => {
         const content = await client.fetchFileContent(owner, repo, sha || "HEAD", frame.filePath);
-        return { filePath: frame.filePath, snippet: content.slice(0, 1000) };
+        return { filePath: frame.filePath, snippet: content };
       })
     );
 
@@ -84,14 +85,51 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Formulate Hypotheses & Candidate Patch
+    // 6. Optional AI Patch Draft: ONLY request when AI provider is configured
+    let aiDiffProposal: string | undefined;
+
+    if (customApiKey || headerProvider === "ollama") {
+      try {
+        const provider = createModelProvider({
+          type: headerProvider || (customApiKey ? "openai-compatible" : "ollama"),
+          baseUrl: headerBaseUrl || "http://localhost:11434",
+          apiKey: customApiKey,
+          model: headerModel || "qwen2.5-coder:7b"
+        });
+        const avail = await provider.isAvailable();
+        if (avail.available) {
+          const culprit = parsedTrace.frames.find((f) => f.isUserCode) || parsedTrace.frames[0];
+          if (culprit) {
+            const fileContent = fileSnippets.get(culprit.filePath);
+            if (fileContent) {
+              const prompt = `Bug description: ${safeTitle}\n${safeDesc}\nStack trace:\n${stackTrace.slice(0, 500)}\n\nFile content for ${culprit.filePath}:\n${fileContent.slice(0, 2000)}\n\nGenerate ONLY a unified diff fixing this bug. Start with --- a/${culprit.filePath} and +++ b/${culprit.filePath}. Do not include markdown commentary.`;
+              const diffRaw = await provider.generate({
+                model: headerModel || "qwen2.5-coder:7b",
+                prompt,
+                systemPrompt: "You are an automated patch generator. Output ONLY a valid unified diff."
+              });
+              const match = /--- a\/[\s\S]*?\+\+\+ b\/[\s\S]*/.exec(diffRaw);
+              if (match) {
+                aiDiffProposal = match[0].replace(/```/g, "").trim();
+              }
+            }
+          }
+        }
+      } catch {
+        // AI diff generation failed - fall back cleanly to suggestion scaffold
+      }
+    }
+
+    // 7. Formulate Hypotheses & In-Memory Validated Patch
     const analysis = HypothesisEngine.analyze(
       `${owner}/${repo}`,
       sha || "HEAD",
       safeTitle,
       safeDesc,
       parsedTrace,
-      fileSnippets
+      fileSnippets,
+      aiDiffProposal,
+      repoFilePaths
     );
 
     return NextResponse.json({
@@ -101,8 +139,9 @@ export async function POST(req: NextRequest) {
       rateLimit: client.lastRateLimit
     });
   } catch (error: any) {
+    const safeError = redactSecret(error.message || "Failed to analyze bug report.", customApiKey);
     return NextResponse.json(
-      { error: error.message || "Failed to analyze bug report." },
+      { error: safeError },
       { status: 500 }
     );
   }
