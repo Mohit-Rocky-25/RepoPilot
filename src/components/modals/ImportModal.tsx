@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { X, Github, ArrowRight, AlertCircle, Clock } from "lucide-react";
 import { GitHubUrlSchema } from "@repopilot/core";
 import { useRepository } from "@/context/RepositoryContext";
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/Badge";
 import { clientFetch } from "@/lib/api";
 
 export const ImportModal: React.FC = () => {
+  const router = useRouter();
   const { isImportModalOpen, setIsImportModalOpen, saveRecentRepo, setRateLimit, recentRepos } = useRepository();
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +44,7 @@ export const ImportModal: React.FC = () => {
       saveRecentRepo(data.repository);
       setIsImportModalOpen(false);
       setUrl("");
+      router.push("/explore");
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred during import");
     } finally {

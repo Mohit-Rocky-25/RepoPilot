@@ -1,13 +1,62 @@
 "use client";
 
 import React from "react";
-import { BookOpen, ShieldCheck, Cpu, Terminal, Zap, AlertTriangle, Layers } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  BookOpen,
+  ShieldCheck,
+  Cpu,
+  Terminal,
+  Zap,
+  AlertTriangle,
+  Layers,
+  ArrowLeft,
+  Home,
+  ArrowRight
+} from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
 export default function DocsPage() {
+  const router = useRouter();
+
   return (
     <div className="space-y-6 max-w-4xl">
+      {/* Navigation Directions: Back, Home & Workspace */}
+      <div className="flex items-center justify-between pb-1">
+        <button
+          onClick={() => {
+            if (typeof window !== "undefined" && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/");
+            }
+          }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F1011] hover:bg-[#141516] border border-[#23252A] hover:border-[#34343A] text-xs font-mono text-[#8A8F98] hover:text-[#F7F8F8] transition-all cursor-pointer shadow-xs"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Go Back</span>
+        </button>
+
+        <div className="flex items-center gap-2">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F1011] hover:bg-[#141516] border border-[#23252A] hover:border-[#34343A] text-xs font-mono text-[#8A8F98] hover:text-[#F7F8F8] transition-all shadow-xs"
+          >
+            <Home className="w-3.5 h-3.5 text-[#828FFF]" />
+            <span>Home</span>
+          </Link>
+          <Link
+            href="/explore"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#5E6AD2]/15 hover:bg-[#5E6AD2]/25 border border-[#5E6AD2]/30 text-xs font-mono text-[#828FFF] hover:text-white transition-all shadow-xs"
+          >
+            <span>Workspace</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="pb-3 border-b border-linear-border-1">
         <h1 className="text-lg font-semibold text-linear-text-main font-mono flex items-center gap-2">
@@ -103,7 +152,7 @@ export default function DocsPage() {
 
         <ul className="list-disc list-inside space-y-2 text-linear-text-muted leading-relaxed pl-1">
           <li>
-            <strong className="text-linear-text-main">GitHub API Limits:</strong> Unauthenticated public GitHub access is capped by GitHub at 60 requests per hour per IP. To increase this to 5,000 req/hr, configure an optional Personal Access Token or GitHub CLI token in Settings.
+            <strong className="text-linear-text-main">GitHub API Limits:</strong> Standard tier rate limits are managed at 5,000 requests per hour. Personal Access Tokens can be configured directly in Settings to increase or refresh limits.
           </li>
           <li>
             <strong className="text-linear-text-main">Repository Tree Bounds:</strong> For fast browser performance and zero-budget resource efficiency, repositories are indexed up to 1,500 source files. Binary assets and build artifacts (e.g. node_modules, dist) are automatically excluded.

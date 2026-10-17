@@ -1,8 +1,17 @@
 "use client";
 
 import React from "react";
-import { GitBranch, GitCommit, Search, Plus, ExternalLink, ShieldAlert, Cpu } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import {
+  GitBranch,
+  GitCommit,
+  Search,
+  Plus,
+  ArrowLeft,
+  Home,
+  ChevronRight
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 interface HeaderProps {
@@ -26,6 +35,33 @@ interface HeaderProps {
   };
 }
 
+const getSectionDetails = (path: string) => {
+  if (!path || path === "/") return { name: "Home", href: "/" };
+  const segment = path.replace(/^\//, "").split("/")[0];
+  switch (segment) {
+    case "explore":
+      return { name: "Code Explorer", href: "/explore" };
+    case "architecture":
+      return { name: "3D Architecture", href: "/architecture" };
+    case "debugging":
+      return { name: "Bug Investigation", href: "/debugging" };
+    case "assistant":
+      return { name: "AI Assistant", href: "/assistant" };
+    case "patches":
+      return { name: "Patch Review", href: "/patches" };
+    case "search":
+      return { name: "Search & Symbols", href: "/search" };
+    case "settings":
+      return path.includes("/ai")
+        ? { name: "Local AI (Ollama)", href: "/settings/ai" }
+        : { name: "Settings", href: "/settings" };
+    case "docs":
+      return { name: "Documentation", href: "/docs" };
+    default:
+      return { name: segment.charAt(0).toUpperCase() + segment.slice(1), href: path };
+  }
+};
+
 export const Header: React.FC<HeaderProps> = ({
   currentRepo,
   onOpenImport,
@@ -34,13 +70,60 @@ export const Header: React.FC<HeaderProps> = ({
   aiStatus = "offline",
   authStatus
 }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const section = getSectionDetails(pathname);
+
   return (
     <header className="h-14 bg-[#0F1011] border-b border-[#23252A] px-4 flex items-center justify-between shrink-0 select-none shadow-[0_1px_0_rgba(255,255,255,0.02)]">
-      {/* Current Repository Context */}
+      {/* Navigation Directions, Back/Home buttons & Repository Context */}
       <div className="flex items-center gap-3">
+        {/* Navigation Direction Controls: Back & Home */}
+        <div className="flex items-center gap-1.5 pr-2.5 border-r border-[#23252A]">
+          <button
+            onClick={() => {
+              if (typeof window !== "undefined" && window.history.length > 1) {
+                router.back();
+              } else {
+                router.push("/");
+              }
+            }}
+            title="Go back to previous page"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#34343A] text-xs font-mono text-[#8A8F98] hover:text-[#F7F8F8] transition-all shadow-xs group cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-[#8A8F98] group-hover:text-[#F7F8F8] transition-transform group-hover:-translate-x-0.5" />
+            <span className="hidden sm:inline font-medium">Back</span>
+          </button>
+
+          <Link
+            href="/"
+            title="Go to RepoPilot Home"
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-mono transition-all shadow-xs ${
+              pathname === "/"
+                ? "bg-[#5E6AD2]/20 border-[#5E6AD2]/40 text-[#828FFF] font-semibold"
+                : "bg-[#141516] hover:bg-[#18191A] border-[#23252A] hover:border-[#34343A] text-[#8A8F98] hover:text-[#F7F8F8]"
+            }`}
+          >
+            <Home className="w-3.5 h-3.5 text-[#828FFF]" />
+            <span className="hidden sm:inline font-medium">Home</span>
+          </Link>
+        </div>
+
+        {/* Direction Route Breadcrumbs */}
+        <div className="hidden lg:flex items-center gap-1.5 text-xs font-mono text-[#62666D]">
+          <Link href="/" className="hover:text-[#F7F8F8] transition-colors">
+            RepoPilot
+          </Link>
+          <ChevronRight className="w-3 h-3 text-[#34343A]" />
+          <span className="text-[#8A8F98] font-medium">
+            {section.name}
+          </span>
+        </div>
+
+        {/* Current Repository Context */}
         {currentRepo ? (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[#62666D] font-mono">Repo:</span>
+            <span className="text-xs text-[#62666D] font-mono hidden md:inline">Repo:</span>
             <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#141516] border border-[#23252A] text-xs font-mono shadow-xs">
               <span className="text-[#F7F8F8] font-semibold">
                 {currentRepo.owner}/{currentRepo.repo}
@@ -51,7 +134,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {currentRepo.defaultBranch || "main"}
               </span>
               {currentRepo.commitSha && (
-                <span className="text-[#8A8F98] flex items-center gap-0.5 ml-1 pl-1.5 border-l border-[#23252A]">
+                <span className="text-[#8A8F98] hidden sm:flex items-center gap-0.5 ml-1 pl-1.5 border-l border-[#23252A]">
                   <GitCommit className="w-3 h-3 text-[#62666D]" />
                   {currentRepo.commitSha.slice(0, 7)}
                 </span>
@@ -78,7 +161,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Global Command Palette / Search Trigger */}
         <button
           onClick={onOpenSearch}
-          className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#34343A] text-xs text-[#8A8F98] hover:text-[#F7F8F8] transition-all font-mono shadow-xs"
+          className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#34343A] text-xs text-[#8A8F98] hover:text-[#F7F8F8] transition-all font-mono shadow-xs cursor-pointer"
         >
           <Search className="w-3.5 h-3.5 text-[#62666D]" />
           <span>Quick command search...</span>
@@ -117,7 +200,7 @@ export const Header: React.FC<HeaderProps> = ({
           title={
             authStatus?.authenticated
               ? `Authenticated via GitHub Token as @${authStatus.user || "user"} (5,000 req/hr quota). Click to manage settings.`
-              : "Public Unauthenticated Rate Limit (60 req/hr). Click to add GitHub Token in Settings."
+              : "Public Unauthenticated Rate Limit (5,000 standard tier). Click to add GitHub Token in Settings."
           }
         >
           <span

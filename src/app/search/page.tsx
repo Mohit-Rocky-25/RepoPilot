@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Search as SearchIcon,
@@ -84,14 +85,20 @@ function SearchContent() {
             Import a public GitHub repository to perform deterministic code search and symbol navigation.
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="md"
-          onClick={() => setIsImportModalOpen(true)}
-          className="mx-auto"
-        >
-          Connect Repository
-        </Button>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <Link href="/">
+            <Button variant="secondary" size="md">
+              Go Home
+            </Button>
+          </Link>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => setIsImportModalOpen(true)}
+          >
+            Connect Repository
+          </Button>
+        </div>
       </Card>
     );
   }

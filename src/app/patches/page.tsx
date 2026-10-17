@@ -53,14 +53,20 @@ export default function PatchesPage() {
             Import a public GitHub repository to review proposed candidate diffs, regression test recommendations, and export reproducible PR drafts.
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="md"
-          onClick={() => setIsImportModalOpen(true)}
-          className="mx-auto"
-        >
-          Import Repository
-        </Button>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <Link href="/">
+            <Button variant="secondary" size="md">
+              Go Home
+            </Button>
+          </Link>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => setIsImportModalOpen(true)}
+          >
+            Import Repository
+          </Button>
+        </div>
       </Card>
     );
   }

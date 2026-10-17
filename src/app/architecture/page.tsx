@@ -116,14 +116,20 @@ ${summary.dependencies.slice(0, 30).map((d) => `- ${d.name} (${d.isDev ? "dev" :
             Import a public GitHub repository to explore its interactive 3D spatial architecture graph, detect frameworks, and generate an evidence-backed architectural brief.
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="md"
-          onClick={() => setIsImportModalOpen(true)}
-          className="mx-auto"
-        >
-          Connect Repository
-        </Button>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <Link href="/">
+            <Button variant="secondary" size="md">
+              Go Home
+            </Button>
+          </Link>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => setIsImportModalOpen(true)}
+          >
+            Connect Repository
+          </Button>
+        </div>
       </Card>
     );
   }

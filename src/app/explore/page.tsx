@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   FolderTree,
@@ -133,14 +134,20 @@ function ExploreContent() {
             Import a public GitHub repository to browse its file structure, inspect code line-by-line, and extract AST symbols.
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="md"
-          onClick={() => setIsImportModalOpen(true)}
-          className="mx-auto"
-        >
-          Connect Repository
-        </Button>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <Link href="/">
+            <Button variant="secondary" size="md">
+              Go Home
+            </Button>
+          </Link>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => setIsImportModalOpen(true)}
+          >
+            Connect Repository
+          </Button>
+        </div>
       </Card>
     );
   }

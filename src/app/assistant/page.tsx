@@ -106,14 +106,20 @@ export default function AssistantPage() {
             Import a public GitHub repository to ask questions grounded directly in indexed code files with exact citations.
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="md"
-          onClick={() => setIsImportModalOpen(true)}
-          className="mx-auto"
-        >
-          Import Repository
-        </Button>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <Link href="/">
+            <Button variant="secondary" size="md">
+              Go Home
+            </Button>
+          </Link>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => setIsImportModalOpen(true)}
+          >
+            Import Repository
+          </Button>
+        </div>
       </Card>
     );
   }

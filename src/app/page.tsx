@@ -119,6 +119,16 @@ export default function HomePage() {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
+            {currentRepo && (
+              <Link
+                href="/explore"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#5E6AD2]/40 bg-[#5E6AD2]/15 text-xs font-mono font-medium text-[#828FFF] hover:text-white hover:bg-[#5E6AD2]/25 transition-all shadow-xs"
+              >
+                <span>Console: {currentRepo.owner}/{currentRepo.repo}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            )}
+
             <a
               href="https://github.com/Mohit-Rocky-25/RepoPilot"
               target="_blank"
@@ -130,10 +140,16 @@ export default function HomePage() {
             </a>
 
             <button
-              onClick={() => setIsImportModalOpen(true)}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-linear-accent text-white text-xs font-medium hover:bg-linear-accent-hover shadow-sm active:scale-[0.98] transition-all"
+              onClick={() => {
+                if (currentRepo) {
+                  router.push("/explore");
+                } else {
+                  setIsImportModalOpen(true);
+                }
+              }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-linear-accent text-white text-xs font-medium hover:bg-linear-accent-hover shadow-sm active:scale-[0.98] transition-all cursor-pointer"
             >
-              <span>Explore Repo</span>
+              <span>{currentRepo ? "Open Console" : "Explore Repo"}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

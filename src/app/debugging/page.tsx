@@ -115,14 +115,20 @@ export default function DebuggingPage() {
             Import a public GitHub repository to map error stack traces directly to source code lines and formulate candidate bug fixes.
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="md"
-          onClick={() => setIsImportModalOpen(true)}
-          className="mx-auto"
-        >
-          Import Repository
-        </Button>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <Link href="/">
+            <Button variant="secondary" size="md">
+              Go Home
+            </Button>
+          </Link>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => setIsImportModalOpen(true)}
+          >
+            Import Repository
+          </Button>
+        </div>
       </Card>
     );
   }

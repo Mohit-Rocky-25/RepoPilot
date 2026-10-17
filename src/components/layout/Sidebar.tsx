@@ -16,7 +16,8 @@ import {
   Terminal,
   Activity,
   Compass,
-  Code2
+  Code2,
+  Home
 } from "lucide-react";
 
 interface NavItem {
@@ -31,12 +32,12 @@ export const Sidebar: React.FC = () => {
 
   const sections: { title: string; items: NavItem[] }[] = [
     {
-      title: "Repository",
+      title: "Workspace",
       items: [
         {
-          name: "Overview",
+          name: "Home / Overview",
           href: "/",
-          icon: <Layers className="w-4 h-4" />
+          icon: <Home className="w-4 h-4" />
         },
         {
           name: "Code Explorer",
@@ -77,7 +78,7 @@ export const Sidebar: React.FC = () => {
       ]
     },
     {
-      title: "System",
+      title: "Configuration",
       items: [
         {
           name: "Local AI (Ollama)",
@@ -85,12 +86,12 @@ export const Sidebar: React.FC = () => {
           icon: <Activity className="w-4 h-4" />
         },
         {
-          name: "Settings",
+          name: "Settings & Token",
           href: "/settings",
           icon: <Settings className="w-4 h-4" />
         },
         {
-          name: "Docs & Limits",
+          name: "Documentation",
           href: "/docs",
           icon: <BookOpen className="w-4 h-4" />
         }
@@ -100,14 +101,18 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside className="w-64 bg-[#0F1011] border-r border-[#23252A] flex flex-col shrink-0 select-none shadow-[1px_0_0_rgba(255,255,255,0.02)]">
-      {/* Brand Header */}
-      <div className="h-14 flex items-center px-4 border-b border-[#23252A] gap-2.5">
-        <div className="w-7 h-7 rounded-lg bg-[#5E6AD2]/15 border border-[#5E6AD2]/30 flex items-center justify-center text-[#828FFF] shadow-[0_0_12px_rgba(94,106,210,0.25)]">
+      {/* Brand Header / Home Link */}
+      <Link
+        href="/"
+        title="Go to RepoPilot Home"
+        className="h-14 flex items-center px-4 border-b border-[#23252A] gap-2.5 hover:bg-[#141516] transition-colors group cursor-pointer"
+      >
+        <div className="w-7 h-7 rounded-lg bg-[#5E6AD2]/15 border border-[#5E6AD2]/30 flex items-center justify-center text-[#828FFF] group-hover:bg-[#5E6AD2]/25 group-hover:border-[#5E6AD2]/50 shadow-[0_0_12px_rgba(94,106,210,0.25)] transition-all">
           <Compass className="w-4 h-4" />
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-sm tracking-tight text-[#F7F8F8] font-sans">
+            <span className="font-semibold text-sm tracking-tight text-[#F7F8F8] font-sans group-hover:text-white transition-colors">
               RepoPilot
             </span>
             <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded-[4px] bg-[#141516] text-[#8A8F98] border border-[#23252A]">
@@ -118,7 +123,7 @@ export const Sidebar: React.FC = () => {
             Codebase Intelligence
           </span>
         </div>
-      </div>
+      </Link>
 
       {/* Navigation Links */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">

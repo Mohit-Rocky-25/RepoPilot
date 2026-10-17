@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Activity,
   CheckCircle,
@@ -14,7 +16,12 @@ import {
   Copy,
   Check,
   ExternalLink,
-  Laptop
+  Laptop,
+  ArrowLeft,
+  Home,
+  ArrowRight,
+  Settings as SettingsIcon,
+  BookOpen
 } from "lucide-react";
 import { useRepository } from "@/context/RepositoryContext";
 import { Card } from "@/components/ui/Card";
@@ -23,6 +30,7 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 
 export default function AISettingsPage() {
+  const router = useRouter();
   const { aiConfig, setAiConfig } = useRepository();
 
   const [baseUrl, setBaseUrl] = useState(aiConfig.baseUrl);
@@ -92,6 +100,65 @@ export default function AISettingsPage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
+      {/* Navigation Directions: Back, Home & Workspace */}
+      <div className="flex items-center justify-between pb-1">
+        <button
+          onClick={() => {
+            if (typeof window !== "undefined" && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/");
+            }
+          }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F1011] hover:bg-[#141516] border border-[#23252A] hover:border-[#34343A] text-xs font-mono text-[#8A8F98] hover:text-[#F7F8F8] transition-all cursor-pointer shadow-xs"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Go Back</span>
+        </button>
+
+        <div className="flex items-center gap-2">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F1011] hover:bg-[#141516] border border-[#23252A] hover:border-[#34343A] text-xs font-mono text-[#8A8F98] hover:text-[#F7F8F8] transition-all shadow-xs"
+          >
+            <Home className="w-3.5 h-3.5 text-[#828FFF]" />
+            <span>Home</span>
+          </Link>
+          <Link
+            href="/explore"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#5E6AD2]/15 hover:bg-[#5E6AD2]/25 border border-[#5E6AD2]/30 text-xs font-mono text-[#828FFF] hover:text-white transition-all shadow-xs"
+          >
+            <span>Workspace</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      </div>
+
+      {/* Settings Navigation Tabs */}
+      <div className="flex items-center gap-2 p-1 bg-[#0F1011] border border-[#23252A] rounded-lg">
+        <Link
+          href="/settings"
+          className="flex-1 text-center py-1.5 px-3 rounded-md text-xs font-mono font-medium text-[#8A8F98] hover:text-[#F7F8F8] hover:bg-[#141516] transition-all flex items-center justify-center gap-2"
+        >
+          <SettingsIcon className="w-3.5 h-3.5" />
+          <span>General & Rate Limit</span>
+        </Link>
+        <Link
+          href="/settings/ai"
+          className="flex-1 text-center py-1.5 px-3 rounded-md text-xs font-mono font-medium bg-[#141516] text-[#F7F8F8] border border-[#34343A] shadow-xs flex items-center justify-center gap-2"
+        >
+          <Activity className="w-3.5 h-3.5 text-[#828FFF]" />
+          <span>Local AI (Ollama)</span>
+        </Link>
+        <Link
+          href="/docs"
+          className="flex-1 text-center py-1.5 px-3 rounded-md text-xs font-mono font-medium text-[#8A8F98] hover:text-[#F7F8F8] hover:bg-[#141516] transition-all flex items-center justify-center gap-2"
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          <span>Docs & Guides</span>
+        </Link>
+      </div>
+
       {/* Title */}
       <div className="pb-3 border-b border-linear-border-1">
         <h1 className="text-lg font-semibold text-linear-text-main font-mono flex items-center gap-2">
