@@ -21,6 +21,7 @@
   </p>
 
   <p align="center">
+    <a href="https://repo-pilot-git.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-repo--pilot--git.vercel.app-5E6AD2.svg?logo=vercel&logoColor=white" alt="Live Demo" /></a>
     <img src="https://img.shields.io/badge/License-MIT-5E6AD2.svg" alt="License: MIT" />
     <img src="https://img.shields.io/badge/TypeScript-Strict_Mode-3178C6.svg" alt="TypeScript Strict" />
     <img src="https://img.shields.io/badge/Next.js-14.2.15-000000.svg" alt="Next.js 14" />

@@ -33,7 +33,7 @@ Because RepoPilot is a standard Next.js 14 application, it deploys seamlessly to
 5. *(Optional)* Add Environment Variables:
    - `GITHUB_TOKEN`: Your GitHub Personal Access Token (classic with `public_repo` read access). This provides 5,000 requests/hour for all users of your deployment.
 6. Click **Deploy**.
-7. Your application will be live at `https://repopilot-xxx.vercel.app` within 60 seconds!
+7. **Official Live Production URL:** [https://repo-pilot-git.vercel.app](https://repo-pilot-git.vercel.app)
 
 ---
 
