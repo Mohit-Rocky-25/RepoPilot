@@ -115,6 +115,9 @@ export default function HomePage() {
             <Link href="/docs" className="hover:text-linear-text-main transition-colors">
               Docs
             </Link>
+            <Link href="/examples" className="text-linear-accent hover:text-linear-accent-hover font-semibold transition-colors">
+              Examples
+            </Link>
           </nav>
 
           {/* Actions */}
@@ -242,6 +245,49 @@ export default function HomePage() {
               <span className="flex items-center gap-1.5">
                 <Check className="w-3.5 h-3.5 text-linear-success" /> ₹0 API Spend
               </span>
+            </div>
+
+            {/* Try an Example Quick-Launch Pills */}
+            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-2">
+              <span className="text-[11px] font-mono text-linear-text-muted">Try an example:</span>
+              <div className="flex flex-wrap items-center justify-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRepoUrl("https://github.com/vercel/swr");
+                    router.push("/explore?owner=vercel&repo=swr");
+                  }}
+                  className="px-2.5 py-1 rounded-md bg-[#141516] hover:bg-[#1C1D20] border border-[#23252A] hover:border-linear-accent text-[11px] font-mono text-linear-text-secondary hover:text-white transition-all cursor-pointer shadow-xs"
+                >
+                  ⚡ vercel/swr <span className="text-indigo-400">(TS)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRepoUrl("https://github.com/pallets/flask");
+                    router.push("/explore?owner=pallets&repo=flask");
+                  }}
+                  className="px-2.5 py-1 rounded-md bg-[#141516] hover:bg-[#1C1D20] border border-[#23252A] hover:border-linear-accent text-[11px] font-mono text-linear-text-secondary hover:text-white transition-all cursor-pointer shadow-xs"
+                >
+                  🐍 pallets/flask <span className="text-yellow-400">(Py)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRepoUrl("https://github.com/gin-gonic/gin");
+                    router.push("/explore?owner=gin-gonic&repo=gin");
+                  }}
+                  className="px-2.5 py-1 rounded-md bg-[#141516] hover:bg-[#1C1D20] border border-[#23252A] hover:border-linear-accent text-[11px] font-mono text-linear-text-secondary hover:text-white transition-all cursor-pointer shadow-xs"
+                >
+                  🚀 gin-gonic/gin <span className="text-cyan-400">(Go)</span>
+                </button>
+                <Link
+                  href="/examples"
+                  className="px-2 py-1 rounded-md text-[11px] font-mono text-linear-accent hover:text-linear-accent-hover font-semibold transition-colors"
+                >
+                  All Examples →
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -861,7 +907,7 @@ export default function HomePage() {
                 Local-Only Secrets
               </h3>
               <p className="text-xs text-linear-text-muted leading-relaxed">
-                Optional GitHub Personal Access Tokens are stored purely in your browser's LocalStorage and are never sent to external servers or logged in telemetry.
+                Optional GitHub Personal Access Tokens are stored purely in your browser&apos;s sessionStorage and are never sent to external servers or logged in telemetry.
               </p>
             </div>
           </div>

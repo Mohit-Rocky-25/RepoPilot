@@ -378,6 +378,32 @@ export default function AssistantPage() {
 
       {/* Q&A Stream */}
       <div className="space-y-4">
+        {history.length === 0 && (
+          <Card className="p-8 text-center space-y-3 bg-[#0F1011] border-[#23252A]">
+            <Bot className="w-8 h-8 text-[#5E6AD2] mx-auto opacity-70" />
+            <h3 className="text-sm font-mono font-semibold text-white">Grounded Code Intelligence Console</h3>
+            <p className="text-xs text-[#8A8F98] max-w-md mx-auto">
+              Ask any question about {currentRepo.owner}/{currentRepo.repo}. Answers cite exact commit SHAs, files, and line numbers.
+            </p>
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+              <span className="text-[11px] font-mono text-linear-text-muted">Or try asking:</span>
+              {sampleQuestions.slice(1, 3).map((sq, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    setQuestion(sq);
+                    handleAsk(sq);
+                  }}
+                  className="px-2.5 py-1 rounded bg-[#141516] hover:bg-[#1A1B1E] border border-[#23252A] text-[11px] font-mono text-[#828FFF] transition-all cursor-pointer"
+                >
+                  &ldquo;{sq}&rdquo;
+                </button>
+              ))}
+            </div>
+          </Card>
+        )}
+
         {history.map((item) => {
           const hasMermaid = item.answer.includes("```mermaid");
 

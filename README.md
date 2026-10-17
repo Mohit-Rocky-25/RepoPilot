@@ -33,12 +33,15 @@
   </p>
 
   <p align="center">
+    <a href="https://github.com/Mohit-Rocky-25/RepoPilot/actions/workflows/ci.yml">
+      <img src="https://img.shields.io/badge/CI-Passing-27A644.svg?logo=github-actions&logoColor=white" alt="CI Status" />
+    </a>
     <img src="https://img.shields.io/badge/License-MIT-5E6AD2.svg" alt="License: MIT" />
     <img src="https://img.shields.io/badge/TypeScript-Strict_Mode-3178C6.svg" alt="TypeScript Strict" />
     <img src="https://img.shields.io/badge/Next.js-14.2.15-000000.svg" alt="Next.js 14" />
-    <img src="https://img.shields.io/badge/Vitest-95_Passed-27A644.svg" alt="Tests" />
-    <img src="https://img.shields.io/badge/API_Costs-₹0_/_$0-27A644.svg" alt="Zero API Costs" />
-    <img src="https://img.shields.io/badge/AI-Local_Ollama_or_BYO_Key-828FFF.svg" alt="Local AI" />
+    <img src="https://img.shields.io/badge/Vitest-123_Passed-27A644.svg" alt="Tests" />
+    <img src="https://img.shields.io/badge/Security-Defended_&_Scanned-27A644.svg" alt="Security Hardened" />
+    <img src="https://img.shields.io/badge/AI-Deterministic_|_BYO_Key_|_Ollama-828FFF.svg" alt="AI Modes" />
   </p>
 </div>
 
@@ -58,7 +61,41 @@ RepoPilot solves this through an **evidence-first engineering approach**:
 
 ---
 
-## 2. Key Capabilities & Implementation Status
+## 2. Product Walkthrough & Demo Recording Guide
+
+<div align="center">
+  <a href="https://repo-pilot-git.vercel.app/examples">
+    <img src="assets/repopilot_demo_placeholder.svg" alt="RepoPilot Interactive Walkthrough" width="100%" style="border-radius: 12px; border: 1px solid #23252A;" />
+  </a>
+  <p align="center">
+    <em>Interactive walkthrough: AST symbol indexing, architecture evidence brief, and grounded Q&amp;A citations.</em>
+  </p>
+</div>
+
+### 🎬 Steps to Record / Replicate the Demo:
+
+1. **Ingest a Repository with Zero API Keys:**
+   - Open [https://repo-pilot-git.vercel.app](https://repo-pilot-git.vercel.app) or local `http://localhost:3000`.
+   - Click one of the quick-launch example pills (`⚡ vercel/swr`, `🐍 pallets/flask`, or `🚀 gin-gonic/gin`) or paste any public GitHub URL into the hero input and click **Begin Exploration**.
+   - Notice the repository tree streams and pins to an immutable commit SHA (`5d80486f...`).
+2. **Navigate Code with AST Symbol Precision:**
+   - In the **Code Explorer** (`/explore`), browse the directory tree. On mobile, switch seamlessly using the **Files** and **Code** tabs.
+   - Click `core/use-swr.ts`. Inspect the syntax-highlighted code and click any function chip in the top **Symbols** bar to jump directly to its definition.
+3. **Deterministic Symbol & Lexical Search:**
+   - Press `/` or click **Search** in the navigation bar.
+   - Search for `useSWR` or `initCache`. Results rank exact matches first with line numbers and preview snippets.
+   - Click any match to jump straight to the source coordinate.
+4. **Inspect Architecture & 2D/3D Graph:**
+   - Open **Architecture** (`/architecture`) to view detected frameworks, confirmed application entry points, and directory roles.
+   - Toggle between **2D Schematic** and **3D Spatial Projection** and inspect module dependency links.
+5. **Ask Grounded Questions with Strict Citations:**
+   - Open **Assistant** (`/assistant`).
+   - Select a sample prompt: *"Where is the main application entry point and how does initialization work?"*
+   - Observe the response citing exact file coordinates `[src/core/use-swr.ts:45-88#useSWR]` with verified citation badges.
+
+---
+
+## 3. Key Capabilities & Implementation Status
 
 | Feature Area | Description | Status | Works on Public Demo Without Key? | Data Source |
 | :--- | :--- | :--- | :--- | :--- |

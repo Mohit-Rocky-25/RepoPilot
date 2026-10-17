@@ -234,11 +234,31 @@ function SearchContent() {
               </Card>
             ))}
           </div>
-        ) : query.trim() ? (
-          <Card className="p-8 text-center text-xs font-mono text-[#8A8F98]">
-            No matching results found for "{query}". Try broadening your search query or clearing type filters.
+        ) : !currentRepo ? (
+          <Card className="p-12 text-center space-y-3 bg-[#0F1011] border-[#23252A]">
+            <SearchIcon className="w-8 h-8 text-[#5E6AD2] mx-auto opacity-60" />
+            <h3 className="text-sm font-mono font-semibold text-white">No Active Repository Loaded</h3>
+            <p className="text-xs text-[#8A8F98] max-w-sm mx-auto">
+              Import a public GitHub repository or load an example to search files and extracted symbols deterministically.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="/examples"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#5E6AD2] text-white text-xs font-mono font-semibold hover:bg-[#6875E5] transition-all"
+              >
+                <span>Browse Examples →</span>
+              </Link>
+            </div>
           </Card>
-        ) : null}
+        ) : (
+          <Card className="p-12 text-center space-y-3 bg-[#0F1011] border-[#23252A]">
+            <SearchIcon className="w-8 h-8 text-[#5E6AD2] mx-auto opacity-60" />
+            <h3 className="text-sm font-mono font-semibold text-white">Deterministic Search Console</h3>
+            <p className="text-xs text-[#8A8F98] max-w-sm mx-auto">
+              Type a filename, directory, or symbol identifier above to search across {currentRepo.owner}/{currentRepo.repo}.
+            </p>
+          </Card>
+        )}
       </div>
     </div>
   );

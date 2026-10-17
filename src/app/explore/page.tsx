@@ -38,6 +38,9 @@ function ExploreContent() {
   const [highlightRange, setHighlightRange] = useState<[number, number] | undefined>(
     initialLine ? [initialLine, initialLine] : undefined
   );
+  const [activeMobileTab, setActiveMobileTab] = useState<"tree" | "code">(
+    initialFilePath ? "code" : "tree"
+  );
 
   useEffect(() => {
     if (currentRepo && files.length === 0) {
@@ -187,10 +190,36 @@ function ExploreContent() {
         )}
       </div>
 
+      {/* Mobile Tab Switcher (Visible on < md screens) */}
+      <div className="flex md:hidden items-center p-1 rounded-lg bg-[#0F1011] border border-[#23252A] gap-1 mb-2">
+        <button
+          onClick={() => setActiveMobileTab("tree")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-mono rounded-md transition-all ${
+            activeMobileTab === "tree"
+              ? "bg-[#5E6AD2] text-white font-semibold shadow-xs"
+              : "text-[#8A8F98] hover:text-white"
+          }`}
+        >
+          <FolderTree className="w-3.5 h-3.5" />
+          <span>Files ({files.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveMobileTab("code")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-mono rounded-md transition-all ${
+            activeMobileTab === "code"
+              ? "bg-[#5E6AD2] text-white font-semibold shadow-xs"
+              : "text-[#8A8F98] hover:text-white"
+          }`}
+        >
+          <Code2 className="w-3.5 h-3.5" />
+          <span>Code ({selectedFile?.path ? selectedFile.path.split("/").pop() : "None"})</span>
+        </button>
+      </div>
+
       {/* Explorer Dual-Pane Layout */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-[calc(100vh-180px)]">
         {/* Left Pane: File Tree */}
-        <div className="md:col-span-4 lg:col-span-3 h-full">
+        <div className={`md:col-span-4 lg:col-span-3 h-full ${activeMobileTab === "tree" ? "block" : "hidden md:block"}`}>
           {loadingTree ? (
             <div className="h-full flex items-center justify-center border border-[#23252A] rounded-xl bg-[#0F1011] text-xs font-mono text-[#8A8F98] gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-[#5E6AD2]" />
@@ -203,13 +232,14 @@ function ExploreContent() {
               onSelectFile={(f) => {
                 setSelectedFile(f);
                 setHighlightRange(undefined);
+                setActiveMobileTab("code");
               }}
             />
           )}
         </div>
 
         {/* Right Pane: Code Viewer & Symbols */}
-        <div className="md:col-span-8 lg:col-span-9 h-full flex flex-col space-y-3 overflow-hidden">
+        <div className={`md:col-span-8 lg:col-span-9 h-full flex flex-col space-y-3 overflow-hidden ${activeMobileTab === "code" ? "flex" : "hidden md:flex"}`}>
           {/* Symbols definitions quick bar */}
           {symbols.length > 0 && (
             <div className="flex items-center gap-1.5 overflow-x-auto py-1 px-3 bg-[#0F1011] border border-[#23252A] rounded-lg text-xs shrink-0 select-none shadow-xs">
