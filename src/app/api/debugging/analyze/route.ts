@@ -6,7 +6,8 @@ import {
   validateGitHubOwner,
   validateGitHubRepo,
   validateGitRevision,
-  validateFilePath
+  validateFilePath,
+  sanitizeErrorMessage
 } from "@/lib/security";
 import { enforceRateLimit, checkPayloadSize } from "@/lib/rateLimiter";
 
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
                 prompt,
                 systemPrompt: "You are an automated patch generator. Output ONLY a valid unified diff."
               });
-              const match = /--- a\/[\s\S]*?\+\+\+ b\/[\s\S]*/.exec(diffRaw);
+              const match = /--- a\/[^\n]*\n\+\+\+ b\/[\s\S]*/.exec(diffRaw);
               if (match) {
                 aiDiffProposal = match[0].replace(/```/g, "").trim();
               }
@@ -139,7 +140,7 @@ export async function POST(req: NextRequest) {
       rateLimit: client.lastRateLimit
     });
   } catch (error: any) {
-    const safeError = redactSecret(error.message || "Failed to analyze bug report.", customApiKey);
+    const safeError = sanitizeErrorMessage(redactSecret(error.message || "Failed to analyze bug report.", customApiKey));
     return NextResponse.json(
       { error: safeError },
       { status: 500 }

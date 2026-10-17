@@ -325,8 +325,8 @@ export class ArchitectureAnalyzer {
       const sourceId = filePathToId.get(file.path);
       if (!sourceId) continue;
 
-      // Extract JS/TS imports
-      const jsImportRegex = /(?:import\s+(?:(?:[\w*\s{},]*)\s+from\s+)?|require\s*\(\s*)['"]([./][^'"]+)['"]/g;
+      // Extract JS/TS imports (bounded non-backtracking regex)
+      const jsImportRegex = /(?:import\s+(?:[^'"]*?\s+from\s+)?|require\s*\(\s*)['"]([./][^'"]+)['"]/g;
       let match: RegExpExecArray | null;
       while ((match = jsImportRegex.exec(file.content)) !== null) {
         const importSpecifier = match[1];

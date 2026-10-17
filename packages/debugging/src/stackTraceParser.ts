@@ -56,7 +56,7 @@ export class StackTraceParser {
     const goPattern = /^\s*([a-zA-Z0-9_\-./\\]+\.go):(\d+)(?:\s+\+0x[0-9a-fA-F]+)?$/;
 
     // 4. Rust: at src/main.rs:24:5 or panicked at '...', src/main.rs:24:5
-    const rustPattern = /(?:at\s+|panicked at.*,\s+)([a-zA-Z0-9_\-./\\]+\.rs):(\d+)(?::(\d+))?/;
+    const rustPattern = /(?:at\s+|panicked at[^,\n]*,?\s*)([a-zA-Z0-9_\-./\\]+\.rs):(\d+)(?::(\d+))?/;
 
     // Helper to map and classify file paths
     const classifyPath = (

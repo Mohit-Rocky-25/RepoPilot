@@ -14,7 +14,8 @@ import {
   validateGitHubRepo,
   validateGitRevision,
   validateFilePath,
-  validateAiEndpoint
+  validateAiEndpoint,
+  sanitizeErrorMessage
 } from "@/lib/security";
 import { enforceRateLimit, checkPayloadSize } from "@/lib/rateLimiter";
 import type { SourceReference } from "@repopilot/core";
@@ -294,7 +295,7 @@ ${chunks.slice(0, 2).map((c) => `**${c.filePath}** (Lines ${c.startLine}-${c.end
       rateLimit: ghClient.lastRateLimit
     });
   } catch (error: any) {
-    const safeError = redactSecret(error.message || "Failed to process question.", customApiKey);
+    const safeError = sanitizeErrorMessage(redactSecret(error.message || "Failed to process question.", customApiKey));
     return NextResponse.json(
       { error: safeError },
       { status: 500 }

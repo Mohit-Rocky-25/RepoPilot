@@ -5,6 +5,9 @@ import {
   validateGitRevision,
   validateFilePath,
   validateOllamaEndpoint,
+  validateAiEndpoint,
+  isPrivateOrReservedIp,
+  sanitizeErrorMessage,
   sanitizeSvg
 } from "../../src/lib/security";
 import { rateLimiter } from "../../src/lib/rateLimiter";
@@ -128,11 +131,149 @@ describe("Security Validation & Defensive Controls", () => {
       expect(validateGitHubRepo("repo with spaces")).toBe(false);
     });
 
+    it("should reject identifiers exceeding 100 characters", () => {
+      const longName = "a".repeat(101);
+      expect(validateGitHubOwner(longName)).toBe(false);
+      expect(validateGitHubRepo(longName)).toBe(false);
+      expect(validateGitHubOwner("a".repeat(100))).toBe(true);
+    });
+
+    it("should reject unicode lookalikes and homoglyphs", () => {
+      // Cyrillic 'а' (\u0430) instead of ASCII 'a'
+      expect(validateGitHubOwner("\u0430dmin")).toBe(false);
+      // Fullwidth Latin characters
+      expect(validateGitHubOwner("\uFF4D\uFF4F\uFF48\uFF49\uFF54")).toBe(false);
+      // Emojis
+      expect(validateGitHubRepo("my-\uD83D\uDE80-repo")).toBe(false);
+    });
+
     it("should allow valid GitHub handles and repository names", () => {
       expect(validateGitHubOwner("Mohit-Rocky-25")).toBe(true);
       expect(validateGitHubRepo("RepoPilot")).toBe(true);
       expect(validateGitHubRepo("next.js")).toBe(true);
       expect(validateGitHubRepo("react_native")).toBe(true);
+    });
+  });
+
+  describe("Comprehensive Path Traversal Defense (validateFilePath)", () => {
+    it("should reject standard directory traversal sequences", () => {
+      expect(validateFilePath("../secret.txt")).toBe(false);
+      expect(validateFilePath("foo/../../secret.txt")).toBe(false);
+      expect(validateFilePath("..")).toBe(false);
+    });
+
+    it("should reject backslash traversal sequences", () => {
+      expect(validateFilePath("..\\secret.txt")).toBe(false);
+      expect(validateFilePath("foo\\..\\bar")).toBe(false);
+    });
+
+    it("should reject single URL-encoded traversal patterns", () => {
+      expect(validateFilePath("%2e%2e%2fsecret.txt")).toBe(false);
+      expect(validateFilePath("%2e%2e/secret.txt")).toBe(false);
+      expect(validateFilePath("..%2fsecret.txt")).toBe(false);
+      expect(validateFilePath("%2e%2e%5csecret.txt")).toBe(false);
+    });
+
+    it("should reject double URL-encoded traversal patterns", () => {
+      expect(validateFilePath("%252e%252e%252fsecret.txt")).toBe(false);
+      expect(validateFilePath("%252e%252e%255csecret.txt")).toBe(false);
+    });
+
+    it("should reject null bytes in literal and URL-encoded forms", () => {
+      expect(validateFilePath("secret.txt\0.png")).toBe(false);
+      expect(validateFilePath("secret.txt%00.png")).toBe(false);
+    });
+
+    it("should reject absolute paths across Windows and Unix conventions", () => {
+      expect(validateFilePath("/etc/passwd")).toBe(false);
+      expect(validateFilePath("C:\\Windows\\System32\\cmd.exe")).toBe(false);
+      expect(validateFilePath("c:/windows/system32")).toBe(false);
+      expect(validateFilePath("\\\\network\\share\\file.txt")).toBe(false);
+    });
+
+    it("should allow valid repository relative paths", () => {
+      expect(validateFilePath("src/index.ts")).toBe(true);
+      expect(validateFilePath("packages/ai/src/modelProvider.ts")).toBe(true);
+      expect(validateFilePath("README.md")).toBe(true);
+      expect(validateFilePath(".github/workflows/ci.yml")).toBe(true);
+    });
+  });
+
+  describe("SSRF Defense & Numeric IP Encodings (isPrivateOrReservedIp & validateAiEndpoint)", () => {
+    it("should detect all numeric, hex, and octal loopback IP encodings", () => {
+      // Decimal 2130706433 -> 127.0.0.1
+      expect(isPrivateOrReservedIp("2130706433")).toBe(true);
+      // Hex 0x7f000001 -> 127.0.0.1
+      expect(isPrivateOrReservedIp("0x7f000001")).toBe(true);
+      // Dotted hex 0x7f.0.0.1 & 0x7f.1
+      expect(isPrivateOrReservedIp("0x7f.0.0.1")).toBe(true);
+      expect(isPrivateOrReservedIp("0x7f.1")).toBe(true);
+      // Octal 0177.0.0.1 & 0177.1
+      expect(isPrivateOrReservedIp("0177.0.0.1")).toBe(true);
+      expect(isPrivateOrReservedIp("0177.1")).toBe(true);
+      // Shorthand 127.1
+      expect(isPrivateOrReservedIp("127.1")).toBe(true);
+    });
+
+    it("should detect numeric and hex cloud metadata IP encodings", () => {
+      // Decimal 2852039166 -> 169.254.169.254
+      expect(isPrivateOrReservedIp("2852039166")).toBe(true);
+      // Hex 0xa9fea9fe -> 169.254.169.254
+      expect(isPrivateOrReservedIp("0xa9fea9fe")).toBe(true);
+    });
+
+    it("should detect IPv4-mapped IPv6 loopback and metadata addresses", () => {
+      expect(isPrivateOrReservedIp("::ffff:127.0.0.1")).toBe(true);
+      expect(isPrivateOrReservedIp("::ffff:169.254.169.254")).toBe(true);
+      expect(isPrivateOrReservedIp("0:0:0:0:0:ffff:127.0.0.1")).toBe(true);
+    });
+
+    it("should detect localhost hostname variants in validateAiEndpoint", async () => {
+      expect((await validateAiEndpoint("https://localhost.localdomain/v1")).valid).toBe(false);
+      expect((await validateAiEndpoint("https://ip6-localhost/v1")).valid).toBe(false);
+      expect((await validateAiEndpoint("https://0.0.0.0:11434")).valid).toBe(false);
+    });
+
+    it("should allow standard public remote IPs and hostnames", () => {
+      expect(isPrivateOrReservedIp("8.8.8.8")).toBe(false);
+      expect(isPrivateOrReservedIp("1.1.1.1")).toBe(false);
+      expect(isPrivateOrReservedIp("104.244.42.1")).toBe(false);
+    });
+  });
+
+  describe("ReDoS Resilience & Size Caps (StackTraceParser)", () => {
+    it("should enforce a 64 KB cap and process 100 KB trace in under 50ms", async () => {
+      const { StackTraceParser } = await import("@repopilot/debugging");
+      // Generate 100 KB adversarial repetitive trace
+      const largeTrace = "    at processLine (C:\\path\\to\\file.ts:12:34)\n".repeat(2500); // ~110 KB
+      expect(largeTrace.length).toBeGreaterThan(65536);
+
+      const startTime = performance.now();
+      const parsed = StackTraceParser.parse(largeTrace);
+      const elapsed = performance.now() - startTime;
+
+      expect(elapsed).toBeLessThan(50);
+      expect(parsed.frames.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("Error Sanitization & Secret Leak Prevention (sanitizeErrorMessage)", () => {
+    it("should strip absolute filesystem paths and secrets from error strings", () => {
+      const leakedWindows = "Error in C:\\Users\\admin\\project\\server.ts: line 42";
+      expect(sanitizeErrorMessage(leakedWindows)).not.toContain("C:\\Users\\admin\\project");
+      expect(sanitizeErrorMessage(leakedWindows)).toContain("[REDACTED_PATH]");
+
+      const leakedUnix = "Crash in /home/deploy/app/secret.ts: fatal";
+      expect(sanitizeErrorMessage(leakedUnix)).not.toContain("/home/deploy");
+      expect(sanitizeErrorMessage(leakedUnix)).toContain("[REDACTED_PATH]");
+
+      const leakedToken = "Failed to fetch: ghp_1234567890abcdef1234567890abcdef1234";
+      expect(sanitizeErrorMessage(leakedToken)).not.toContain("ghp_1234567890abcdef");
+      expect(sanitizeErrorMessage(leakedToken)).toContain("[REDACTED_TOKEN]");
+
+      const leakedBearer = "Authorization header Bearer secret-auth-token-12345 failed";
+      expect(sanitizeErrorMessage(leakedBearer)).not.toContain("secret-auth-token-12345");
+      expect(sanitizeErrorMessage(leakedBearer)).toContain("Bearer [REDACTED]");
     });
   });
 

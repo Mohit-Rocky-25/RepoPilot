@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseGitHubUrl, GitHubClient } from "@repopilot/github";
 import { enforceRateLimit } from "@/lib/rateLimiter";
+import { sanitizeErrorMessage } from "@/lib/security";
 import { z } from "zod";
 
 const ImportRequestSchema = z.object({
@@ -46,11 +47,10 @@ export async function POST(req: NextRequest) {
       rateLimit: client.lastRateLimit
     });
   } catch (error: any) {
-    console.error("API /api/github/import error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to import repository."
+        error: sanitizeErrorMessage(error.message, "Failed to import repository.")
       },
       { status: error.status || 400 }
     );

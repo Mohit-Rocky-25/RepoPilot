@@ -48,23 +48,140 @@ export function validateFilePath(filePath: unknown): boolean {
   if (typeof filePath !== "string" || !filePath.trim()) return false;
   const clean = filePath.trim();
 
-  // Block null bytes
-  if (clean.includes("\0")) return false;
+  // Block null bytes (literal or hex encoded %00)
+  if (clean.includes("\0") || /%00/i.test(clean)) return false;
 
-  // Block leading slash / backslash (must be repository-relative)
+  // Block Windows drive letter absolute paths (e.g. C:\ or C:/)
+  if (/^[a-zA-Z]:[/\\]/.test(clean)) return false;
+
+  // Block leading slash, backslash, or UNC network paths (\\)
   if (clean.startsWith("/") || clean.startsWith("\\")) return false;
 
-  // Block directory traversal sequences: ../ or ..\
-  if (PATH_TRAVERSAL_REGEX.test(clean) || clean.includes("..")) return false;
+  // Repeatedly URL-decode up to 3 times to prevent double/nested URL-encoding bypasses (%252e%252e%252f)
+  let decoded = clean;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const nextDecoded = decodeURIComponent(decoded);
+      if (nextDecoded === decoded) break;
+      decoded = nextDecoded;
+    } catch {
+      return false; // Malformed percent-encoding
+    }
+  }
+
+  // Check again on decoded string
+  if (
+    decoded.includes("\0") ||
+    /%00/i.test(decoded) ||
+    decoded.startsWith("/") ||
+    decoded.startsWith("\\") ||
+    /^[a-zA-Z]:[/\\]/.test(decoded)
+  ) {
+    return false;
+  }
+
+  // Block directory traversal sequences: ../ or ..\ or .. alone
+  if (
+    PATH_TRAVERSAL_REGEX.test(clean) ||
+    clean.includes("..") ||
+    PATH_TRAVERSAL_REGEX.test(decoded) ||
+    decoded.includes("..")
+  ) {
+    return false;
+  }
 
   // Length limit (max 512 chars)
-  if (clean.length > 512) return false;
+  if (clean.length > 512 || decoded.length > 512) return false;
 
   return true;
 }
 
 /**
+ * Parses an IPv4 token (decimal, hex with 0x, or octal with leading 0).
+ */
+function parseIpToken(token: string): number | null {
+  const t = token.trim();
+  if (/^0x[0-9a-f]+$/i.test(t)) {
+    const val = parseInt(t, 16);
+    return isNaN(val) ? null : val;
+  }
+  if (/^0[0-7]+$/.test(t)) {
+    const val = parseInt(t, 8);
+    return isNaN(val) ? null : val;
+  }
+  if (/^\d+$/.test(t)) {
+    const val = parseInt(t, 10);
+    return isNaN(val) ? null : val;
+  }
+  return null;
+}
+
+/**
+ * Parses any standard IPv4 notation (1 to 4 parts: decimal, hex, octal, shorthand) into a 32-bit unsigned number.
+ */
+function parseIpv4ToUint32(ipStr: string): number | null {
+  const parts = ipStr.split(".");
+  if (parts.length > 4 || parts.length === 0) return null;
+  const parsedParts: number[] = [];
+  for (const part of parts) {
+    const val = parseIpToken(part);
+    if (val === null || val < 0) return null;
+    parsedParts.push(val);
+  }
+
+  let num = 0;
+  if (parsedParts.length === 1) {
+    num = parsedParts[0];
+  } else if (parsedParts.length === 2) {
+    if (parsedParts[0] > 0xff || parsedParts[1] > 0xffffff) return null;
+    num = ((parsedParts[0] << 24) >>> 0) + parsedParts[1];
+  } else if (parsedParts.length === 3) {
+    if (parsedParts[0] > 0xff || parsedParts[1] > 0xff || parsedParts[2] > 0xffff) return null;
+    num = ((parsedParts[0] << 24) >>> 0) + (parsedParts[1] << 16) + parsedParts[2];
+  } else if (parsedParts.length === 4) {
+    if (parsedParts.some((p) => p > 0xff)) return null;
+    num =
+      (((parsedParts[0] << 24) >>> 0) +
+        (parsedParts[1] << 16) +
+        (parsedParts[2] << 8) +
+        parsedParts[3]) >>>
+      0;
+  }
+  return num >>> 0;
+}
+
+/**
+ * Checks if a 32-bit unsigned IPv4 integer falls into private, loopback, or reserved ranges.
+ */
+function isPrivateUint32(num: number): boolean {
+  const b0 = (num >>> 24) & 0xff;
+  const b1 = (num >>> 16) & 0xff;
+
+  // 0.0.0.0/8 (Current network)
+  if (b0 === 0) return true;
+  // 127.0.0.0/8 (Loopback)
+  if (b0 === 127) return true;
+  // 10.0.0.0/8 (Private RFC1918)
+  if (b0 === 10) return true;
+  // 172.16.0.0/12 (Private RFC1918: 172.16.0.0 - 172.31.255.255)
+  if (b0 === 172 && b1 >= 16 && b1 <= 31) return true;
+  // 192.168.0.0/16 (Private RFC1918)
+  if (b0 === 192 && b1 === 168) return true;
+  // 169.254.0.0/16 (Link-Local & Cloud Metadata AWS/GCP/Azure/DO)
+  if (b0 === 169 && b1 === 254) return true;
+  // 100.64.0.0/10 (Carrier-Grade NAT)
+  if (b0 === 100 && b1 >= 64 && b1 <= 127) return true;
+  // 224.0.0.0/4 (Multicast: 224-239)
+  if (b0 >= 224 && b0 <= 239) return true;
+  // 240.0.0.0/4 (Reserved / Future use: 240-255)
+  if (b0 >= 240) return true;
+
+  return false;
+}
+
+/**
  * Checks if an IPv4 or IPv6 string belongs to private, loopback, link-local, or cloud metadata ranges.
+ * Supports decimal integers, hex (0x..), octal (0..), shorthand (127.1), and IPv4-mapped IPv6.
  */
 export function isPrivateOrReservedIp(ipStr: string): boolean {
   const ip = ipStr.trim().toLowerCase();
@@ -92,50 +209,46 @@ export function isPrivateOrReservedIp(ipStr: string): boolean {
     }
   }
 
-  // IPv4 Decimal integer notation (e.g., 2852039166 -> 169.254.169.254, 2130706433 -> 127.0.0.1)
-  if (/^\d{8,11}$/.test(ip)) {
-    return true;
-  }
-
-  // IPv4 Hex/Octal notation
-  if (/^0x[0-9a-f]+$/i.test(ip) || /^0[0-7]+$/.test(ip)) {
-    return true;
-  }
-
-  // Standard IPv4 checks
-  const parts = ip.split(".").map((p) => parseInt(p, 10));
-  if (parts.length === 4 && parts.every((p) => !isNaN(p) && p >= 0 && p <= 255)) {
-    const [b0, b1] = parts;
-
-    // 0.0.0.0/8 (Current network)
-    if (b0 === 0) return true;
-
-    // 127.0.0.0/8 (Loopback)
-    if (b0 === 127) return true;
-
-    // 10.0.0.0/8 (Private RFC1918)
-    if (b0 === 10) return true;
-
-    // 172.16.0.0/12 (Private RFC1918: 172.16 - 172.31)
-    if (b0 === 172 && b1 >= 16 && b1 <= 31) return true;
-
-    // 192.168.0.0/16 (Private RFC1918)
-    if (b0 === 192 && b1 === 168) return true;
-
-    // 169.254.0.0/16 (Link-Local & Cloud Metadata AWS/GCP/Azure/DO)
-    if (b0 === 169 && b1 === 254) return true;
-
-    // 100.64.0.0/10 (Carrier-Grade NAT)
-    if (b0 === 100 && b1 >= 64 && b1 <= 127) return true;
-
-    // 224.0.0.0/4 (Multicast: 224-239)
-    if (b0 >= 224 && b0 <= 239) return true;
-
-    // 240.0.0.0/4 (Reserved / Future use: 240-255)
-    if (b0 >= 240) return true;
+  // Check IPv4 in any notation (dotted decimal, hex, octal, shorthand, or integer)
+  const v4Num = parseIpv4ToUint32(ip);
+  if (v4Num !== null) {
+    return isPrivateUint32(v4Num);
   }
 
   return false;
+}
+
+/**
+ * Sanitizes an error message or string before returning it to the client.
+ * Prevents leaks of absolute file paths, secret tokens, environment values, or stack traces.
+ */
+export function sanitizeErrorMessage(message: unknown, fallback = "An unexpected error occurred."): string {
+  if (!message || typeof message !== "string") {
+    return fallback;
+  }
+
+  let clean = message;
+
+  // Strip potential Windows absolute paths: C:\Users\... or C:/Users/...
+  clean = clean.replace(/[a-zA-Z]:[\\/][^ \n\r"']+/g, "[REDACTED_PATH]");
+
+  // Strip potential Unix absolute paths: /home/..., /Users/..., /etc/...
+  clean = clean.replace(/(?:\/home|\/Users|\/root|\/etc)[^ \n\r"']+/g, "[REDACTED_PATH]");
+
+  // Strip API keys / tokens: sk-..., ghp_..., github_pat_..., Bearer ...
+  clean = clean.replace(/sk-[a-zA-Z0-9_-]{20,}/g, "[REDACTED_API_KEY]");
+  clean = clean.replace(/ghp_[a-zA-Z0-9]{20,}/g, "[REDACTED_TOKEN]");
+  clean = clean.replace(/github_pat_[a-zA-Z0-9_]{20,}/g, "[REDACTED_TOKEN]");
+  clean = clean.replace(/Bearer\s+[a-zA-Z0-9_\-.]+/gi, "Bearer [REDACTED]");
+
+  // Remove stack traces if someone threw an error and called String(err)
+  clean = clean.replace(/^\s*at\s+.*$/gm, "").trim();
+
+  if (!clean || clean.length === 0) {
+    return fallback;
+  }
+
+  return clean.slice(0, 300);
 }
 
 /**
@@ -168,9 +281,13 @@ export async function validateAiEndpoint(
   const hostname = parsed.hostname.toLowerCase();
   const isLoopback =
     hostname === "localhost" ||
+    hostname === "localhost.localdomain" ||
+    hostname === "ip6-localhost" ||
+    hostname === "ip6-loopback" ||
     hostname === "127.0.0.1" ||
     hostname === "::1" ||
-    hostname === "[::1]";
+    hostname === "[::1]" ||
+    hostname === "0.0.0.0";
 
   // Handle local Ollama
   if (isLoopback) {
