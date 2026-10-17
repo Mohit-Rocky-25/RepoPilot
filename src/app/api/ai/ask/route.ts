@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { GitHubClient } from "@repopilot/github";
 import { SearchEngine } from "@repopilot/search";
 import { OllamaClient, PromptBuilder, CitationValidator } from "@repopilot/ai";
+import { ArchitectureAnalyzer } from "@repopilot/analysis";
+import { generateMermaidDiagram } from "@/lib/mermaidGenerator";
 import type { SourceReference } from "@repopilot/core";
 
 export async function POST(req: NextRequest) {
@@ -94,22 +96,58 @@ export async function POST(req: NextRequest) {
 
     // 3. Fallback if Ollama is offline or uninstalled
     if (!ollamaStatus.isAvailable) {
-      const fallbackAnswer = `Local AI (Ollama) is currently offline at ${baseUrl}.
+      const isDiagramRequest = /mermaid|diagram|architecture|flowchart|structure|graph|3d/i.test(question);
 
-Here are the most relevant source files discovered via deterministic search for your query:
-${chunks.map((c) => `- **[${c.filePath}:${c.startLine}-${c.endLine}]**`).join("\n")}
+      if (isDiagramRequest) {
+        const summary = ArchitectureAnalyzer.analyze(tree);
+        const graph = ArchitectureAnalyzer.generateGraph(tree, repo);
+        const mermaidCode = generateMermaidDiagram(summary, graph, "system", `${owner}/${repo}`);
 
-To enable AI explanations, start Ollama locally:
-\`\`\`bash
-ollama run ${model}
-\`\`\``;
+        const answer = `### 📊 GitHub-Compatible Mermaid Architecture Diagram
+
+Here is the deterministic architecture diagram generated for **${owner}/${repo}**:
+
+\`\`\`mermaid
+${mermaidCode}
+\`\`\`
+
+#### 🚀 System Architecture Overview:
+- **Primary Language:** ${summary.primaryLanguage}
+- **Detected Frameworks:** ${summary.detectedFrameworks.join(", ") || "Standard Library"}
+- **Identified Entry Points (${summary.entryPoints.length}):** ${summary.entryPoints.slice(0, 4).join(", ") || "None"}
+- **Key Modules:** ${summary.keyModules.slice(0, 6).map((m) => `${m.directory}/ (${m.fileCount} files)`).join(", ")}
+
+> 💡 **Tip:** You can paste the \`\`\`mermaid code above directly into your GitHub \`README.md\` or inspect the full interactive **3D Spatial Architecture Map** in the [Architecture Workspace](/architecture).`;
+
+        return NextResponse.json({
+          success: true,
+          answer,
+          citations,
+          confidence: "high",
+          modelUsed: "deterministic-mermaid-engine",
+          limitations: []
+        });
+      }
+
+      const fallbackAnswer = `### 🔍 Deterministic Code Intelligence Analysis
+
+**Query:** "${question}"
+
+#### 📌 Grounding Code Locations Discovered (${chunks.length}):
+${chunks.map((c) => `- **[\`${c.filePath}:${c.startLine}-${c.endLine}\`](/explore?file=${encodeURIComponent(c.filePath)}&line=${c.startLine})**`).join("\n")}
+
+#### 📄 Code Context Preview:
+${chunks.slice(0, 2).map((c) => `**${c.filePath}** (Lines ${c.startLine}-${c.endLine}):\n\`\`\`${c.filePath.endsWith(".ts") || c.filePath.endsWith(".tsx") ? "typescript" : "text"}\n${c.content.slice(0, 350)}\n\`\`\``).join("\n\n")}
+
+---
+*⚡ Powered by RepoPilot Deterministic Search Engine (Zero API Fees). To enable local neural synthesis, run: \`ollama run ${model}\`.*`;
 
       return NextResponse.json({
         success: true,
         answer: fallbackAnswer,
         citations,
         confidence: "medium",
-        modelUsed: "deterministic-search-fallback",
+        modelUsed: "deterministic-search-engine",
         limitations: [
           "Ollama offline: Showing deterministic code retrieval without LLM synthesis."
         ]

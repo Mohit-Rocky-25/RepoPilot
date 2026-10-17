@@ -15,13 +15,15 @@ import {
   Check,
   RefreshCw,
   GitCommit,
-  Network
+  Network,
+  GitBranch
 } from "lucide-react";
 import { useRepository } from "@/context/RepositoryContext";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ArchitectureMap3D } from "@/components/architecture/ArchitectureMap3D";
+import { MermaidViewer } from "@/components/architecture/MermaidViewer";
 import type { ArchitectureSummary, ArchitectureGraph } from "@repopilot/core";
 import { clientFetch } from "@/lib/api";
 
@@ -33,7 +35,7 @@ export default function ArchitecturePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedBrief, setCopiedBrief] = useState(false);
-  const [activeTab, setActiveTab] = useState<"map" | "brief">("map");
+  const [activeTab, setActiveTab] = useState<"map" | "mermaid" | "brief">("map");
 
   const loadArchitecture = () => {
     if (!currentRepo) return;
@@ -177,7 +179,7 @@ ${summary.dependencies.slice(0, 30).map((d) => `- ${d.name} (${d.isDev ? "dev" :
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#23252A] pb-3 font-mono text-xs">
+      <div className="flex flex-wrap items-center gap-2 border-b border-[#23252A] pb-3 font-mono text-xs">
         <button
           onClick={() => setActiveTab("map")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors ${
@@ -188,6 +190,18 @@ ${summary.dependencies.slice(0, 30).map((d) => `- ${d.name} (${d.isDev ? "dev" :
         >
           <Network className="w-3.5 h-3.5" />
           <span>Interactive 3D Spatial Map</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("mermaid")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors ${
+            activeTab === "mermaid"
+              ? "bg-[#5E6AD2] text-white"
+              : "bg-[#141516] text-[#8A8F98] hover:text-[#F7F8F8] border border-[#23252A]"
+          }`}
+        >
+          <GitBranch className="w-3.5 h-3.5" />
+          <span>GitHub Mermaid Diagram</span>
         </button>
 
         <button
@@ -272,7 +286,14 @@ ${summary.dependencies.slice(0, 30).map((d) => `- ${d.name} (${d.isDev ? "dev" :
             </div>
           )}
 
-          {/* Tab 2: Full Architecture Brief */}
+          {/* Tab 2: GitHub Mermaid Diagram */}
+          {activeTab === "mermaid" && (
+            <div className="space-y-4">
+              <MermaidViewer summary={summary} graph={graph} repoFullName={currentRepo.fullName} />
+            </div>
+          )}
+
+          {/* Tab 3: Full Architecture Brief */}
           {activeTab === "brief" && (
             <div className="space-y-6">
               {/* Evidence Taxonomy Notice */}

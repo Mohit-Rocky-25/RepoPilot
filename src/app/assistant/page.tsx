@@ -15,7 +15,14 @@ import {
   ShieldCheck,
   Code,
   HelpCircle,
-  ArrowRight
+  ArrowRight,
+  Copy,
+  Check,
+  ClipboardPaste,
+  Network,
+  GitBranch,
+  X,
+  Layers
 } from "lucide-react";
 import { useRepository } from "@/context/RepositoryContext";
 import { Card } from "@/components/ui/Card";
@@ -43,7 +50,14 @@ export default function AssistantPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Copy states
+  const [copiedOllamaCmd, setCopiedOllamaCmd] = useState(false);
+  const [hideOllamaBanner, setHideOllamaBanner] = useState(false);
+  const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
+  const [copiedMermaidId, setCopiedMermaidId] = useState<string | null>(null);
+
   const sampleQuestions = [
+    "Generate a GitHub Mermaid architecture diagram for this repository",
     "Where is the main application entry point and how does initialization work?",
     "How is routing and URL dispatching structured in this project?",
     "What state management or persistence mechanism is used?",
@@ -92,6 +106,31 @@ export default function AssistantPage() {
     }
   };
 
+  const handlePasteFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text.trim()) {
+        setQuestion(text.trim());
+      }
+    } catch (e) {
+      // Browser permission denied or clipboard empty
+    }
+  };
+
+  const handleCopyAnswer = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedItemId(id);
+    setTimeout(() => setCopiedItemId(null), 2000);
+  };
+
+  const handleCopyMermaidOnly = (id: string, text: string) => {
+    const match = text.match(/```mermaid([\s\S]*?)```/);
+    const mermaidCode = match ? match[0] : text;
+    navigator.clipboard.writeText(mermaidCode);
+    setCopiedMermaidId(id);
+    setTimeout(() => setCopiedMermaidId(null), 2000);
+  };
+
   if (!currentRepo) {
     return (
       <Card className="p-8 text-center max-w-xl mx-auto my-12 space-y-4 bg-linear-surface-1 border border-linear-border-1">
@@ -125,15 +164,15 @@ export default function AssistantPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Title Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-linear-border-1 gap-2">
         <div>
           <h1 className="text-lg font-semibold text-linear-text-main font-mono flex items-center gap-2">
             <Bot className="w-5 h-5 text-linear-accent" />
             <span>Grounded Code Assistant</span>
           </h1>
-          <p className="text-xs text-linear-text-muted mt-0.5">
+          <p className="text-xs text-linear-text-muted mt-0.5 font-mono">
             Evidence-grounded code intelligence for {currentRepo.owner}/{currentRepo.repo}.
           </p>
         </div>
@@ -142,33 +181,66 @@ export default function AssistantPage() {
           <Badge variant={aiConfig.isAvailable ? "success" : "violet"} size="sm">
             {aiConfig.isAvailable ? `Ollama (${aiConfig.modelName})` : "Deterministic Engine (Active)"}
           </Badge>
+          <Link href="/architecture">
+            <Button variant="secondary" size="sm" icon={<Network className="w-3.5 h-3.5 text-[#828FFF]" />}>
+              3D Spatial Map
+            </Button>
+          </Link>
           <Link href="/settings/ai">
             <Button variant="secondary" size="sm">
-              Configure Local AI
+              Configure AI
             </Button>
           </Link>
         </div>
       </div>
 
-      {/* Ollama Offline Guidance Banner */}
-      {!aiConfig.isAvailable && (
-        <div className="p-4 rounded-lg bg-linear-surface-1 border border-linear-border-1 flex items-start gap-3">
-          <Terminal className="w-4 h-4 text-linear-accent shrink-0 mt-0.5" />
-          <div className="space-y-1 text-xs font-mono">
-            <div className="text-linear-text-main font-semibold">
-              Zero-Budget Offline Mode Active
+      {/* Ollama Offline Guidance Banner with 1-Click Copy & Dismiss */}
+      {!aiConfig.isAvailable && !hideOllamaBanner && (
+        <div className="p-4 rounded-xl bg-[#0F1011] border border-[#23252A] flex flex-col sm:flex-row sm:items-start justify-between gap-3 text-xs font-mono shadow-xs">
+          <div className="flex items-start gap-3">
+            <div className="w-7 h-7 rounded-lg bg-[#5E6AD2]/10 border border-[#5E6AD2]/30 flex items-center justify-center shrink-0 mt-0.5">
+              <Terminal className="w-4 h-4 text-[#828FFF]" />
             </div>
-            <p className="text-linear-text-muted leading-relaxed">
-              When local Ollama is offline, RepoPilot uses deterministic AST and keyword search to retrieve exact matching source lines. To enable local generative synthesis, start Ollama with:
-            </p>
-            <div className="inline-block px-2.5 py-1 rounded bg-linear-surface-2 border border-linear-border-2 text-linear-accent-hover text-[11px] font-semibold">
-              ollama run {aiConfig.modelName}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[#F7F8F8] font-semibold">
+                  Zero-Budget Deterministic Engine Active
+                </span>
+                <Badge variant="violet" size="sm">Native Offline</Badge>
+              </div>
+              <p className="text-[#8A8F98] leading-relaxed">
+                RepoPilot answers questions using fast deterministic AST and keyword search. To enable private local generative synthesis, run this command in your terminal or Git Bash:
+              </p>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <code className="px-3 py-1.5 rounded-lg bg-[#141516] border border-[#23252A] text-[#828FFF] font-semibold text-[11px] font-mono select-all">
+                  ollama run {aiConfig.modelName}
+                </code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`ollama run ${aiConfig.modelName}`);
+                    setCopiedOllamaCmd(true);
+                    setTimeout(() => setCopiedOllamaCmd(false), 2000);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1E1B4B] hover:bg-[#2A2663] border border-[#5E6AD2]/40 text-[#828FFF] hover:text-white text-[11px] font-medium transition-all cursor-pointer shadow-xs"
+                >
+                  {copiedOllamaCmd ? <Check className="w-3.5 h-3.5 text-[#27A644]" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedOllamaCmd ? "Copied Command!" : "Copy Command"}</span>
+                </button>
+              </div>
             </div>
           </div>
+
+          <button
+            onClick={() => setHideOllamaBanner(true)}
+            className="text-[#62666D] hover:text-[#8A8F98] text-xs p-1.5 rounded hover:bg-[#141516] transition-colors shrink-0 self-start"
+            title="Dismiss notification"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
-      {/* Question Form */}
+      {/* Question Form & Quick Actions */}
       <Card className="p-4 space-y-3 bg-linear-surface-1 border-linear-border-1">
         <form
           onSubmit={(e) => {
@@ -177,7 +249,7 @@ export default function AssistantPage() {
           }}
           className="flex flex-col sm:flex-row gap-2"
         >
-          <div className="flex-1">
+          <div className="flex-1 relative">
             <Input
               type="text"
               placeholder="Ask a question about the repository's architecture, state, or functions..."
@@ -187,16 +259,29 @@ export default function AssistantPage() {
               autoFocus
             />
           </div>
-          <Button
-            type="submit"
-            variant="primary"
-            size="md"
-            isLoading={loading}
-            icon={<Send className="w-4 h-4" />}
-            className="shrink-0"
-          >
-            Ask Codebase
-          </Button>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={handlePasteFromClipboard}
+              icon={<ClipboardPaste className="w-4 h-4" />}
+              title="Paste text from clipboard into query"
+            >
+              Paste
+            </Button>
+
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              isLoading={loading}
+              icon={<Send className="w-4 h-4" />}
+            >
+              Ask Codebase
+            </Button>
+          </div>
         </form>
 
         {error && (
@@ -204,12 +289,22 @@ export default function AssistantPage() {
         )}
 
         {/* Quick Suggestion Chips */}
-        <div className="pt-2 border-t border-linear-border-1">
-          <span className="text-[11px] font-mono text-linear-text-subtle uppercase tracking-wider block mb-1.5 font-semibold">
-            Suggested Queries:
-          </span>
+        <div className="pt-2 border-t border-linear-border-1 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-mono text-linear-text-subtle uppercase tracking-wider block font-semibold">
+              Quick Analysis & Visual Diagrams:
+            </span>
+            <Link
+              href="/architecture"
+              className="text-[11px] font-mono text-[#828FFF] hover:underline inline-flex items-center gap-1"
+            >
+              <span>View 3D Spatial Architecture</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+
           <div className="flex flex-wrap gap-1.5">
-            {sampleQuestions.map((sq) => (
+            {sampleQuestions.map((sq, i) => (
               <button
                 key={sq}
                 onClick={() => {
@@ -217,9 +312,12 @@ export default function AssistantPage() {
                   handleAsk(sq);
                 }}
                 disabled={loading}
-                className="px-2.5 py-1 rounded bg-linear-surface-2 hover:bg-linear-surface-3 border border-linear-border-1 hover:border-linear-accent/40 text-[11px] font-mono text-linear-text-muted hover:text-linear-text-main transition-colors text-left"
+                className="px-2.5 py-1 rounded-lg bg-linear-surface-2 hover:bg-linear-surface-3 border border-linear-border-1 hover:border-linear-accent/40 text-[11px] font-mono text-linear-text-muted hover:text-linear-text-main transition-colors text-left flex items-center gap-1.5"
               >
-                {sq}
+                {i === 0 && <GitBranch className="w-3 h-3 text-[#828FFF]" />}
+                {i === 1 && <FileCode className="w-3 h-3 text-[#27A644]" />}
+                {i === 2 && <Network className="w-3 h-3 text-[#38BDF8]" />}
+                <span>{sq}</span>
               </button>
             ))}
           </div>
@@ -228,65 +326,111 @@ export default function AssistantPage() {
 
       {/* Q&A Stream */}
       <div className="space-y-4">
-        {history.map((item) => (
-          <Card key={item.id} className="p-5 space-y-4 bg-linear-surface-1 border-linear-border-1">
-            <div className="flex items-center justify-between border-b border-linear-border-1 pb-2.5">
-              <span className="text-sm font-semibold text-linear-text-main font-mono">
-                Q: {item.question}
-              </span>
-              <div className="flex items-center gap-2">
-                {item.modelUsed && (
-                  <Badge variant="primary" size="sm">
-                    {item.modelUsed}
-                  </Badge>
-                )}
-                <span className="text-[11px] font-mono text-linear-text-subtle">
-                  {item.timestamp}
-                </span>
-              </div>
-            </div>
+        {history.map((item) => {
+          const hasMermaid = item.answer.includes("```mermaid");
 
-            {/* Answer Text */}
-            <div className="text-xs text-linear-text-secondary font-mono whitespace-pre-wrap leading-relaxed">
-              {item.answer}
-            </div>
-
-            {/* Citations Box */}
-            {item.citations.length > 0 && (
-              <div className="pt-3 border-t border-linear-border-1 space-y-2">
-                <span className="text-[11px] font-mono text-linear-text-subtle uppercase tracking-wider block font-semibold">
-                  Grounding Source References:
+          return (
+            <Card key={item.id} className="p-5 space-y-4 bg-linear-surface-1 border-linear-border-1">
+              <div className="flex items-center justify-between border-b border-linear-border-1 pb-2.5">
+                <span className="text-sm font-semibold text-linear-text-main font-mono flex items-center gap-2">
+                  <span className="text-[#828FFF]">Q:</span>
+                  <span>{item.question}</span>
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {item.citations.map((cit, idx) => (
-                    <Link
-                      key={idx}
-                      href={`/explore?file=${encodeURIComponent(cit.filePath)}&line=${cit.startLine}`}
-                      className="p-2.5 rounded bg-linear-surface-2 hover:bg-linear-surface-3 border border-linear-border-1 hover:border-linear-accent/40 transition-colors group font-mono text-xs block"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 truncate">
-                          <FileCode className="w-3.5 h-3.5 text-linear-accent shrink-0" />
-                          <span className="text-linear-text-main font-medium truncate group-hover:text-linear-accent">
-                            {cit.filePath}
-                          </span>
-                        </div>
-                        <span className="text-[11px] text-linear-text-subtle shrink-0">
-                          L{cit.startLine}-{cit.endLine}
-                        </span>
-                      </div>
-                      {cit.codeSnippet && (
-                        <div className="mt-1.5 text-[10px] text-linear-text-muted truncate bg-linear-surface-3 p-1 rounded border border-linear-border-1">
-                          {cit.codeSnippet.split("\n")[0]}
-                        </div>
-                      )}
-                    </Link>
-                  ))}
+                <div className="flex items-center gap-2">
+                  {item.modelUsed && (
+                    <Badge variant="primary" size="sm">
+                      {item.modelUsed}
+                    </Badge>
+                  )}
+                  <span className="text-[11px] font-mono text-linear-text-subtle">
+                    {item.timestamp}
+                  </span>
+                  <button
+                    onClick={() => handleCopyAnswer(item.id, item.answer)}
+                    className="p-1 rounded text-[#8A8F98] hover:text-[#F7F8F8] hover:bg-[#141516] transition-colors"
+                    title="Copy full answer"
+                  >
+                    {copiedItemId === item.id ? (
+                      <Check className="w-3.5 h-3.5 text-[#27A644]" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                  </button>
                 </div>
               </div>
-            )}
-          </Card>
-        ))}
+
+              {/* Answer Content */}
+              <div className="text-xs text-linear-text-secondary font-mono whitespace-pre-wrap leading-relaxed">
+                {item.answer}
+              </div>
+
+              {/* Special Action Bar for Mermaid Diagrams */}
+              {hasMermaid && (
+                <div className="p-3.5 rounded-lg bg-[#0F1011] border border-[#23252A] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+                  <div className="flex items-center gap-2 text-[#828FFF]">
+                    <GitBranch className="w-4 h-4 shrink-0" />
+                    <span className="font-semibold text-white">GitHub Mermaid Diagram Ready</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleCopyMermaidOnly(item.id, item.answer)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#1E1B4B] hover:bg-[#2A2663] border border-[#5E6AD2]/40 text-[#828FFF] hover:text-white text-xs font-medium transition-all"
+                    >
+                      {copiedMermaidId === item.id ? (
+                        <Check className="w-3.5 h-3.5 text-[#27A644]" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                      <span>{copiedMermaidId === item.id ? "Copied for GitHub!" : "Copy Mermaid for README"}</span>
+                    </button>
+
+                    <Link href="/architecture">
+                      <Button variant="secondary" size="sm" icon={<Network className="w-3.5 h-3.5" />}>
+                        Open in 3D Spatial Map →
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              {/* Citations Box */}
+              {item.citations.length > 0 && (
+                <div className="pt-3 border-t border-linear-border-1 space-y-2">
+                  <span className="text-[11px] font-mono text-linear-text-subtle uppercase tracking-wider block font-semibold">
+                    Grounding Source References:
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {item.citations.map((cit, idx) => (
+                      <Link
+                        key={idx}
+                        href={`/explore?file=${encodeURIComponent(cit.filePath)}&line=${cit.startLine}`}
+                        className="p-2.5 rounded bg-linear-surface-2 hover:bg-linear-surface-3 border border-linear-border-1 hover:border-linear-accent/40 transition-colors group font-mono text-xs block"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 truncate">
+                            <FileCode className="w-3.5 h-3.5 text-linear-accent shrink-0" />
+                            <span className="text-linear-text-main font-medium truncate group-hover:text-linear-accent">
+                              {cit.filePath}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-linear-text-subtle shrink-0">
+                            L{cit.startLine}-{cit.endLine}
+                          </span>
+                        </div>
+                        {cit.codeSnippet && (
+                          <div className="mt-1.5 text-[10px] text-linear-text-muted truncate bg-linear-surface-3 p-1 rounded border border-linear-border-1">
+                            {cit.codeSnippet.split("\n")[0]}
+                          </div>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
