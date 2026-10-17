@@ -74,7 +74,8 @@ export const IndexedSymbolSchema = z.object({
   startLine: z.number().int().positive(),
   endLine: z.number().int().positive(),
   signature: z.string().optional(),
-  docstring: z.string().optional()
+  docstring: z.string().optional(),
+  confidence: z.enum(["ast", "heuristic"]).optional()
 });
 
 export const SourceReferenceSchema = z.object({

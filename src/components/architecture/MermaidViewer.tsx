@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import type { ArchitectureSummary, ArchitectureGraph } from "@repopilot/core";
 import { generateMermaidDiagram, type MermaidDiagramType } from "@/lib/mermaidGenerator";
-import { sanitizeSvg } from "@/lib/security";
+import { sanitizeSvg } from "@/lib/svgSanitizer";
 
 interface Props {
   summary: ArchitectureSummary;

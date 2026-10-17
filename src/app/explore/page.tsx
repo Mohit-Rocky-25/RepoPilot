@@ -98,12 +98,17 @@ function ExploreContent() {
       .then((data) => {
         if (data.content !== undefined) {
           setFileContent(data.content);
-          const extracted = extractSymbols(
+          extractSymbols(
             selectedFile.path,
             data.content,
             selectedFile.language
-          );
-          setSymbols(extracted);
+          )
+            .then((extracted) => {
+              setSymbols(extracted);
+            })
+            .catch(() => {
+              setSymbols([]);
+            });
         } else {
           setError(data.error || "Failed to load content.");
         }
@@ -131,7 +136,7 @@ function ExploreContent() {
             No Repository Active
           </h2>
           <p className="text-xs text-[#8A8F98] mt-1.5 leading-relaxed max-w-md mx-auto">
-            Import a public GitHub repository to browse its file structure, inspect code line-by-line, and extract AST symbols.
+            Import a public GitHub repository to browse its file structure, inspect code line-by-line, and extract AST symbols with heuristic fallback.
           </p>
         </div>
         <div className="flex items-center justify-center gap-3 pt-2">
@@ -216,11 +221,20 @@ function ExploreContent() {
                 <button
                   key={sym.id}
                   onClick={() => handleSymbolClick(sym)}
-                  className="px-2 py-0.5 rounded-[4px] bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#34343A] text-[11px] font-mono text-[#8A8F98] hover:text-[#828FFF] shrink-0 transition-colors"
-                  title={`${sym.signature || sym.name} (line ${sym.startLine})`}
+                  className="px-2 py-0.5 rounded-[4px] bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#34343A] text-[11px] font-mono text-[#8A8F98] hover:text-[#828FFF] shrink-0 transition-colors inline-flex items-center gap-1.5"
+                  title={`${sym.signature || sym.name} (lines ${sym.startLine}-${sym.endLine}) [${sym.confidence || "heuristic"}]`}
                 >
-                  <span className="text-[#62666D] mr-1">{sym.kind[0]}</span>
+                  <span className="text-[#62666D]">{sym.kind[0]}</span>
                   <span>{sym.name}</span>
+                  <span
+                    className={`text-[9px] px-1 py-0.2 rounded font-sans uppercase font-medium ${
+                      sym.confidence === "ast"
+                        ? "bg-[#5E6AD2]/20 text-[#828FFF] border border-[#5E6AD2]/30"
+                        : "bg-[#23252A] text-[#8A8F98]"
+                    }`}
+                  >
+                    {sym.confidence === "ast" ? "AST" : "heuristic"}
+                  </span>
                 </button>
               ))}
               {symbols.length > 15 && (
