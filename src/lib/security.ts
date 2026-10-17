@@ -2,6 +2,7 @@
  * Centralized Application Security and Defensive Validation Module
  * Enforces strict input validation, SSRF prevention, path traversal defense, and XSS sanitization.
  */
+export { sanitizeSvg } from "./svgSanitizer";
 
 // Strict GitHub owner/repo identifier regex: alphanumeric, underscores, hyphens, periods (1-100 chars)
 const GITHUB_NAME_REGEX = /^[a-zA-Z0-9_.-]{1,100}$/;
@@ -63,16 +64,99 @@ export function validateFilePath(filePath: unknown): boolean {
 }
 
 /**
- * SSRF Prevention Validator for Local AI / Ollama Endpoints
- * Strictly prohibits link-local cloud metadata, private cloud VPC IPs, and arbitrary ports.
+ * Checks if an IPv4 or IPv6 string belongs to private, loopback, link-local, or cloud metadata ranges.
  */
-export function validateOllamaEndpoint(urlStr: unknown): { valid: boolean; reason?: string } {
+export function isPrivateOrReservedIp(ipStr: string): boolean {
+  const ip = ipStr.trim().toLowerCase();
+
+  // IPv6 Loopback & Unspecified
+  if (ip === "::1" || ip === "::" || ip === "0:0:0:0:0:0:0:1" || ip === "0:0:0:0:0:0:0:0") {
+    return true;
+  }
+
+  // IPv6 ULA (Unique Local Address fc00::/7 -> fc00 to fdff)
+  if (ip.startsWith("fc") || ip.startsWith("fd")) {
+    return true;
+  }
+
+  // IPv6 Link-Local (fe80::/10 -> fe80 to febf)
+  if (/^fe[89ab]/.test(ip)) {
+    return true;
+  }
+
+  // IPv4-mapped IPv6 (e.g. ::ffff:127.0.0.1 or ::ffff:169.254.169.254)
+  if (ip.startsWith("::ffff:") || ip.startsWith("0:0:0:0:0:ffff:")) {
+    const v4Part = ip.split(":").pop();
+    if (v4Part && isPrivateOrReservedIp(v4Part)) {
+      return true;
+    }
+  }
+
+  // IPv4 Decimal integer notation (e.g., 2852039166 -> 169.254.169.254, 2130706433 -> 127.0.0.1)
+  if (/^\d{8,11}$/.test(ip)) {
+    return true;
+  }
+
+  // IPv4 Hex/Octal notation
+  if (/^0x[0-9a-f]+$/i.test(ip) || /^0[0-7]+$/.test(ip)) {
+    return true;
+  }
+
+  // Standard IPv4 checks
+  const parts = ip.split(".").map((p) => parseInt(p, 10));
+  if (parts.length === 4 && parts.every((p) => !isNaN(p) && p >= 0 && p <= 255)) {
+    const [b0, b1] = parts;
+
+    // 0.0.0.0/8 (Current network)
+    if (b0 === 0) return true;
+
+    // 127.0.0.0/8 (Loopback)
+    if (b0 === 127) return true;
+
+    // 10.0.0.0/8 (Private RFC1918)
+    if (b0 === 10) return true;
+
+    // 172.16.0.0/12 (Private RFC1918: 172.16 - 172.31)
+    if (b0 === 172 && b1 >= 16 && b1 <= 31) return true;
+
+    // 192.168.0.0/16 (Private RFC1918)
+    if (b0 === 192 && b1 === 168) return true;
+
+    // 169.254.0.0/16 (Link-Local & Cloud Metadata AWS/GCP/Azure/DO)
+    if (b0 === 169 && b1 === 254) return true;
+
+    // 100.64.0.0/10 (Carrier-Grade NAT)
+    if (b0 === 100 && b1 >= 64 && b1 <= 127) return true;
+
+    // 224.0.0.0/4 (Multicast: 224-239)
+    if (b0 >= 224 && b0 <= 239) return true;
+
+    // 240.0.0.0/4 (Reserved / Future use: 240-255)
+    if (b0 >= 240) return true;
+  }
+
+  return false;
+}
+
+/**
+ * Validates an AI endpoint URL against SSRF vulnerabilities.
+ * Allows loopback ONLY for local Ollama on port 11434 if allowLoopbackOllama is true.
+ * For hosted providers, enforces HTTPS and resolves DNS to verify no private IP resolution.
+ */
+export async function validateAiEndpoint(
+  urlStr: unknown,
+  options?: { allowLoopbackOllama?: boolean }
+): Promise<{ valid: boolean; reason?: string }> {
   if (!urlStr || typeof urlStr !== "string") {
-    return { valid: true }; // Uses default
+    return { valid: true };
   }
 
   const clean = urlStr.trim();
   if (!clean) return { valid: true };
+
+  if (clean.length > 512) {
+    return { valid: false, reason: "URL length exceeds maximum limit of 512 characters." };
+  }
 
   let parsed: URL;
   try {
@@ -81,31 +165,21 @@ export function validateOllamaEndpoint(urlStr: unknown): { valid: boolean; reaso
     return { valid: false, reason: "Malformed URL format." };
   }
 
-  // Enforce http or https protocol only
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    return { valid: false, reason: "Only http:// or https:// protocols are permitted." };
-  }
-
   const hostname = parsed.hostname.toLowerCase();
+  const isLoopback =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "[::1]";
 
-  // 1. Block Cloud Metadata IP (AWS, GCP, Azure, DigitalOcean)
-  if (hostname === "169.254.169.254" || hostname.startsWith("169.254.")) {
-    return { valid: false, reason: "Access to cloud metadata endpoints is prohibited (SSRF defense)." };
-  }
-
-  // 2. Block Cloud internal metadata hostnames
-  if (
-    hostname.includes("metadata.google.internal") ||
-    hostname.includes("metadata.azure") ||
-    hostname.includes("instance-data") ||
-    hostname.includes("internal")
-  ) {
-    return { valid: false, reason: "Access to internal cloud metadata hostnames is prohibited." };
-  }
-
-  // 3. Allow loopback ONLY on standard Ollama port 11434 (prevents loopback port scanning)
-  const isLoopback = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+  // Handle local Ollama
   if (isLoopback) {
+    if (!options?.allowLoopbackOllama) {
+      return {
+        valid: false,
+        reason: "Loopback connections are not allowed for hosted providers."
+      };
+    }
     const port = parsed.port || (parsed.protocol === "https:" ? "443" : "80");
     if (port !== "11434") {
       return {
@@ -116,41 +190,104 @@ export function validateOllamaEndpoint(urlStr: unknown): { valid: boolean; reaso
     return { valid: true };
   }
 
-  // 4. Block Private RFC1918 subnets for non-localhost endpoints
-  // 10.0.0.0/8
-  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) {
-    return { valid: false, reason: "Access to private RFC1918 subnet 10.0.0.0/8 is prohibited." };
-  }
-  // 172.16.0.0/12
-  if (/^172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(hostname)) {
-    return { valid: false, reason: "Access to private RFC1918 subnet 172.16.0.0/12 is prohibited." };
-  }
-  // 192.168.0.0/16
-  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(hostname)) {
-    return { valid: false, reason: "Access to private RFC1918 subnet 192.168.0.0/16 is prohibited." };
+  // Hosted providers MUST use HTTPS
+  if (parsed.protocol !== "https:") {
+    return {
+      valid: false,
+      reason: "Remote AI endpoints must use secure https:// protocol."
+    };
   }
 
-  // Length limit
-  if (clean.length > 256) {
-    return { valid: false, reason: "URL length exceeds maximum limit (256 characters)." };
+  // Block cloud internal hostnames
+  if (
+    hostname.includes("metadata.google.internal") ||
+    hostname.includes("metadata.azure") ||
+    hostname.includes("instance-data") ||
+    hostname.includes("internal")
+  ) {
+    return { valid: false, reason: "Access to internal cloud metadata hostnames is prohibited." };
+  }
+
+  // Check if hostname itself is directly a private/reserved IP
+  if (isPrivateOrReservedIp(hostname)) {
+    return {
+      valid: false,
+      reason: "Direct IP connection to private or reserved subnets is prohibited (SSRF defense)."
+    };
+  }
+
+  // Resolve DNS to prevent DNS-rebinding attacks where a public domain points to 169.254.169.254 or 127.0.0.1
+  try {
+    const dnsModule = await import("dns");
+    const addresses = await dnsModule.promises.lookup(hostname, { all: true });
+    for (const addr of addresses) {
+      if (isPrivateOrReservedIp(addr.address)) {
+        return {
+          valid: false,
+          reason: `DNS lookup for ${hostname} resolved to private/restricted IP (${addr.address}). Request blocked.`
+        };
+      }
+    }
+  } catch (err: any) {
+    // If DNS resolution fails, reject to prevent SSRF through unresolvable host probing
+    return {
+      valid: false,
+      reason: `Could not resolve hostname: ${hostname}. Error: ${err.code || err.message}`
+    };
   }
 
   return { valid: true };
 }
 
 /**
- * Lightweight SVG XSS Sanitizer
- * Strips script tags, javascript: schemes, and inline event handlers from SVG strings.
+ * Synchronous backward-compatible validator for Ollama endpoints.
  */
-export function sanitizeSvg(rawSvg: string): string {
-  if (!rawSvg) return "";
+export function validateOllamaEndpoint(urlStr: unknown): { valid: boolean; reason?: string } {
+  if (!urlStr || typeof urlStr !== "string") return { valid: true };
+  const clean = urlStr.trim();
+  if (!clean) return { valid: true };
 
-  return rawSvg
-    // Remove <script> tags and contents
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-    // Remove on* event handlers (e.g. onload, onerror, onclick)
-    .replace(/\s+on[a-zA-Z]+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, "")
-    // Remove javascript: URI schemes
-    .replace(/href\s*=\s*['"]\s*javascript:[^'"]*['"]/gi, 'href="#"')
-    .replace(/xlink:href\s*=\s*['"]\s*javascript:[^'"]*['"]/gi, 'xlink:href="#"');
+  try {
+    const parsed = new URL(clean);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return { valid: false, reason: "Only http:// or https:// protocols are permitted." };
+    }
+    const hostname = parsed.hostname.toLowerCase();
+    const isLoopback = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+
+    if (isLoopback) {
+      const port = parsed.port || (parsed.protocol === "https:" ? "443" : "80");
+      if (port !== "11434") {
+        return {
+          valid: false,
+          reason: "Loopback connections are strictly restricted to default Ollama port 11434."
+        };
+      }
+      return { valid: true };
+    }
+
+    if (isPrivateOrReservedIp(hostname) || hostname === "169.254.169.254") {
+      return {
+        valid: false,
+        reason: "Access to cloud metadata and private RFC1918 subnets is prohibited."
+      };
+    }
+
+    if (
+      hostname.includes("metadata.google.internal") ||
+      hostname.includes("metadata.azure") ||
+      hostname.includes("instance-data") ||
+      hostname.includes("internal")
+    ) {
+      return { valid: false, reason: "Access to internal cloud metadata hostnames is prohibited." };
+    }
+
+    if (clean.length > 256) {
+      return { valid: false, reason: "URL length exceeds maximum limit (256 characters)." };
+    }
+
+    return { valid: true };
+  } catch {
+    return { valid: false, reason: "Malformed URL format." };
+  }
 }

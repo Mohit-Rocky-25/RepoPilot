@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GitHubClient } from "@repopilot/github";
 import { SearchEngine } from "@repopilot/search";
-import { OllamaClient, PromptBuilder, CitationValidator } from "@repopilot/ai";
+import {
+  PromptBuilder,
+  CitationValidator,
+  createModelProvider,
+  redactSecret
+} from "@repopilot/ai";
 import { ArchitectureAnalyzer } from "@repopilot/analysis";
 import { generateMermaidDiagram } from "@/lib/mermaidGenerator";
 import {
@@ -9,12 +14,14 @@ import {
   validateGitHubRepo,
   validateGitRevision,
   validateFilePath,
-  validateOllamaEndpoint
+  validateAiEndpoint
 } from "@/lib/security";
 import { rateLimiter, getClientIp } from "@/lib/rateLimiter";
 import type { SourceReference } from "@repopilot/core";
 
 export async function POST(req: NextRequest) {
+  let customApiKey: string | undefined;
+
   try {
     // 1. IP Rate Limiting (30 req/min for compute-heavy ask endpoint)
     const clientIp = getClientIp(req);
@@ -26,6 +33,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 2. Read headers for BYO Key & Provider
+    customApiKey = req.headers.get("x-ai-key") || undefined;
+    const headerProvider = req.headers.get("x-ai-provider") as any;
+    const headerBaseUrl = req.headers.get("x-ai-base-url") || undefined;
+    const headerModel = req.headers.get("x-ai-model") || undefined;
+
     const body = await req.json();
     const {
       owner,
@@ -33,11 +46,12 @@ export async function POST(req: NextRequest) {
       sha,
       question,
       targetFilePath,
-      baseUrl = "http://localhost:11434",
-      model = "qwen2.5-coder:1.5b"
+      baseUrl = headerBaseUrl || "http://localhost:11434",
+      model = headerModel || "qwen2.5-coder:1.5b",
+      providerType = headerProvider || (customApiKey ? "openai-compatible" : "ollama")
     } = body;
 
-    // 2. Strict Input Validation
+    // 3. Strict Input Validation
     if (!validateGitHubOwner(owner) || !validateGitHubRepo(repo)) {
       return NextResponse.json(
         { error: "Invalid repository identifier. Owner and repo must be alphanumeric." },
@@ -73,8 +87,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. SSRF Protection: Validate baseUrl
-    const endpointValidation = validateOllamaEndpoint(baseUrl);
+    // 4. SSRF Protection: Validate baseUrl
+    const isLocalOllama = providerType === "ollama";
+    const endpointValidation = await validateAiEndpoint(baseUrl, { allowLoopbackOllama: isLocalOllama });
     if (!endpointValidation.valid) {
       return NextResponse.json(
         { error: endpointValidation.reason || "Invalid AI endpoint (SSRF defense)." },
@@ -86,11 +101,17 @@ export async function POST(req: NextRequest) {
     const ghClient = new GitHubClient({ token });
     const tree = await ghClient.fetchTree(owner, repo, sha || "HEAD");
 
-    // 1. Check if Ollama is available
-    const ollama = new OllamaClient(baseUrl);
-    const ollamaStatus = await ollama.checkStatus();
+    // 5. Select Model Provider
+    const provider = createModelProvider({
+      type: providerType,
+      baseUrl,
+      apiKey: customApiKey,
+      model
+    });
 
-    // 2. Deterministic Context Retrieval
+    const status = await provider.isAvailable();
+
+    // 6. Deterministic Context Retrieval
     const searchEngine = new SearchEngine({ files: tree, symbols: [] });
 
     // Extract search terms from question
@@ -150,8 +171,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Fallback if Ollama is offline or uninstalled
-    if (!ollamaStatus.isAvailable) {
+    // 7. Fallback if provider is offline or unconfigured
+    if (!status.available) {
       const isDiagramRequest = /mermaid|diagram|architecture|flowchart|structure|graph|3d/i.test(question);
 
       if (isDiagramRequest) {
@@ -185,6 +206,10 @@ ${mermaidCode}
         });
       }
 
+      const fallbackReason = status.error
+        ? `Provider "${provider.name}" unavailable: ${redactSecret(status.error, customApiKey)}`
+        : "Selected AI provider is offline.";
+
       const fallbackAnswer = `### 🔍 Deterministic Code Intelligence Analysis
 
 **Query:** "${question}"
@@ -196,7 +221,7 @@ ${chunks.map((c) => `- **[\`${c.filePath}:${c.startLine}-${c.endLine}\`](/explor
 ${chunks.slice(0, 2).map((c) => `**${c.filePath}** (Lines ${c.startLine}-${c.endLine}):\n\`\`\`${c.filePath.endsWith(".ts") || c.filePath.endsWith(".tsx") ? "typescript" : "text"}\n${c.content.slice(0, 350)}\n\`\`\``).join("\n\n")}
 
 ---
-*⚡ Powered by RepoPilot Deterministic Search Engine (Zero API Fees). To enable local neural synthesis, run: \`ollama run ${model}\`.*`;
+*⚡ Powered by RepoPilot Deterministic Search Engine. To enable neural synthesis, configure your BYO API key in [Settings](/settings/ai) or start local Ollama with: \`ollama run ${model}\`.*`;
 
       return NextResponse.json({
         success: true,
@@ -204,22 +229,24 @@ ${chunks.slice(0, 2).map((c) => `**${c.filePath}** (Lines ${c.startLine}-${c.end
         citations,
         confidence: "medium",
         modelUsed: "deterministic-search-engine",
-        limitations: [
-          "Ollama offline: Showing deterministic code retrieval without LLM synthesis."
-        ]
+        limitations: [fallbackReason]
       });
     }
 
-    // 4. Ollama is available: Build grounded prompt and run local inference
+    // 8. Provider is available: Build grounded prompt and generate response
     const { systemPrompt, userPrompt } = PromptBuilder.buildGroundedPrompt(
       question,
       chunks,
       `${owner}/${repo}`
     );
 
-    const rawResponse = await ollama.generate(model, userPrompt, systemPrompt);
+    const rawResponse = await provider.generate({
+      model,
+      prompt: userPrompt,
+      systemPrompt
+    });
 
-    // 5. Validate citations in generated response
+    // 9. Validate citations in generated response
     const extractedCitations = CitationValidator.extractCitations(rawResponse);
     const validatedCitations = CitationValidator.validate(extractedCitations, tree);
 
@@ -230,11 +257,13 @@ ${chunks.slice(0, 2).map((c) => `**${c.filePath}** (Lines ${c.startLine}-${c.end
       validatedCitations,
       confidence: "high",
       modelUsed: model,
+      providerUsed: provider.name,
       rateLimit: ghClient.lastRateLimit
     });
   } catch (error: any) {
+    const safeError = redactSecret(error.message || "Failed to process question.", customApiKey);
     return NextResponse.json(
-      { error: error.message || "Failed to process question." },
+      { error: safeError },
       { status: 500 }
     );
   }

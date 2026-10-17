@@ -53,6 +53,48 @@ describe("Security Validation & Defensive Controls", () => {
     });
   });
 
+  describe("Comprehensive SSRF Defense & IP Classification (isPrivateOrReservedIp, validateAiEndpoint)", () => {
+    it("identifies private IPv4, loopback, and metadata addresses", async () => {
+      const { isPrivateOrReservedIp } = await import("../../src/lib/security");
+      expect(isPrivateOrReservedIp("169.254.169.254")).toBe(true);
+      expect(isPrivateOrReservedIp("127.0.0.1")).toBe(true);
+      expect(isPrivateOrReservedIp("10.5.0.1")).toBe(true);
+      expect(isPrivateOrReservedIp("192.168.1.100")).toBe(true);
+      expect(isPrivateOrReservedIp("172.20.1.1")).toBe(true);
+      expect(isPrivateOrReservedIp("100.64.0.1")).toBe(true);
+      expect(isPrivateOrReservedIp("0.0.0.0")).toBe(true);
+      // Public IPs
+      expect(isPrivateOrReservedIp("8.8.8.8")).toBe(false);
+      expect(isPrivateOrReservedIp("1.1.1.1")).toBe(false);
+    });
+
+    it("identifies IPv6 loopback, ULA, link-local, and IPv4-mapped addresses", async () => {
+      const { isPrivateOrReservedIp } = await import("../../src/lib/security");
+      expect(isPrivateOrReservedIp("::1")).toBe(true);
+      expect(isPrivateOrReservedIp("fc00::1")).toBe(true);
+      expect(isPrivateOrReservedIp("fe80::1")).toBe(true);
+      expect(isPrivateOrReservedIp("::ffff:127.0.0.1")).toBe(true);
+      expect(isPrivateOrReservedIp("::ffff:169.254.169.254")).toBe(true);
+    });
+
+    it("identifies decimal integer IP encodings", async () => {
+      const { isPrivateOrReservedIp } = await import("../../src/lib/security");
+      // 2852039166 === 169.254.169.254
+      expect(isPrivateOrReservedIp("2852039166")).toBe(true);
+    });
+
+    it("enforces HTTPS for remote hosted AI endpoints and rejects HTTP", async () => {
+      const { validateAiEndpoint } = await import("../../src/lib/security");
+      const httpRes = await validateAiEndpoint("http://api.openai.com/v1", { allowLoopbackOllama: false });
+      expect(httpRes.valid).toBe(false);
+      expect(httpRes.reason).toContain("https://");
+
+      const loopbackBlocked = await validateAiEndpoint("http://localhost:11434", { allowLoopbackOllama: false });
+      expect(loopbackBlocked.valid).toBe(false);
+      expect(loopbackBlocked.reason).toContain("Loopback connections are not allowed");
+    });
+  });
+
   describe("Path Traversal Defense (validateFilePath)", () => {
     it("should reject directory traversal sequences", () => {
       expect(validateFilePath("../etc/passwd")).toBe(false);

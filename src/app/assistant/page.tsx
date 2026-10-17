@@ -45,10 +45,27 @@ interface QAItem {
 export default function AssistantPage() {
   const { currentRepo, aiConfig, setIsImportModalOpen } = useRepository();
 
+  const [providerMode, setProviderMode] = useState<"ollama" | "openai-compatible" | "offline">("offline");
   const [question, setQuestion] = useState("");
   const [history, setHistory] = useState<QAItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    try {
+      const byoKey = sessionStorage.getItem("REPOPILOT_BYO_AI_KEY");
+      const provider = sessionStorage.getItem("REPOPILOT_AI_PROVIDER");
+      if (byoKey && provider === "openai-compatible") {
+        setProviderMode("openai-compatible");
+      } else if (aiConfig.isAvailable) {
+        setProviderMode("ollama");
+      } else {
+        setProviderMode("offline");
+      }
+    } catch {
+      setProviderMode(aiConfig.isAvailable ? "ollama" : "offline");
+    }
+  }, [aiConfig.isAvailable]);
 
   // Copy states
   const [copiedOllamaCmd, setCopiedOllamaCmd] = useState(false);
@@ -177,10 +194,20 @@ export default function AssistantPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Badge variant={aiConfig.isAvailable ? "success" : "violet"} size="sm">
-            {aiConfig.isAvailable ? `Ollama (${aiConfig.modelName})` : "Deterministic Engine (Active)"}
-          </Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          {providerMode === "openai-compatible" ? (
+            <Badge variant="success" size="sm" className="font-mono">
+              AI: Your API key
+            </Badge>
+          ) : providerMode === "ollama" ? (
+            <Badge variant="primary" size="sm" className="font-mono">
+              AI: Local Ollama ({aiConfig.modelName})
+            </Badge>
+          ) : (
+            <Badge variant="neutral" size="sm" className="font-mono">
+              AI: Offline (deterministic only)
+            </Badge>
+          )}
           <Link href="/architecture">
             <Button variant="secondary" size="sm" icon={<Network className="w-3.5 h-3.5 text-[#828FFF]" />}>
               3D Spatial Map
