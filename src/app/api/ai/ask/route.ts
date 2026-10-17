@@ -16,21 +16,21 @@ import {
   validateFilePath,
   validateAiEndpoint
 } from "@/lib/security";
-import { rateLimiter, getClientIp } from "@/lib/rateLimiter";
+import { enforceRateLimit, checkPayloadSize } from "@/lib/rateLimiter";
 import type { SourceReference } from "@repopilot/core";
 
 export async function POST(req: NextRequest) {
   let customApiKey: string | undefined;
 
   try {
-    // 1. IP Rate Limiting (30 req/min for compute-heavy ask endpoint)
-    const clientIp = getClientIp(req);
-    const limitCheck = rateLimiter.check(`ai:ask:${clientIp}`, 30, 60000);
-    if (!limitCheck.allowed) {
-      return NextResponse.json(
-        { error: `Rate limit exceeded. Try again in ${limitCheck.resetInSeconds} seconds.` },
-        { status: 429 }
-      );
+    // 1. DoS Defense: Body size cap (64 KB)
+    const sizeCheck = checkPayloadSize(req, 65536);
+    if (sizeCheck) return sizeCheck;
+
+    // 2. IP Rate Limiting (10 req/min for compute-heavy ask endpoint)
+    const rateCheck = await enforceRateLimit(req, "ai");
+    if (!rateCheck.allowed && rateCheck.response) {
+      return rateCheck.response;
     }
 
     // 2. Read headers for BYO Key & Provider

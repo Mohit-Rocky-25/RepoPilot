@@ -6,18 +6,14 @@ import {
   validateGitRevision,
   validateFilePath
 } from "@/lib/security";
-import { rateLimiter, getClientIp } from "@/lib/rateLimiter";
+import { enforceRateLimit } from "@/lib/rateLimiter";
 
 export async function GET(req: NextRequest) {
   try {
     // 1. IP Rate Limiting (60 req/min)
-    const clientIp = getClientIp(req);
-    const limitCheck = rateLimiter.check(`github:file:${clientIp}`, 60, 60000);
-    if (!limitCheck.allowed) {
-      return NextResponse.json(
-        { error: `Rate limit exceeded. Try again in ${limitCheck.resetInSeconds} seconds.` },
-        { status: 429 }
-      );
+    const rateCheck = await enforceRateLimit(req, "general");
+    if (!rateCheck.allowed && rateCheck.response) {
+      return rateCheck.response;
     }
 
     const { searchParams } = new URL(req.url);

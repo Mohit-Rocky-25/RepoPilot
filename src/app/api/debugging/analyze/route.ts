@@ -7,18 +7,18 @@ import {
   validateGitRevision,
   validateFilePath
 } from "@/lib/security";
-import { rateLimiter, getClientIp } from "@/lib/rateLimiter";
+import { enforceRateLimit, checkPayloadSize } from "@/lib/rateLimiter";
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. IP Rate Limiting (30 req/min for compute-heavy debugging analysis)
-    const clientIp = getClientIp(req);
-    const limitCheck = rateLimiter.check(`debugging:analyze:${clientIp}`, 30, 60000);
-    if (!limitCheck.allowed) {
-      return NextResponse.json(
-        { error: `Rate limit exceeded. Try again in ${limitCheck.resetInSeconds} seconds.` },
-        { status: 429 }
-      );
+    // 1. DoS Defense: Body size cap (64 KB)
+    const sizeCheck = checkPayloadSize(req, 65536);
+    if (sizeCheck) return sizeCheck;
+
+    // 2. IP Rate Limiting (20 req/min for compute-heavy debugging analysis)
+    const rateCheck = await enforceRateLimit(req, "debug");
+    if (!rateCheck.allowed && rateCheck.response) {
+      return rateCheck.response;
     }
 
     const body = await req.json();

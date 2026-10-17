@@ -33,6 +33,8 @@
   "author": "Mohit-Rocky-25",
   "license": "MIT",
   "dependencies": {
+    "@upstash/ratelimit": "^2.2.0",
+    "@upstash/redis": "^1.39.0",
     "lucide-react": "^0.453.0",
     "next": "^14.2.15",
     "react": "^18.3.1",

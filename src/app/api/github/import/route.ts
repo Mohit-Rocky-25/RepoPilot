@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseGitHubUrl, GitHubClient } from "@repopilot/github";
-import { rateLimiter, getClientIp } from "@/lib/rateLimiter";
+import { enforceRateLimit } from "@/lib/rateLimiter";
 import { z } from "zod";
 
 const ImportRequestSchema = z.object({
@@ -9,14 +9,10 @@ const ImportRequestSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. IP Rate Limiting (30 req/min)
-    const clientIp = getClientIp(req);
-    const limitCheck = rateLimiter.check(`github:import:${clientIp}`, 30, 60000);
-    if (!limitCheck.allowed) {
-      return NextResponse.json(
-        { success: false, error: `Rate limit exceeded. Try again in ${limitCheck.resetInSeconds} seconds.` },
-        { status: 429 }
-      );
+    // 1. IP Rate Limiting (15 req/min ingest limit)
+    const rateCheck = await enforceRateLimit(req, "ingest");
+    if (!rateCheck.allowed && rateCheck.response) {
+      return rateCheck.response;
     }
 
     const body = await req.json();
