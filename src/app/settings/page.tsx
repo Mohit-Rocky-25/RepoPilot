@@ -43,23 +43,51 @@ export default function GeneralSettingsPage() {
     user?: string;
   } | null>(null);
 
+  const [rememberDevice, setRememberDevice] = useState(false);
+
   useEffect(() => {
-    const saved = localStorage.getItem("REPOPILOT_GH_TOKEN");
-    if (saved) setToken(saved);
+    try {
+      const sessionToken = sessionStorage.getItem("REPOPILOT_GH_TOKEN");
+      const localToken = localStorage.getItem("REPOPILOT_GH_TOKEN");
+      if (sessionToken) {
+        setToken(sessionToken);
+        setRememberDevice(false);
+      } else if (localToken) {
+        setToken(localToken);
+        setRememberDevice(true);
+      }
+    } catch {}
   }, []);
 
   const handleSaveToken = async () => {
     const trimmed = token.trim();
     if (trimmed) {
-      localStorage.setItem("REPOPILOT_GH_TOKEN", trimmed);
+      if (rememberDevice) {
+        localStorage.setItem("REPOPILOT_GH_TOKEN", trimmed);
+        sessionStorage.removeItem("REPOPILOT_GH_TOKEN");
+      } else {
+        sessionStorage.setItem("REPOPILOT_GH_TOKEN", trimmed);
+        localStorage.removeItem("REPOPILOT_GH_TOKEN");
+      }
     } else {
-      localStorage.removeItem("REPOPILOT_GH_TOKEN");
+      handleClearToken();
+      return;
     }
     setSavedTokenNotice(true);
     setTimeout(() => setSavedTokenNotice(false), 2500);
 
     // Automatically verify newly saved token
     await handleVerifyToken(trimmed);
+  };
+
+  const handleClearToken = async () => {
+    setToken("");
+    sessionStorage.removeItem("REPOPILOT_GH_TOKEN");
+    localStorage.removeItem("REPOPILOT_GH_TOKEN");
+    setVerifyResult(null);
+    setSavedTokenNotice(true);
+    setTimeout(() => setSavedTokenNotice(false), 2000);
+    await handleVerifyToken("");
   };
 
   const handleVerifyToken = async (overrideToken?: string) => {
@@ -212,7 +240,7 @@ export default function GeneralSettingsPage() {
         </div>
 
         <p className="text-xs text-[#8A8F98] leading-relaxed font-mono">
-          Public GitHub unauthenticated requests are limited to 60 req/hour. Supplying an optional Personal Access Token (classic with public repo read access) increases your quota to 5,000 req/hour. The token is stored strictly in your browser's LocalStorage and is never transmitted to any third party.
+          Public GitHub unauthenticated requests are limited to 60 req/hour. Providing an optional Personal Access Token (with <code>public_repo</code> read-only scope) raises your limit to 5,000 req/hour. By default, tokens are saved strictly in <code>sessionStorage</code> and cleared when you close the tab.
         </p>
 
         <div className="space-y-3 font-mono text-xs">
@@ -245,7 +273,7 @@ export default function GeneralSettingsPage() {
               disabled={isVerifying}
               className="shrink-0"
             >
-              {isVerifying ? "Verifying..." : "Test Token"}
+              {isVerifying ? "Verifying..." : "Test"}
             </Button>
             <Button
               variant="primary"
@@ -255,8 +283,37 @@ export default function GeneralSettingsPage() {
               disabled={isVerifying}
               className="shrink-0"
             >
-              Save Token
+              Save
             </Button>
+            {token && (
+              <Button
+                variant="outline"
+                size="sm"
+                icon={<Trash2 className="w-3.5 h-3.5" />}
+                onClick={handleClearToken}
+                disabled={isVerifying}
+                className="shrink-0 text-linear-danger hover:bg-linear-danger/10"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+
+          <div className="pt-1">
+            <label className="flex items-start gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={rememberDevice}
+                onChange={(e) => setRememberDevice(e.target.checked)}
+                className="mt-0.5 rounded border-linear-border-2 bg-linear-surface-2 text-linear-accent focus:ring-0"
+              />
+              <span className="text-[11px] text-linear-text-muted">
+                Remember on this device (Save to localStorage).
+                <span className="block text-[10px] text-linear-text-subtle mt-0.5">
+                  ⚠️ Note: Persistent localStorage is vulnerable if unauthorized browser extensions or scripts are active. Leave unchecked for session-only memory.
+                </span>
+              </span>
+            </label>
           </div>
 
           {savedTokenNotice && (
