@@ -166,7 +166,7 @@ export default function AISettingsPage() {
           <span>Local AI (Ollama) Diagnostics & Configuration</span>
         </h1>
         <p className="text-xs text-linear-text-muted mt-0.5">
-          Configure zero-cost, private, local open-weights inference without hosted cloud API fees.
+          Ollama is 100% optional. Configure zero-cost, private, local open-weights inference without hosted cloud API fees.
         </p>
       </div>
 
@@ -175,25 +175,27 @@ export default function AISettingsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-start sm:items-center gap-3">
             {statusResult?.isAvailable ? (
-              <div className="w-9 h-9 rounded-full bg-emerald-950/40 border border-emerald-800/60 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-emerald-950/40 border border-emerald-800/60 flex items-center justify-center shrink-0">
                 <CheckCircle className="w-5 h-5 text-linear-success" />
               </div>
             ) : (
-              <div className="w-9 h-9 rounded-full bg-rose-950/40 border border-rose-800/60 flex items-center justify-center shrink-0">
-                <XCircle className="w-5 h-5 text-linear-danger" />
+              <div className="w-10 h-10 rounded-full bg-[#5E6AD2]/10 border border-[#5E6AD2]/30 flex items-center justify-center shrink-0 text-[#828FFF]">
+                <Cpu className="w-5 h-5" />
               </div>
             )}
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-semibold text-linear-text-main font-mono">
-                  {statusResult?.isAvailable ? "Ollama Connected & Operational" : "Ollama Daemon Offline / Unreachable"}
+                  {statusResult?.isAvailable ? "Local AI Connected & Operational" : "Deterministic Engine Active (Ollama in Standby)"}
                 </h2>
-                <Badge variant={statusResult?.isAvailable ? "success" : "neutral"} size="sm">
-                  {statusResult?.isAvailable ? "ONLINE" : "OFFLINE"}
+                <Badge variant={statusResult?.isAvailable ? "success" : "violet"} size="sm">
+                  {statusResult?.isAvailable ? "ONLINE" : "STANDBY (OPTIONAL)"}
                 </Badge>
               </div>
               <p className="text-xs text-linear-text-muted mt-0.5 font-mono">
-                Active Endpoint: <code className="text-linear-accent-hover bg-linear-surface-2 px-1.5 py-0.5 rounded border border-linear-border-1">{baseUrl}</code>
+                {statusResult?.isAvailable
+                  ? `Active Endpoint: ${baseUrl}`
+                  : "All repository exploration, search, and architecture analysis are 100% functional."}
               </p>
             </div>
           </div>
@@ -210,15 +212,19 @@ export default function AISettingsPage() {
         </div>
 
         {statusResult && !statusResult.isAvailable && (
-          <div className="p-3.5 rounded-lg bg-linear-surface-2 border border-linear-border-1 text-xs font-mono space-y-2">
+          <div className="p-4 rounded-lg bg-linear-surface-2 border border-linear-border-1 text-xs font-mono space-y-2.5">
             <div className="flex items-center gap-2 text-linear-text-main font-semibold">
-              <AlertCircle className="w-4 h-4 text-linear-warning" />
-              <span>Offline Diagnostic & Graceful Fallback Active</span>
+              <ShieldCheck className="w-4 h-4 text-[#828FFF]" />
+              <span>Deterministic Core Platform Active — No Local AI Required</span>
             </div>
             <p className="text-linear-text-muted leading-relaxed">
               No local Ollama server answered on <code className="text-linear-text-main font-semibold">{baseUrl}</code>.
-              RepoPilot will automatically operate in <strong>100% offline deterministic mode</strong> — code search, AST symbol indexing, and architecture mapping remain fully functional.
+              {" "}<strong>This is completely normal and expected.</strong> RepoPilot operates in <strong>100% offline deterministic mode</strong> — AST symbol indexing, architecture mapping, code navigation, and evidence search are fully operational without any AI model installed.
             </p>
+            <div className="pt-1 text-[11px] text-linear-accent flex items-center gap-1.5 font-medium">
+              <Terminal className="w-3.5 h-3.5 shrink-0" />
+              <span>Want local LLM natural language explanations? Follow the 2-step setup guide below to download Ollama.</span>
+            </div>
           </div>
         )}
 

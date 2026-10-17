@@ -139,8 +139,8 @@ export default function AssistantPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge variant={aiConfig.isAvailable ? "success" : "neutral"} size="sm">
-            {aiConfig.isAvailable ? `Ollama (${aiConfig.modelName})` : "Deterministic Fallback (Offline)"}
+          <Badge variant={aiConfig.isAvailable ? "success" : "violet"} size="sm">
+            {aiConfig.isAvailable ? `Ollama (${aiConfig.modelName})` : "Deterministic Engine (Active)"}
           </Badge>
           <Link href="/settings/ai">
             <Button variant="secondary" size="sm">
