@@ -9,34 +9,99 @@ import {
   Save,
   CheckCircle,
   AlertTriangle,
-  Github
+  Github,
+  RefreshCw,
+  ExternalLink,
+  UserCheck
 } from "lucide-react";
 import { useRepository } from "@/context/RepositoryContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import { clientFetch } from "@/lib/api";
 
 export default function GeneralSettingsPage() {
-  const { currentRepo, recentRepos, rateLimit, setRateLimit } = useRepository();
+  const { currentRepo, recentRepos, rateLimit, setRateLimit, authStatus, refreshRateLimit } = useRepository();
 
   const [token, setToken] = useState("");
   const [savedTokenNotice, setSavedTokenNotice] = useState(false);
   const [clearedHistoryNotice, setClearedHistoryNotice] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verifyResult, setVerifyResult] = useState<{
+    tested: boolean;
+    success: boolean;
+    message: string;
+    user?: string;
+  } | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("REPOPILOT_GH_TOKEN");
     if (saved) setToken(saved);
   }, []);
 
-  const handleSaveToken = () => {
-    if (token.trim()) {
-      localStorage.setItem("REPOPILOT_GH_TOKEN", token.trim());
+  const handleSaveToken = async () => {
+    const trimmed = token.trim();
+    if (trimmed) {
+      localStorage.setItem("REPOPILOT_GH_TOKEN", trimmed);
     } else {
       localStorage.removeItem("REPOPILOT_GH_TOKEN");
     }
     setSavedTokenNotice(true);
     setTimeout(() => setSavedTokenNotice(false), 2500);
+
+    // Automatically verify newly saved token
+    await handleVerifyToken(trimmed);
+  };
+
+  const handleVerifyToken = async (overrideToken?: string) => {
+    setIsVerifying(true);
+    setVerifyResult(null);
+
+    const tokenToTest = overrideToken !== undefined ? overrideToken : token.trim();
+    const headers: Record<string, string> = {};
+    if (tokenToTest) {
+      headers["x-github-token"] = tokenToTest;
+    }
+
+    try {
+      const res = await fetch("/api/github/rate-limit", {
+        headers
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        if (data.rateLimit) {
+          setRateLimit({
+            remaining: data.rateLimit.remaining,
+            limit: data.rateLimit.limit
+          });
+        }
+        setVerifyResult({
+          tested: true,
+          success: true,
+          message: data.authenticated
+            ? `Authenticated as @${data.user || "user"}. Rate limit quota: ${data.rateLimit?.remaining}/${data.rateLimit?.limit} req/hr.`
+            : `Unauthenticated public access. Rate limit quota: ${data.rateLimit?.remaining}/${data.rateLimit?.limit} req/hr.`,
+          user: data.user
+        });
+        await refreshRateLimit();
+      } else {
+        setVerifyResult({
+          tested: true,
+          success: false,
+          message: data.error || "Failed to authenticate with GitHub API."
+        });
+      }
+    } catch {
+      setVerifyResult({
+        tested: true,
+        success: false,
+        message: "Network error attempting to verify GitHub rate limits."
+      });
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleClearHistory = () => {
@@ -52,38 +117,52 @@ export default function GeneralSettingsPage() {
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
-      <div className="pb-3 border-b border-linear-border-1">
-        <h1 className="text-lg font-semibold text-linear-text-main font-mono flex items-center gap-2">
-          <SettingsIcon className="w-5 h-5 text-linear-accent" />
+      <div className="pb-3 border-b border-[#23252A]">
+        <h1 className="text-lg font-semibold text-[#F7F8F8] font-mono flex items-center gap-2">
+          <SettingsIcon className="w-5 h-5 text-[#5E6AD2]" />
           <span>Console Configuration & Environment</span>
         </h1>
-        <p className="text-xs text-linear-text-muted mt-0.5">
-          Manage local secrets, GitHub rate limit quotas, and sandboxing safety policies.
+        <p className="text-xs text-[#8A8F98] mt-0.5">
+          Manage local secrets, GitHub rate limit quotas, token authentication speed, and sandboxing safety policies.
         </p>
       </div>
 
       {/* GitHub Token / Rate Limit Card */}
-      <Card className="p-5 space-y-4 bg-linear-surface-1 border-linear-border-1">
+      <Card className="p-5 space-y-4 bg-[#0F1011] border-[#23252A]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Github className="w-4 h-4 text-linear-accent" />
-            <h2 className="text-sm font-semibold text-linear-text-main font-mono uppercase">
+            <Github className="w-4 h-4 text-[#5E6AD2]" />
+            <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono uppercase">
               GitHub Rate Limit & Optional Token
             </h2>
           </div>
-          <Badge variant="primary" size="sm">
-            Current Quota: {rateLimit.remaining}/{rateLimit.limit} req/hr
+          <Badge
+            variant={rateLimit.remaining < 20 ? "danger" : authStatus.authenticated ? "success" : "primary"}
+            size="sm"
+          >
+            Quota: {rateLimit.remaining}/{rateLimit.limit} req/hr
           </Badge>
         </div>
 
-        <p className="text-xs text-linear-text-muted leading-relaxed font-mono">
+        <p className="text-xs text-[#8A8F98] leading-relaxed font-mono">
           Public GitHub unauthenticated requests are limited to 60 req/hour. Supplying an optional Personal Access Token (classic with public repo read access) increases your quota to 5,000 req/hour. The token is stored strictly in your browser's LocalStorage and is never transmitted to any third party.
         </p>
 
-        <div className="space-y-2 font-mono text-xs">
-          <label className="block text-linear-text-secondary font-medium">
-            Personal Access Token (Optional)
-          </label>
+        <div className="space-y-3 font-mono text-xs">
+          <div className="flex items-center justify-between">
+            <label className="text-[#D0D6E0] font-medium">
+              Personal Access Token (Optional)
+            </label>
+            <a
+              href="https://github.com/settings/tokens/new?description=RepoPilot&scopes=public_repo"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#828FFF] hover:text-[#5E6AD2] text-[11px] flex items-center gap-1 transition-colors"
+            >
+              Generate token on GitHub <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+
           <div className="flex gap-2">
             <Input
               type="password"
@@ -92,35 +171,82 @@ export default function GeneralSettingsPage() {
               onChange={(e) => setToken(e.target.value)}
             />
             <Button
+              variant="secondary"
+              size="sm"
+              icon={<RefreshCw className={`w-3.5 h-3.5 ${isVerifying ? "animate-spin text-[#828FFF]" : ""}`} />}
+              onClick={() => handleVerifyToken()}
+              disabled={isVerifying}
+              className="shrink-0"
+            >
+              {isVerifying ? "Verifying..." : "Test Token"}
+            </Button>
+            <Button
               variant="primary"
               size="sm"
               icon={<Save className="w-3.5 h-3.5" />}
               onClick={handleSaveToken}
+              disabled={isVerifying}
               className="shrink-0"
             >
               Save Token
             </Button>
           </div>
+
           {savedTokenNotice && (
-            <p className="text-xs text-linear-success flex items-center gap-1 font-medium">
+            <p className="text-xs text-[#27A644] flex items-center gap-1 font-medium">
               <CheckCircle className="w-3.5 h-3.5" /> Token preferences saved locally.
             </p>
+          )}
+
+          {/* Test & Verification Feedback Box */}
+          {verifyResult && (
+            <div
+              className={`p-3 rounded-lg border text-xs flex items-start gap-2.5 transition-all ${
+                verifyResult.success
+                  ? "bg-[#27A644]/10 border-[#27A644]/30 text-[#27A644]"
+                  : "bg-[#EF4444]/10 border-[#EF4444]/30 text-[#EF4444]"
+              }`}
+            >
+              {verifyResult.success ? (
+                <UserCheck className="w-4 h-4 shrink-0 mt-0.5" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1 space-y-0.5">
+                <span className="font-semibold block">
+                  {verifyResult.success ? "Authentication Verified" : "Authentication Failed"}
+                </span>
+                <span className="text-linear-text-muted text-[11px] leading-relaxed block text-opacity-90">
+                  {verifyResult.message}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Current Auth Status Banner */}
+          {!verifyResult && authStatus.authenticated && authStatus.user && (
+            <div className="p-2.5 rounded-lg border bg-[#141516] border-[#23252A] text-xs flex items-center gap-2 text-[#828FFF]">
+              <UserCheck className="w-4 h-4 text-[#27A644]" />
+              <span>
+                Authenticated as <strong className="text-[#F7F8F8]">@{authStatus.user}</strong> with active 5,000 req/hr rate limit.
+              </span>
+            </div>
           )}
         </div>
       </Card>
 
       {/* Security & Execution Policy Card */}
-      <Card className="p-5 space-y-3 font-mono text-xs bg-linear-surface-1 border-linear-border-1">
+      <Card className="p-5 space-y-3 font-mono text-xs bg-[#0F1011] border-[#23252A]">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-linear-success" />
-          <h2 className="text-sm font-semibold text-linear-text-main uppercase">
+          <ShieldCheck className="w-4 h-4 text-[#27A644]" />
+          <h2 className="text-sm font-semibold text-[#F7F8F8] uppercase">
             Security & Execution Sandbox Policy
           </h2>
         </div>
 
-        <div className="space-y-2 text-linear-text-muted leading-relaxed">
-          <div className="flex items-center justify-between p-2.5 rounded-lg bg-linear-surface-2 border border-linear-border-1">
-            <span className="font-medium text-linear-text-main">Automated Arbitrary Code Execution</span>
+        <div className="space-y-2 text-[#8A8F98] leading-relaxed">
+          <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#141516] border border-[#23252A]">
+            <span className="font-medium text-[#F7F8F8]">Automated Arbitrary Code Execution</span>
             <Badge variant="danger" size="sm">
               STRICTLY DISABLED
             </Badge>
@@ -133,15 +259,15 @@ export default function GeneralSettingsPage() {
       </Card>
 
       {/* Local Storage & History Management */}
-      <Card className="p-5 space-y-3 font-mono text-xs bg-linear-surface-1 border-linear-border-1">
+      <Card className="p-5 space-y-3 font-mono text-xs bg-[#0F1011] border-[#23252A]">
         <div className="flex items-center gap-2">
-          <Trash2 className="w-4 h-4 text-linear-danger" />
-          <h2 className="text-sm font-semibold text-linear-text-main uppercase">
+          <Trash2 className="w-4 h-4 text-[#EF4444]" />
+          <h2 className="text-sm font-semibold text-[#F7F8F8] uppercase">
             Local Data & Workspace History
           </h2>
         </div>
 
-        <p className="text-linear-text-muted">
+        <p className="text-[#8A8F98]">
           Clear cached repository history and saved configurations stored in your browser.
         </p>
 
@@ -155,7 +281,7 @@ export default function GeneralSettingsPage() {
             Clear Local Cache & Recent History
           </Button>
           {clearedHistoryNotice && (
-            <span className="text-xs text-linear-danger font-medium">
+            <span className="text-xs text-[#EF4444] font-medium">
               History cleared. Reloading...
             </span>
           )}

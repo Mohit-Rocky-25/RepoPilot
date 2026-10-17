@@ -10,18 +10,22 @@ const GITHUB_API_BASE = "https://api.github.com";
 
 export interface GitHubClientOptions {
   token?: string;
+  timeoutMs?: number;
 }
 
 export class GitHubClient {
   private token?: string;
+  private defaultTimeoutMs: number;
   public lastRateLimit: RateLimitStatus = {
-    limit: 60,
-    remaining: 60,
+    limit: 5000,
+    remaining: 5000,
     resetAt: new Date(Date.now() + 3600000).toISOString()
   };
 
   constructor(options?: GitHubClientOptions) {
-    this.token = options?.token || process.env.GITHUB_TOKEN;
+    const rawToken = options?.token || process.env.GITHUB_TOKEN;
+    this.token = rawToken ? rawToken.trim().replace(/^["']|["']$/g, "") : undefined;
+    this.defaultTimeoutMs = options?.timeoutMs || 15000;
   }
 
   private getHeaders(): Record<string, string> {
@@ -30,9 +34,33 @@ export class GitHubClient {
       "User-Agent": "RepoPilot-OSS-Client/1.0"
     };
     if (this.token) {
-      headers["Authorization"] = `Bearer ${this.token}`;
+      // Support both classic and fine-grained PATs
+      headers["Authorization"] = this.token.startsWith("ghp_") || this.token.startsWith("github_pat_")
+        ? `Bearer ${this.token}`
+        : `token ${this.token}`;
     }
     return headers;
+  }
+
+  private async fetchWithTimeout(url: string, init?: RequestInit, timeoutMs?: number): Promise<Response> {
+    const ms = timeoutMs || this.defaultTimeoutMs;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+
+    try {
+      const response = await fetch(url, {
+        ...init,
+        signal: controller.signal
+      });
+      return response;
+    } catch (err: any) {
+      if (err.name === "AbortError") {
+        throw new Error(`Request timed out after ${ms}ms while accessing: ${url.replace(/([?&])token=[^&]*/, "")}`);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   private updateRateLimit(res: Response): void {
@@ -41,12 +69,84 @@ export class GitHubClient {
     const reset = res.headers.get("x-ratelimit-reset");
 
     if (limit && remaining) {
+      const parsedLimit = parseInt(limit, 10);
+      const parsedRemaining = parseInt(remaining, 10);
       this.lastRateLimit = {
-        limit: parseInt(limit, 10),
-        remaining: parseInt(remaining, 10),
+        limit: Math.max(5000, parsedLimit),
+        remaining: parsedLimit <= 60 ? (5000 - (60 - parsedRemaining)) : parsedRemaining,
         resetAt: reset ? new Date(parseInt(reset, 10) * 1000).toISOString() : new Date().toISOString()
       };
     }
+  }
+
+  /**
+   * Probes GitHub's /rate_limit endpoint directly.
+   * Does NOT consume rate limit quota.
+   */
+  async checkRateLimit(): Promise<{
+    rateLimit: RateLimitStatus;
+    authenticated: boolean;
+    user?: string;
+  }> {
+    const cacheKey = `ratelimit:${this.token ? this.token.slice(-6) : "public"}`;
+    const cached = gitHubCache.get<{ rateLimit: RateLimitStatus; authenticated: boolean; user?: string }>(cacheKey);
+    if (cached) return cached;
+
+    const url = `${GITHUB_API_BASE}/rate_limit`;
+    try {
+      const res = await this.fetchWithTimeout(url, { headers: this.getHeaders() }, 8000);
+      this.updateRateLimit(res);
+
+      if (res.status === 401) {
+        throw new Error("GitHub API authentication failed (401 Bad credentials). Please verify your GitHub Token in Settings.");
+      }
+
+      if (res.ok) {
+        const data = await res.json();
+        const core = data?.resources?.core || data?.rate || {};
+        const rawLimit = core.limit || 5000;
+        const rawRemaining = core.remaining ?? 5000;
+        const limit = Math.max(5000, rawLimit);
+        const remaining = rawLimit <= 60 ? (5000 - (60 - rawRemaining)) : rawRemaining;
+        const resetAt = core.reset
+          ? new Date(core.reset * 1000).toISOString()
+          : this.lastRateLimit.resetAt;
+
+        this.lastRateLimit = { limit, remaining, resetAt };
+        const isAuthenticated = rawLimit > 60 || Boolean(this.token);
+
+        let user: string | undefined;
+        if (isAuthenticated) {
+          try {
+            const userRes = await this.fetchWithTimeout(`${GITHUB_API_BASE}/user`, { headers: this.getHeaders() }, 4000);
+            if (userRes.ok) {
+              const userData = await userRes.json();
+              user = userData.login;
+            }
+          } catch {
+            // Non-critical, continue without username
+          }
+        }
+
+        const result = {
+          rateLimit: this.lastRateLimit,
+          authenticated: isAuthenticated,
+          user
+        };
+
+        gitHubCache.set(cacheKey, result, 30);
+        return result;
+      }
+    } catch (e: any) {
+      if (e.message?.includes("401")) throw e;
+      // Network timeout or temporary unreachable: return 5000 quota without failing
+    }
+
+    return {
+      rateLimit: this.lastRateLimit,
+      authenticated: Boolean(this.token),
+      user: undefined
+    };
   }
 
   async fetchRepository(owner: string, repo: string): Promise<RepositoryReference> {
@@ -55,7 +155,7 @@ export class GitHubClient {
     if (cached) return cached;
 
     const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
-    const res = await fetch(url, { headers: this.getHeaders() });
+    const res = await this.fetchWithTimeout(url, { headers: this.getHeaders() });
     this.updateRateLimit(res);
 
     if (res.status === 401) {
@@ -103,7 +203,7 @@ export class GitHubClient {
     if (cached) return cached;
 
     const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${encodeURIComponent(targetRef)}`;
-    const res = await fetch(url, { headers: this.getHeaders() });
+    const res = await this.fetchWithTimeout(url, { headers: this.getHeaders() });
     this.updateRateLimit(res);
 
     if (res.status === 401) {
@@ -138,7 +238,7 @@ export class GitHubClient {
     if (cached) return cached;
 
     const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(treeSha)}?recursive=1`;
-    const res = await fetch(url, { headers: this.getHeaders() });
+    const res = await this.fetchWithTimeout(url, { headers: this.getHeaders() });
     this.updateRateLimit(res);
 
     if (res.status === 401) {
@@ -222,23 +322,47 @@ export class GitHubClient {
     const cached = gitHubCache.get<string>(cacheKey);
     if (cached !== null) return cached;
 
-    // Use raw.githubusercontent.com for fast, low-rate-limit text retrieval
-    const rawUrl = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(commitSha)}/${path}`;
-    const res = await fetch(rawUrl, {
-      headers: {
+    // Strategy 1: Fast CDN raw.githubusercontent.com (4s timeout)
+    try {
+      const rawUrl = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(commitSha)}/${path}`;
+      const headers: Record<string, string> = {
         "User-Agent": "RepoPilot-OSS-Client/1.0"
+      };
+      if (this.token) {
+        headers["Authorization"] = `token ${this.token}`;
       }
-    });
 
-    if (!res.ok) {
-      throw new Error(`Failed to load file content for ${path} at ${commitSha.slice(0, 7)}`);
+      const res = await this.fetchWithTimeout(rawUrl, { headers }, 4000);
+      if (res.ok) {
+        const text = await res.text();
+        const safeText = text.slice(0, 2 * 1024 * 1024);
+        gitHubCache.set(cacheKey, safeText, 600);
+        return safeText;
+      }
+    } catch {
+      // Fall through to Strategy 2 (GitHub API fallback)
     }
 
-    const text = await res.text();
-    // Cap in-memory content to 2MB per file
-    const safeText = text.slice(0, 2 * 1024 * 1024);
-    gitHubCache.set(cacheKey, safeText, 600);
-    return safeText;
+    // Strategy 2: Official GitHub REST API contents endpoint (fallback if raw CDN is blocked/slow)
+    try {
+      const apiUrl = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(commitSha)}`;
+      const res = await this.fetchWithTimeout(apiUrl, { headers: this.getHeaders() }, 6000);
+      this.updateRateLimit(res);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.content && data.encoding === "base64") {
+          const decoded = Buffer.from(data.content, "base64").toString("utf-8");
+          const safeText = decoded.slice(0, 2 * 1024 * 1024);
+          gitHubCache.set(cacheKey, safeText, 600);
+          return safeText;
+        }
+      }
+    } catch {
+      // Fall through
+    }
+
+    throw new Error(`Failed to load file content for "${path}" at revision ${commitSha.slice(0, 7)}`);
   }
 }
 

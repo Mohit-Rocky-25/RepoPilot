@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       limit: 6
     });
 
-    // Gather file chunks
+    // Gather file chunks concurrently
     const chunks: { filePath: string; startLine: number; endLine: number; content: string }[] = [];
     const citations: SourceReference[] = [];
 
@@ -56,15 +56,28 @@ export async function POST(req: NextRequest) {
       ? [targetFilePath, ...searchMatches.map((m) => m.filePath).filter((p) => p !== targetFilePath)]
       : searchMatches.map((m) => m.filePath);
 
-    for (const filePath of candidateFiles.slice(0, 3)) {
-      try {
+    const candidateSlice = candidateFiles.slice(0, 3);
+    const chunkResults = await Promise.allSettled(
+      candidateSlice.map(async (filePath) => {
         const content = await ghClient.fetchFileContent(owner, repo, sha || "HEAD", filePath);
         const lines = content.split("\n");
-        const snippet = lines.slice(0, 60).join("\n"); // top 60 lines
-        chunks.push({
+        const snippet = lines.slice(0, 60).join("\n");
+        return {
           filePath,
           startLine: 1,
           endLine: Math.min(lines.length, 60),
+          snippet
+        };
+      })
+    );
+
+    for (const res of chunkResults) {
+      if (res.status === "fulfilled" && res.value) {
+        const { filePath, startLine, endLine, snippet } = res.value;
+        chunks.push({
+          filePath,
+          startLine,
+          endLine,
           content: snippet
         });
 
@@ -72,12 +85,10 @@ export async function POST(req: NextRequest) {
           repoKey: `${owner}/${repo}`,
           commitSha: sha || "HEAD",
           filePath,
-          startLine: 1,
-          endLine: Math.min(lines.length, 60),
+          startLine,
+          endLine,
           codeSnippet: snippet.slice(0, 300)
         });
-      } catch (e) {
-        // Continue
       }
     }
 

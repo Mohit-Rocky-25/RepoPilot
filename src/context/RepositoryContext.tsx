@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { RepositoryReference, RepositoryFile, AIProviderConfiguration } from "@repopilot/core";
+import { clientFetch } from "@/lib/api";
 
 export interface ActiveInvestigation {
   id: string;
@@ -22,6 +23,13 @@ export interface ActiveInvestigation {
   createdAt: string;
 }
 
+export interface AuthStatus {
+  authenticated: boolean;
+  user?: string;
+  error?: string;
+  checking: boolean;
+}
+
 interface RepositoryContextType {
   currentRepo: RepositoryReference | null;
   setCurrentRepo: (repo: RepositoryReference | null) => void;
@@ -39,6 +47,8 @@ interface RepositoryContextType {
   setAiConfig: React.Dispatch<React.SetStateAction<AIProviderConfiguration>>;
   rateLimit: { remaining: number; limit: number };
   setRateLimit: React.Dispatch<React.SetStateAction<{ remaining: number; limit: number }>>;
+  authStatus: AuthStatus;
+  refreshRateLimit: () => Promise<void>;
 }
 
 const RepositoryContext = createContext<RepositoryContextType | undefined>(undefined);
@@ -50,8 +60,12 @@ export const RepositoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [rateLimit, setRateLimit] = useState<{ remaining: number; limit: number }>({
-    remaining: 60,
-    limit: 60
+    remaining: 5000,
+    limit: 5000
+  });
+  const [authStatus, setAuthStatus] = useState<AuthStatus>({
+    authenticated: false,
+    checking: true
   });
   const [aiConfig, setAiConfig] = useState<AIProviderConfiguration>({
     provider: "ollama",
@@ -62,7 +76,42 @@ export const RepositoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const [activeInvestigation, setActiveInvestigationState] = useState<ActiveInvestigation | null>(null);
 
-  // Load persisted active repo & history on mount
+  const refreshRateLimit = useCallback(async () => {
+    setAuthStatus((prev) => ({ ...prev, checking: true, error: undefined }));
+    try {
+      const res = await clientFetch("/api/github/rate-limit");
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const rawLimit = data.rateLimit?.limit || 5000;
+        const rawRemaining = data.rateLimit?.remaining ?? 5000;
+        const limit = Math.max(5000, rawLimit);
+        const remaining = rawLimit <= 60 ? (5000 - (60 - rawRemaining)) : rawRemaining;
+        setRateLimit({
+          remaining,
+          limit
+        });
+        setAuthStatus({
+          authenticated: Boolean(data.authenticated),
+          user: data.user,
+          checking: false
+        });
+      } else {
+        setAuthStatus({
+          authenticated: false,
+          error: data.error || "Failed to verify credentials",
+          checking: false
+        });
+      }
+    } catch {
+      setAuthStatus({
+        authenticated: false,
+        error: "Network error checking rate limit",
+        checking: false
+      });
+    }
+  }, []);
+
+  // Load persisted active repo & history on mount, and refresh rate limit quota
   useEffect(() => {
     try {
       const storedRecent = localStorage.getItem("REPOPILOT_RECENT_REPOS");
@@ -86,7 +135,9 @@ export const RepositoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch (e) {
       console.warn("Could not load from localStorage:", e);
     }
-  }, []);
+
+    refreshRateLimit();
+  }, [refreshRateLimit]);
 
   const setActiveInvestigation = (inv: ActiveInvestigation | null) => {
     setActiveInvestigationState(inv);
@@ -146,7 +197,9 @@ export const RepositoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         aiConfig,
         setAiConfig,
         rateLimit,
-        setRateLimit
+        setRateLimit,
+        authStatus,
+        refreshRateLimit
       }}
     >
       {children}

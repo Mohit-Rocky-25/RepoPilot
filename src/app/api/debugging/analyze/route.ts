@@ -22,14 +22,19 @@ export async function POST(req: NextRequest) {
     // 1. Parse Stack Trace
     const parsedTrace = StackTraceParser.parse(stackTrace, repoFilePaths);
 
-    // 2. Fetch snippets for culprit frames
+    // 2. Fetch snippets for culprit frames concurrently
     const fileSnippets = new Map<string, string>();
-    for (const frame of parsedTrace.frames.slice(0, 3)) {
-      try {
+    const framesToFetch = parsedTrace.frames.slice(0, 3);
+    const snippetResults = await Promise.allSettled(
+      framesToFetch.map(async (frame) => {
         const content = await client.fetchFileContent(owner, repo, sha || "HEAD", frame.filePath);
-        fileSnippets.set(frame.filePath, content.slice(0, 1000));
-      } catch (e) {
-        // Continue
+        return { filePath: frame.filePath, snippet: content.slice(0, 1000) };
+      })
+    );
+
+    for (const res of snippetResults) {
+      if (res.status === "fulfilled" && res.value) {
+        fileSnippets.set(res.value.filePath, res.value.snippet);
       }
     }
 

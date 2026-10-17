@@ -16,13 +16,16 @@ export async function POST(req: NextRequest) {
     const token = req.headers.get("x-github-token") || process.env.GITHUB_TOKEN;
     const client = new GitHubClient({ token });
 
-    // 1. Fetch Repository Metadata
-    const repository = await client.fetchRepository(owner, repo);
+    // 1. Fetch Repository Metadata and Head Revision concurrently
+    const [repository, headRevision] = await Promise.all([
+      client.fetchRepository(owner, repo),
+      client.resolveRevision(owner, repo, "HEAD").catch(() => null)
+    ]);
 
-    // 2. Resolve Head Revision & Tree SHA
-    const revision = await client.resolveRevision(owner, repo, repository.defaultBranch);
+    // If HEAD resolution did not succeed, resolve using repository's default branch
+    const revision = headRevision || (await client.resolveRevision(owner, repo, repository.defaultBranch));
 
-    // 3. Fetch Repository Tree
+    // 2. Fetch Repository Tree
     const tree = await client.fetchTree(owner, repo, revision.treeSha);
 
     return NextResponse.json({

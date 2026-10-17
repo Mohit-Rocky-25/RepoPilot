@@ -16,7 +16,8 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsImportModalOpen,
     setIsSearchModalOpen,
     rateLimit,
-    aiConfig
+    aiConfig,
+    authStatus
   } = useRepository();
 
   if (isLandingPage) {
@@ -43,6 +44,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
           onOpenSearch={() => setIsSearchModalOpen(true)}
           rateLimit={rateLimit}
           aiStatus={aiConfig.isAvailable ? "ready" : "offline"}
+          authStatus={authStatus}
         />
 
         {/* Dynamic Page Content */}

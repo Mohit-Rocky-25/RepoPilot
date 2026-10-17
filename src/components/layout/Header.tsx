@@ -19,6 +19,11 @@ interface HeaderProps {
     limit: number;
   };
   aiStatus?: "ready" | "offline" | "connecting";
+  authStatus?: {
+    authenticated: boolean;
+    user?: string;
+    checking?: boolean;
+  };
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -26,7 +31,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenImport,
   onOpenSearch,
   rateLimit = { remaining: 5000, limit: 5000 },
-  aiStatus = "offline"
+  aiStatus = "offline",
+  authStatus
 }) => {
   return (
     <header className="h-14 bg-[#0F1011] border-b border-[#23252A] px-4 flex items-center justify-between shrink-0 select-none shadow-[0_1px_0_rgba(255,255,255,0.02)]">
@@ -104,12 +110,29 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
-        {/* GitHub API Rate Limit */}
-        <div
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#141516] border border-[#23252A] text-[11px] font-mono text-[#8A8F98]"
-          title="GitHub REST API rate limit quota"
+        {/* GitHub API Rate Limit & Auth status */}
+        <a
+          href="/settings"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#34343A] text-[11px] font-mono transition-colors text-[#8A8F98] hover:text-[#F7F8F8]"
+          title={
+            authStatus?.authenticated
+              ? `Authenticated via GitHub Token as @${authStatus.user || "user"} (5,000 req/hr quota). Click to manage settings.`
+              : "Public Unauthenticated Rate Limit (60 req/hr). Click to add GitHub Token in Settings."
+          }
         >
+          <span
+            className={`w-2 h-2 rounded-full ${
+              authStatus?.authenticated
+                ? "bg-[#27A644] shadow-[0_0_8px_rgba(39,166,68,0.5)]"
+                : rateLimit.remaining < 20
+                ? "bg-[#EF4444]"
+                : "bg-[#F59E0B]"
+            }`}
+          />
           <span className="text-[#62666D]">API:</span>
+          {authStatus?.authenticated && authStatus.user ? (
+            <span className="text-[#828FFF] font-medium">@{authStatus.user}</span>
+          ) : null}
           <span
             className={
               rateLimit.remaining < 20
@@ -119,7 +142,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             {rateLimit.remaining}/{rateLimit.limit}
           </span>
-        </div>
+        </a>
 
         {currentRepo && (
           <Button
