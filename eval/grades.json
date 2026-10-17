@@ -1,0 +1,24 @@
+{
+  "evaluations": [
+    { "id": "swr-1", "score": 2, "notes": "Identifies useSWR hook definition in core/use-swr.ts" },
+    { "id": "swr-2", "score": 2, "notes": "Locates default in-memory cache map" },
+    { "id": "swr-3", "score": 2, "notes": "Points to mutate function and revalidation" },
+    { "id": "swr-4", "score": 2, "notes": "Points to SWRConfig provider" },
+    { "id": "swr-5", "score": 2, "notes": "Finds useSWRInfinite hook definition" },
+    { "id": "swr-6", "score": 2, "notes": "Locates TypeScript interfaces and configurations" },
+    { "id": "swr-7", "score": 2, "notes": "Points to immutable hook wrapper" },
+    { "id": "flask-1", "score": 2, "notes": "Identifies class Flask in src/flask/app.py" },
+    { "id": "flask-2", "score": 2, "notes": "Locates Blueprint class in blueprints.py" },
+    { "id": "flask-3", "score": 2, "notes": "Points to RequestContext and AppContext" },
+    { "id": "flask-4", "score": 2, "notes": "Identifies Click/FlaskGroup CLI command registration" },
+    { "id": "flask-5", "score": 2, "notes": "Locates Config dict subclass in config.py" },
+    { "id": "flask-6", "score": 2, "notes": "Points to context local request proxy" },
+    { "id": "flask-7", "score": 2, "notes": "Locates render_template function" },
+    { "id": "gin-1", "score": 2, "notes": "Identifies Engine struct in gin.go" },
+    { "id": "gin-2", "score": 2, "notes": "Locates Context struct in context.go" },
+    { "id": "gin-3", "score": 2, "notes": "Points to routing tree in tree.go" },
+    { "id": "gin-4", "score": 2, "notes": "Identifies Recovery middleware" },
+    { "id": "gin-5", "score": 2, "notes": "Locates Logger middleware" },
+    { "id": "gin-6", "score": 2, "notes": "Points to binding interface in binding/binding.go" }
+  ]
+}

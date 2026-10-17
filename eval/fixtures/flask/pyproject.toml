@@ -1,0 +1,3 @@
+[project]
+name = "flask"
+version = "3.0.0"

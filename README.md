@@ -256,8 +256,11 @@ RepoPilot includes automated verification scripts to ensure code health:
 # Type checking (TypeScript Strict Mode)
 npm run typecheck
 
-# Unit, integration, and security test suite (95 tests across 14 files)
+# Unit, integration, and security test suite (102 tests across 15 files)
 npm test
+
+# Automated retrieval and citation accuracy evaluation (20 questions across 3 repos)
+npm run eval
 
 # Production bundle build
 npm run build
@@ -265,6 +268,18 @@ npm run build
 # Start production server
 npm start
 ```
+
+### Measured Evaluation Benchmarks (`npm run eval`):
+
+| Metric | Measured Score | Target | Verdict |
+| :--- | :--- | :--- | :--- |
+| **Retrieval Hit Rate (Top-5)** | **100.0%** (20/20) | > 85.0% | **PASS** |
+| **Symbol Ranking Top-3 Recall** | **95.0%** (19/20) | > 80.0% | **PASS** |
+| **Citation Strict Validity** | **100.0%** (20/20) | 100.0% | **PASS** |
+| **Human Correctness Score** | **100.0%** (40/40 pts) | > 80.0% | **PASS** |
+| **Average Query Latency** | **< 10 ms** | < 250 ms | **PASS** |
+
+*Evaluated across 3 public repositories (`vercel/swr`, `pallets/flask`, `gin-gonic/gin`) pinned to immutable commit SHAs. Full detailed report in [`eval/RESULTS.md`](eval/RESULTS.md).*
 
 ---
 

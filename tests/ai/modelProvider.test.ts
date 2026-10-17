@@ -93,7 +93,8 @@ describe("ModelProvider Abstraction & BYO-Key Security", () => {
       const secret = "sk-super-secret-12345";
       const provider = new OpenAICompatibleProvider({
         baseUrl: "https://invalid-non-existent-ai-provider.com/v1",
-        apiKey: secret
+        apiKey: secret,
+        timeoutMs: 150
       });
 
       await expect(

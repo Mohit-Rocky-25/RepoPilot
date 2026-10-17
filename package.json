@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "docs:pdf": "node scripts/generate_readme_pdf.js"
+    "docs:pdf": "node scripts/generate_readme_pdf.js",
+    "eval": "npx tsx eval/run.ts"
   },
   "keywords": [
     "codebase-intelligence",

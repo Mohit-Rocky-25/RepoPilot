@@ -1,0 +1,162 @@
+[
+  {
+    "id": "swr-1",
+    "repo": "vercel/swr",
+    "question": "Where is the core useSWR hook defined?",
+    "expectedFiles": ["core/use-swr.ts", "src/core/use-swr.ts", "use-swr.ts"],
+    "expectedSymbol": "useSWR",
+    "category": "core-hook"
+  },
+  {
+    "id": "swr-2",
+    "repo": "vercel/swr",
+    "question": "Where is the default in-memory cache provider implemented?",
+    "expectedFiles": ["_internal/utils/cache.ts", "src/utils/cache.ts", "utils/cache.ts"],
+    "expectedSymbol": "initCache",
+    "category": "cache"
+  },
+  {
+    "id": "swr-3",
+    "repo": "vercel/swr",
+    "question": "Where is mutate function implemented for cache invalidation?",
+    "expectedFiles": ["_internal/utils/mutate.ts", "src/utils/mutate.ts", "core/use-swr.ts"],
+    "expectedSymbol": "mutate",
+    "category": "mutation"
+  },
+  {
+    "id": "swr-4",
+    "repo": "vercel/swr",
+    "question": "Where are global SWRConfig options and context defined?",
+    "expectedFiles": ["_internal/utils/config.ts", "src/utils/config.ts", "core/use-swr.ts"],
+    "expectedSymbol": "SWRConfig",
+    "category": "configuration"
+  },
+  {
+    "id": "swr-5",
+    "repo": "vercel/swr",
+    "question": "Where is the pagination infinite loading hook useSWRInfinite implemented?",
+    "expectedFiles": ["infinite/index.ts", "src/infinite/index.ts"],
+    "expectedSymbol": "useSWRInfinite",
+    "category": "extension-hook"
+  },
+  {
+    "id": "swr-6",
+    "repo": "vercel/swr",
+    "question": "Where are SWR TypeScript type definitions declared?",
+    "expectedFiles": ["core/types.ts", "_internal/types.ts", "src/types.ts"],
+    "expectedSymbol": "SWRConfiguration",
+    "category": "types"
+  },
+  {
+    "id": "swr-7",
+    "repo": "vercel/swr",
+    "question": "Where is the immutable data fetching hook useSWRImmutable located?",
+    "expectedFiles": ["immutable/index.ts", "src/immutable/index.ts"],
+    "expectedSymbol": "useSWRImmutable",
+    "category": "extension-hook"
+  },
+  {
+    "id": "flask-1",
+    "repo": "pallets/flask",
+    "question": "Where is the central Flask application class defined?",
+    "expectedFiles": ["src/flask/app.py", "flask/app.py"],
+    "expectedSymbol": "Flask",
+    "category": "core-app"
+  },
+  {
+    "id": "flask-2",
+    "repo": "pallets/flask",
+    "question": "Where is Blueprint modular routing implemented?",
+    "expectedFiles": ["src/flask/blueprints.py", "flask/blueprints.py"],
+    "expectedSymbol": "Blueprint",
+    "category": "routing"
+  },
+  {
+    "id": "flask-3",
+    "repo": "pallets/flask",
+    "question": "Where is request context and application context handling implemented?",
+    "expectedFiles": ["src/flask/ctx.py", "flask/ctx.py"],
+    "expectedSymbol": "RequestContext",
+    "category": "context"
+  },
+  {
+    "id": "flask-4",
+    "repo": "pallets/flask",
+    "question": "Where are standard Flask CLI command group tools configured?",
+    "expectedFiles": ["src/flask/cli.py", "flask/cli.py"],
+    "expectedSymbol": "FlaskGroup",
+    "category": "cli"
+  },
+  {
+    "id": "flask-5",
+    "repo": "pallets/flask",
+    "question": "Where is config loading from files and environment variables implemented?",
+    "expectedFiles": ["src/flask/config.py", "flask/config.py"],
+    "expectedSymbol": "Config",
+    "category": "configuration"
+  },
+  {
+    "id": "flask-6",
+    "repo": "pallets/flask",
+    "question": "Where are request proxy objects and context locals defined?",
+    "expectedFiles": ["src/flask/globals.py", "flask/globals.py"],
+    "expectedSymbol": "request",
+    "category": "globals"
+  },
+  {
+    "id": "flask-7",
+    "repo": "pallets/flask",
+    "question": "Where is Jinja2 template rendering helper render_template implemented?",
+    "expectedFiles": ["src/flask/templating.py", "flask/templating.py"],
+    "expectedSymbol": "render_template",
+    "category": "templating"
+  },
+  {
+    "id": "gin-1",
+    "repo": "gin-gonic/gin",
+    "question": "Where is the core Gin Engine struct and New/Default constructors located?",
+    "expectedFiles": ["gin.go", "engine.go"],
+    "expectedSymbol": "Engine",
+    "category": "core-engine"
+  },
+  {
+    "id": "gin-2",
+    "repo": "gin-gonic/gin",
+    "question": "Where is the request Context struct and helper methods defined?",
+    "expectedFiles": ["context.go"],
+    "expectedSymbol": "Context",
+    "category": "context"
+  },
+  {
+    "id": "gin-3",
+    "repo": "gin-gonic/gin",
+    "question": "Where is the radix tree router and route registration implemented?",
+    "expectedFiles": ["tree.go", "routergroup.go"],
+    "expectedSymbol": "node",
+    "category": "routing"
+  },
+  {
+    "id": "gin-4",
+    "repo": "gin-gonic/gin",
+    "question": "Where is the crash recovery middleware implemented?",
+    "expectedFiles": ["recovery.go"],
+    "expectedSymbol": "Recovery",
+    "category": "middleware"
+  },
+  {
+    "id": "gin-5",
+    "repo": "gin-gonic/gin",
+    "question": "Where is the request logger middleware implemented?",
+    "expectedFiles": ["logger.go"],
+    "expectedSymbol": "Logger",
+    "category": "middleware"
+  },
+  {
+    "id": "gin-6",
+    "repo": "gin-gonic/gin",
+    "question": "Where is JSON, XML, and form binding logic implemented?",
+    "expectedFiles": ["binding/binding.go", "binding.go"],
+    "expectedSymbol": "Binding",
+    "category": "binding"
+  }
+]
