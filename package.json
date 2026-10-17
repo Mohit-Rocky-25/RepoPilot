@@ -18,8 +18,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
+    "lint": "next lint",
     "docs:pdf": "node scripts/generate_readme_pdf.js",
-    "eval": "npx tsx eval/run.ts"
+    "eval": "npx tsx eval/run.ts",
+    "security:scan": "node scripts/secret_scan.js"
   },
   "keywords": [
     "codebase-intelligence",
@@ -51,6 +53,8 @@
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
     "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.15",
     "pdfkit": "^0.20.2",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",

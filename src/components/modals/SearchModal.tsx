@@ -67,7 +67,7 @@ export const SearchModal: React.FC = () => {
             >
               <div className="flex items-center gap-2">
                 <Search className="w-3.5 h-3.5" />
-                <span>Full-text code search for "{query}"</span>
+                <span>Full-text code search for &quot;{query}&quot;</span>
               </div>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </button>

@@ -64,7 +64,7 @@ export default function DocsPage() {
           <span>Documentation, User Guide & Limitations</span>
         </h1>
         <p className="text-xs text-linear-text-muted mt-0.5">
-          Comprehensive guide to RepoPilot's zero-budget architecture, local AI integration, and capabilities.
+          Comprehensive guide to RepoPilot&apos;s zero-budget architecture, local AI integration, and capabilities.
         </p>
       </div>
 
