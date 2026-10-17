@@ -1,14 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GitHubClient } from "@repopilot/github";
 import { ArchitectureAnalyzer } from "@repopilot/analysis";
+import {
+  validateGitHubOwner,
+  validateGitHubRepo,
+  validateGitRevision
+} from "@/lib/security";
+import { rateLimiter, getClientIp } from "@/lib/rateLimiter";
 
 export async function POST(req: NextRequest) {
   try {
+    // 1. IP Rate Limiting (45 req/min)
+    const clientIp = getClientIp(req);
+    const limitCheck = rateLimiter.check(`architecture:${clientIp}`, 45, 60000);
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { error: `Rate limit exceeded. Try again in ${limitCheck.resetInSeconds} seconds.` },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const { owner, repo, sha } = body;
 
-    if (!owner || !repo) {
-      return NextResponse.json({ error: "owner and repo are required." }, { status: 400 });
+    // 2. Strict Input Validation
+    if (!validateGitHubOwner(owner) || !validateGitHubRepo(repo)) {
+      return NextResponse.json(
+        { error: "Invalid repository identifier. Owner and repo must be valid alphanumeric names." },
+        { status: 400 }
+      );
+    }
+
+    if (sha && !validateGitRevision(sha)) {
+      return NextResponse.json(
+        { error: "Invalid git revision or commit SHA format." },
+        { status: 400 }
+      );
     }
 
     const token = req.headers.get("x-github-token") || process.env.GITHUB_TOKEN;

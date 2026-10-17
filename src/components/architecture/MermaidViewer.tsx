@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import type { ArchitectureSummary, ArchitectureGraph } from "@repopilot/core";
 import { generateMermaidDiagram, type MermaidDiagramType } from "@/lib/mermaidGenerator";
+import { sanitizeSvg } from "@/lib/security";
 
 interface Props {
   summary: ArchitectureSummary;
@@ -100,7 +101,7 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
         const { svg } = await window.mermaid.render(uniqueId, diagramCode);
 
         if (isMounted) {
-          setSvgContent(svg);
+          setSvgContent(sanitizeSvg(svg));
           setIsRendering(false);
         }
       } catch (err: any) {

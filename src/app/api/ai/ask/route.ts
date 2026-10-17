@@ -4,10 +4,28 @@ import { SearchEngine } from "@repopilot/search";
 import { OllamaClient, PromptBuilder, CitationValidator } from "@repopilot/ai";
 import { ArchitectureAnalyzer } from "@repopilot/analysis";
 import { generateMermaidDiagram } from "@/lib/mermaidGenerator";
+import {
+  validateGitHubOwner,
+  validateGitHubRepo,
+  validateGitRevision,
+  validateFilePath,
+  validateOllamaEndpoint
+} from "@/lib/security";
+import { rateLimiter, getClientIp } from "@/lib/rateLimiter";
 import type { SourceReference } from "@repopilot/core";
 
 export async function POST(req: NextRequest) {
   try {
+    // 1. IP Rate Limiting (30 req/min for compute-heavy ask endpoint)
+    const clientIp = getClientIp(req);
+    const limitCheck = rateLimiter.check(`ai:ask:${clientIp}`, 30, 60000);
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { error: `Rate limit exceeded. Try again in ${limitCheck.resetInSeconds} seconds.` },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const {
       owner,
@@ -19,9 +37,47 @@ export async function POST(req: NextRequest) {
       model = "qwen2.5-coder:1.5b"
     } = body;
 
-    if (!owner || !repo || !question) {
+    // 2. Strict Input Validation
+    if (!validateGitHubOwner(owner) || !validateGitHubRepo(repo)) {
       return NextResponse.json(
-        { error: "owner, repo, and question are required." },
+        { error: "Invalid repository identifier. Owner and repo must be alphanumeric." },
+        { status: 400 }
+      );
+    }
+
+    if (!question || typeof question !== "string" || !question.trim()) {
+      return NextResponse.json(
+        { error: "Question is required." },
+        { status: 400 }
+      );
+    }
+
+    if (question.length > 2000) {
+      return NextResponse.json(
+        { error: "Question exceeds maximum allowed length (2,000 characters)." },
+        { status: 400 }
+      );
+    }
+
+    if (sha && !validateGitRevision(sha)) {
+      return NextResponse.json(
+        { error: "Invalid git revision or commit SHA format." },
+        { status: 400 }
+      );
+    }
+
+    if (targetFilePath && !validateFilePath(targetFilePath)) {
+      return NextResponse.json(
+        { error: "Invalid target file path (path traversal sequence detected)." },
+        { status: 400 }
+      );
+    }
+
+    // 3. SSRF Protection: Validate baseUrl
+    const endpointValidation = validateOllamaEndpoint(baseUrl);
+    if (!endpointValidation.valid) {
+      return NextResponse.json(
+        { error: endpointValidation.reason || "Invalid AI endpoint (SSRF defense)." },
         { status: 400 }
       );
     }
