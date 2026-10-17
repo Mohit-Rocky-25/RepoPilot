@@ -32,7 +32,7 @@
 
 | ID | Repository | Question | Retrieval Hit? | Symbol Top-3? | Citation Valid? | Latency | Score (0-2) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `swr-1` | `vercel/swr` | Where is the core useSWR hook defined? | ✓ Yes | ✓ Yes | ✓ Valid | 4ms | 2/2 |
+| `swr-1` | `vercel/swr` | Where is the core useSWR hook defined? | ✓ Yes | ✓ Yes | ✓ Valid | 3ms | 2/2 |
 | `swr-2` | `vercel/swr` | Where is the default in-memory cache provider implemented? | ✓ Yes | ✓ Yes | ✓ Valid | 0ms | 2/2 |
 | `swr-3` | `vercel/swr` | Where is mutate function implemented for cache invalidation? | ✓ Yes | ✓ Yes | ✓ Valid | 0ms | 2/2 |
 | `swr-4` | `vercel/swr` | Where are global SWRConfig options and context defined? | ✓ Yes | ✓ Yes | ✓ Valid | 0ms | 2/2 |
