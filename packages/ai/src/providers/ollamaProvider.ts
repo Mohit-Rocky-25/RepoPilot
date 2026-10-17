@@ -22,6 +22,11 @@ export class OllamaProvider implements ModelProvider {
   }
 
   async generate(options: GenerateOptions): Promise<string> {
-    return this.client.generate(options.model, options.prompt, options.systemPrompt);
+    return this.client.generate(
+      options.model,
+      options.prompt,
+      options.systemPrompt,
+      options.signal
+    );
   }
 }

@@ -92,6 +92,10 @@ export class OpenAICompatibleProvider implements ModelProvider {
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    if (options.signal) {
+      if (options.signal.aborted) controller.abort();
+      else options.signal.addEventListener("abort", () => controller.abort());
+    }
 
     const messages: Array<{ role: string; content: string }> = [];
     if (options.systemPrompt) {

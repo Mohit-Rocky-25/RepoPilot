@@ -47,11 +47,13 @@ export class OllamaClient {
   async generate(
     model: string,
     prompt: string,
-    systemPrompt?: string
+    systemPrompt?: string,
+    signal?: AbortSignal
   ): Promise<string> {
     const res = await fetch(`${this.baseUrl}/api/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal,
       body: JSON.stringify({
         model,
         prompt,

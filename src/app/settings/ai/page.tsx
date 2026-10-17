@@ -455,13 +455,46 @@ export default function AISettingsPage() {
               <label className="text-xs font-mono text-linear-text-secondary block mb-1.5">
                 Model Name
               </label>
+              <div className="flex gap-2 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setOllamaModel("qwen2.5-coder:7b")}
+                  className={`px-2.5 py-1 rounded text-[11px] font-mono border transition-colors ${
+                    ollamaModel === "qwen2.5-coder:7b"
+                      ? "bg-linear-accent/20 border-linear-accent text-linear-accent"
+                      : "bg-linear-surface-2 border-linear-border-1 text-linear-text-muted hover:text-white"
+                  }`}
+                >
+                  qwen2.5-coder:7b (Recommended)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOllamaModel("qwen2.5-coder:1.5b")}
+                  className={`px-2.5 py-1 rounded text-[11px] font-mono border transition-colors ${
+                    ollamaModel === "qwen2.5-coder:1.5b"
+                      ? "bg-linear-accent/20 border-linear-accent text-linear-accent"
+                      : "bg-linear-surface-2 border-linear-border-1 text-linear-text-muted hover:text-white"
+                  }`}
+                >
+                  qwen2.5-coder:1.5b (Fast / Low RAM)
+                </button>
+              </div>
               <Input
                 value={ollamaModel}
                 onChange={(e) => setOllamaModel(e.target.value)}
-                placeholder="qwen2.5-coder:1.5b"
+                placeholder="qwen2.5-coder:7b"
                 className="font-mono text-xs"
               />
             </div>
+
+            {/(1\.5b|0\.5b|1b|3b)/i.test(ollamaModel) && (
+              <div className="p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[11px] font-mono flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Quality Notice:</strong> Models under 7B (such as 1.5B) have limited multi-file reasoning capacity and may miss subtle references. A 7B-class model (e.g. <code>qwen2.5-coder:7b</code>) is recommended for production-grade code Q&A.
+                </span>
+              </div>
+            )}
 
             <div className="flex items-center gap-3 pt-2">
               <Button

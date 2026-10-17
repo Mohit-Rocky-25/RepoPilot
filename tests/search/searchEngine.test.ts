@@ -30,6 +30,13 @@ describe("Search Engine - Deterministic Code & Symbol Search", () => {
       language: "TypeScript",
       extension: "ts",
       isBinary: false
+    },
+    {
+      path: "package.json",
+      size: 300,
+      type: "blob",
+      sha: "sha4",
+      isBinary: false
     }
   ];
 
@@ -91,5 +98,41 @@ describe("Search Engine - Deterministic Code & Symbol Search", () => {
 
     expect(results.length).toBe(1);
     expect(results[0].filePath).toBe("tests/Button.test.ts");
+  });
+
+  it("performs multi-factor BM25 context retrieval with symbol and entry point boosts", () => {
+    const retrieval = engine.retrieveContext({
+      query: "Where is calculateTotal initialized?",
+      maxTokens: 4000
+    });
+
+    expect(retrieval.hasRelevantMatches).toBe(true);
+    expect(retrieval.includedFiles).toContain("src/index.ts");
+    expect(retrieval.rankedFiles[0].filePath).toBe("src/index.ts");
+    // Verify symbol and entry point boosts were applied
+    expect(retrieval.rankedFiles[0].reasons.some((r) => r.includes("Symbol"))).toBe(true);
+    expect(retrieval.rankedFiles[0].reasons.some((r) => r.includes("entry point"))).toBe(true);
+  });
+
+  it("signals refusal when retrieval finds no matching files or symbols", () => {
+    const retrieval = engine.retrieveContext({
+      query: "xyz123QuantumFoamNonexistentConcept",
+      maxTokens: 4000
+    });
+
+    expect(retrieval.hasRelevantMatches).toBe(false);
+    expect(retrieval.includedFiles.length).toBe(0);
+    expect(retrieval.omittedCount).toBe(0);
+  });
+
+  it("tracks omitted files when candidate count exceeds token bound", () => {
+    const retrieval = engine.retrieveContext({
+      query: "Button",
+      maxTokens: 400 // only allows 1 file
+    });
+
+    expect(retrieval.hasRelevantMatches).toBe(true);
+    expect(retrieval.includedFiles.length).toBe(1);
+    expect(retrieval.omittedCount).toBeGreaterThanOrEqual(1);
   });
 });

@@ -6,6 +6,7 @@ export interface GenerateOptions {
   systemPrompt?: string;
   temperature?: number;
   maxTokens?: number;
+  signal?: AbortSignal;
 }
 
 export interface ModelProvider {

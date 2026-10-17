@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   let customApiKey: string | undefined;
 
   try {
-    // 1. DoS Defense: Body size cap (64 KB)
+    // 1. DoS Defense: Request body size cap (64 KB)
     const sizeCheck = checkPayloadSize(req, 65536);
     if (sizeCheck) return sizeCheck;
 
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       return rateCheck.response;
     }
 
-    // 2. Read headers for BYO Key & Provider
+    // 3. Read headers for BYO Key & Provider
     customApiKey = req.headers.get("x-ai-key") || undefined;
     const headerProvider = req.headers.get("x-ai-provider") as any;
     const headerBaseUrl = req.headers.get("x-ai-base-url") || undefined;
@@ -46,12 +46,13 @@ export async function POST(req: NextRequest) {
       sha,
       question,
       targetFilePath,
-      baseUrl = headerBaseUrl || "http://localhost:11434",
-      model = headerModel || "qwen2.5-coder:1.5b",
-      providerType = headerProvider || (customApiKey ? "openai-compatible" : "ollama")
+      baseUrl = headerBaseUrl || process.env.OLLAMA_BASE_URL || "http://localhost:11434",
+      model = headerModel || process.env.DEFAULT_MODEL || "qwen2.5-coder:7b",
+      providerType = headerProvider || (customApiKey ? "openai-compatible" : "ollama"),
+      maxContextTokens = body.maxContextTokens || parseInt(process.env.MAX_CONTEXT_TOKENS || "4000", 10)
     } = body;
 
-    // 3. Strict Input Validation
+    // 4. Strict Input Validation
     if (!validateGitHubOwner(owner) || !validateGitHubRepo(repo)) {
       return NextResponse.json(
         { error: "Invalid repository identifier. Owner and repo must be alphanumeric." },
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 4. SSRF Protection: Validate baseUrl
+    // 5. SSRF Protection: Validate baseUrl
     const isLocalOllama = providerType === "ollama";
     const endpointValidation = await validateAiEndpoint(baseUrl, { allowLoopbackOllama: isLocalOllama });
     if (!endpointValidation.valid) {
@@ -101,7 +102,13 @@ export async function POST(req: NextRequest) {
     const ghClient = new GitHubClient({ token });
     const tree = await ghClient.fetchTree(owner, repo, sha || "HEAD");
 
-    // 5. Select Model Provider
+    // Quality check for models under 7B
+    const isUnder7B = /(1\.5b|0\.5b|1b|3b)/i.test(model);
+    const qualityWarning = isUnder7B
+      ? "Selected model has under 7B parameters. For grounded multi-file reasoning, a 7B+ model (e.g., qwen2.5-coder:7b) is recommended."
+      : undefined;
+
+    // 6. Select Model Provider
     const provider = createModelProvider({
       type: providerType,
       baseUrl,
@@ -111,33 +118,39 @@ export async function POST(req: NextRequest) {
 
     const status = await provider.isAvailable();
 
-    // 6. Deterministic Context Retrieval
+    // 7. Multi-factor BM25 Context Retrieval
     const searchEngine = new SearchEngine({ files: tree, symbols: [] });
-
-    // Extract search terms from question
-    const terms = question
-      .replace(/[^\w\s]/g, " ")
-      .split(/\s+/)
-      .filter((w: string) => w.length > 2 && !["where", "what", "which", "does", "this", "that", "how"].includes(w.toLowerCase()));
-
-    const searchQuery = terms.slice(0, 3).join(" ") || question;
-    const searchMatches = searchEngine.search({
-      query: searchQuery,
-      type: "all",
-      limit: 6
+    const retrieval = searchEngine.retrieveContext({
+      query: question,
+      targetFilePath,
+      maxTokens: maxContextTokens
     });
 
-    // Gather file chunks concurrently
+    // 8. Refusal path: Refuse when retrieval finds no relevant evidence
+    if (!retrieval.hasRelevantMatches && !/mermaid|diagram|architecture|flowchart|structure|graph|3d/i.test(question)) {
+      return NextResponse.json({
+        success: true,
+        answer: "Based on the indexed repository files, no relevant evidence was found for your query. RepoPilot does not guess or answer ungrounded questions from model memory.",
+        citations: [],
+        validatedCitations: [],
+        refused: true,
+        confidence: "uncertain",
+        qualityWarning,
+        limitations: ["No matching files or symbols found in repository revision."],
+        contextSummary: {
+          includedFiles: [],
+          omittedCount: 0
+        }
+      });
+    }
+
+    // Gather file chunks concurrently from ranked files
     const chunks: { filePath: string; startLine: number; endLine: number; content: string }[] = [];
     const citations: SourceReference[] = [];
 
-    const candidateFiles = targetFilePath
-      ? [targetFilePath, ...searchMatches.map((m) => m.filePath).filter((p) => p !== targetFilePath)]
-      : searchMatches.map((m) => m.filePath);
-
-    const candidateSlice = candidateFiles.slice(0, 3);
+    const candidateFiles = retrieval.includedFiles.slice(0, 4);
     const chunkResults = await Promise.allSettled(
-      candidateSlice.map(async (filePath) => {
+      candidateFiles.map(async (filePath) => {
         const content = await ghClient.fetchFileContent(owner, repo, sha || "HEAD", filePath);
         const lines = content.split("\n");
         const snippet = lines.slice(0, 60).join("\n");
@@ -171,7 +184,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 7. Fallback if provider is offline or unconfigured
+    // 9. Fallback if provider is offline or unconfigured
     if (!status.available) {
       const isDiagramRequest = /mermaid|diagram|architecture|flowchart|structure|graph|3d/i.test(question);
 
@@ -202,6 +215,11 @@ ${mermaidCode}
           citations,
           confidence: "high",
           modelUsed: "deterministic-mermaid-engine",
+          qualityWarning,
+          contextSummary: {
+            includedFiles: retrieval.includedFiles,
+            omittedCount: retrieval.omittedCount
+          },
           limitations: []
         });
       }
@@ -229,11 +247,16 @@ ${chunks.slice(0, 2).map((c) => `**${c.filePath}** (Lines ${c.startLine}-${c.end
         citations,
         confidence: "medium",
         modelUsed: "deterministic-search-engine",
+        qualityWarning,
+        contextSummary: {
+          includedFiles: retrieval.includedFiles,
+          omittedCount: retrieval.omittedCount
+        },
         limitations: [fallbackReason]
       });
     }
 
-    // 8. Provider is available: Build grounded prompt and generate response
+    // 10. Provider is available: Build grounded prompt and generate response
     const { systemPrompt, userPrompt } = PromptBuilder.buildGroundedPrompt(
       question,
       chunks,
@@ -243,21 +266,31 @@ ${chunks.slice(0, 2).map((c) => `**${c.filePath}** (Lines ${c.startLine}-${c.end
     const rawResponse = await provider.generate({
       model,
       prompt: userPrompt,
-      systemPrompt
+      systemPrompt,
+      signal: req.signal
     });
 
-    // 9. Validate citations in generated response
+    // 11. Strict Citation Validation & Cleansing
     const extractedCitations = CitationValidator.extractCitations(rawResponse);
-    const validatedCitations = CitationValidator.validate(extractedCitations, tree);
+    const validationResult = CitationValidator.validate(extractedCitations, tree);
+    const cleanedAnswer = validationResult.invalidCitations.length > 0
+      ? CitationValidator.cleanInvalidCitations(rawResponse, validationResult.invalidCitations)
+      : rawResponse;
 
     return NextResponse.json({
       success: true,
-      answer: rawResponse,
+      answer: cleanedAnswer,
       citations: citations,
-      validatedCitations,
-      confidence: "high",
+      validatedCitations: validationResult.validCitations,
+      citationWarning: validationResult.warning,
+      confidence: validationResult.validCitations.length > 0 ? "high" : "medium",
       modelUsed: model,
       providerUsed: provider.name,
+      qualityWarning,
+      contextSummary: {
+        includedFiles: retrieval.includedFiles,
+        omittedCount: retrieval.omittedCount
+      },
       rateLimit: ghClient.lastRateLimit
     });
   } catch (error: any) {

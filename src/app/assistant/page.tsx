@@ -40,6 +40,13 @@ interface QAItem {
   modelUsed?: string;
   confidence?: string;
   timestamp: string;
+  qualityWarning?: string;
+  citationWarning?: string;
+  contextSummary?: {
+    includedFiles: string[];
+    omittedCount: number;
+  };
+  refused?: boolean;
 }
 
 export default function AssistantPage() {
@@ -81,8 +88,16 @@ export default function AssistantPage() {
     "Where are network API requests configured and handled?"
   ];
 
+  const abortControllerRef = React.useRef<AbortController | null>(null);
+
   const handleAsk = async (qText: string) => {
     if (!currentRepo || !qText.trim()) return;
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     setLoading(true);
     setError(null);
@@ -91,6 +106,7 @@ export default function AssistantPage() {
       const res = await clientFetch("/api/ai/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           owner: currentRepo.owner,
           repo: currentRepo.repo,
@@ -111,15 +127,24 @@ export default function AssistantPage() {
         citations: data.citations || [],
         modelUsed: data.modelUsed,
         confidence: data.confidence,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        qualityWarning: data.qualityWarning,
+        citationWarning: data.citationWarning,
+        contextSummary: data.contextSummary,
+        refused: data.refused
       };
 
       setHistory((prev) => [newItem, ...prev]);
       setQuestion("");
     } catch (err: any) {
-      setError(err.message || "Failed to process question.");
+      if (err.name === "AbortError") {
+        setError("Request was cancelled.");
+      } else {
+        setError(err.message || "Failed to process question.");
+      }
     } finally {
       setLoading(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -385,6 +410,38 @@ export default function AssistantPage() {
                   </button>
                 </div>
               </div>
+
+              {/* Context Summary Bar */}
+              {item.contextSummary && item.contextSummary.includedFiles.length > 0 && (
+                <div className="p-2.5 rounded-lg bg-[#0F1011] border border-[#23252A] text-[11px] font-mono text-[#8A8F98] space-y-1">
+                  <div className="flex items-center gap-1.5 font-semibold text-white">
+                    <FileCode className="w-3.5 h-3.5 text-[#5E6AD2]" />
+                    <span>Retrieved Context ({item.contextSummary.includedFiles.length} files included{item.contextSummary.omittedCount > 0 ? `, ${item.contextSummary.omittedCount} omitted by token bound` : ""}):</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1 text-[10px] text-[#828FFF]">
+                    {item.contextSummary.includedFiles.map((f) => (
+                      <span key={f} className="px-1.5 py-0.5 rounded bg-[#141516] border border-[#23252A]">
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Quality & Citation Warnings */}
+              {item.qualityWarning && (
+                <div className="p-2 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-mono flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{item.qualityWarning}</span>
+                </div>
+              )}
+
+              {item.citationWarning && (
+                <div className="p-2 rounded bg-blue-500/10 border border-blue-500/30 text-blue-300 text-[11px] font-mono flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                  <span>{item.citationWarning}</span>
+                </div>
+              )}
 
               {/* Answer Content */}
               <div className="text-xs text-linear-text-secondary font-mono whitespace-pre-wrap leading-relaxed">
