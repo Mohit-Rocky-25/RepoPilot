@@ -28,22 +28,49 @@ We will acknowledge receipt within 48 hours and work with you on remediation bef
 
 ---
 
-## Security Boundaries & Design Principles
+## Security Threat Model & Defenses
 
-RepoPilot is designed with defensive boundaries to handle untrusted open-source code safely:
+RepoPilot processes untrusted codebases from the public internet. Its security architecture implements strict defensive boundaries:
+
+### In-Scope & Defended Threats:
 
 1. **Server-Side Request Forgery (SSRF) Prevention**:
-   - All repository URLs submitted for analysis are strictly validated against `https://github.com/([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)`.
-   - Loopback IPs (`127.0.0.1`, `localhost`), private RFC 1918 subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), and link-local cloud metadata addresses (`169.254.169.254`) are blocked before initiating any HTTP connection.
+   - Repository URLs and custom AI base URLs are validated before outbound requests.
+   - DNS resolution is performed prior to connection: loopback addresses (`127.0.0.1`, `::1`), private RFC1918 subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), link-local metadata addresses (`169.254.169.254`), and IPv4-mapped IPv6 equivalents (`::ffff:127.0.0.1`) are blocked.
+   - HTTP redirects are inspected and re-validated against SSRF allowlists.
 
-2. **Path Traversal Protection**:
-   - File path queries within repository trees are validated against null bytes (`\0`), directory traversal sequences (`..`), and absolute path indicators. All paths are resolved virtually against the repository root.
+2. **Gzipped Tarball Extraction Security**:
+   - Repositories are streamed from `codeload.github.com` via a single gzipped tarball.
+   - Protection against zip-bombs and decompression attacks: 25MB archive cap, 100KB per-file cap, and 1,500 file extraction limit.
+   - Files with directory traversal sequences (`../`), absolute paths, null bytes, or symlinks escaping the repository root are rejected.
 
-3. **Zero Automated Code Execution**:
-   - RepoPilot treats all third-party code as untrusted.
-   - The platform **never** automatically executes build scripts, package installation hooks (`npm postinstall`), or arbitrary test runners on the server.
-   - Proposed patches are presented as human-readable unified diffs for local verification in the user's isolated environment.
+3. **Path Traversal Mitigation**:
+   - File retrieval and search APIs validate paths against directory traversal (`..`) and null bytes. All paths resolve virtually against the repository root.
 
-4. **Client-Side Secret Isolation**:
-   - Optional GitHub Personal Access Tokens (PATs) configured for quota expansion are saved exclusively in client-side `LocalStorage`.
-   - Secrets are never transmitted to third parties, written to server logs, or persisted in remote databases.
+4. **DOM-Based SVG XSS Defense**:
+   - Architecture diagrams generated via Mermaid are sanitized using DOMParser before insertion into the DOM.
+   - Strips `<script>`, `<iframe>`, `<object>`, `<embed>`, inline event handlers (`onload`, `onerror`), and `javascript:` URIs.
+
+5. **Prompt Injection Hardening**:
+   - Repository source files passed into LLM context are isolated within structured XML CDATA tags (`<untrusted_repo_content>`).
+   - System prompts instruct models to treat repository content strictly as data and never execute instructions found within repository files.
+
+6. **In-Memory Patch Validation & Sandboxing**:
+   - RepoPilot **never** executes untrusted repository code, build scripts, or test runners.
+   - Proposed patches are validated in memory against pinned file lines. Conflicting or invalid hunks are rejected.
+
+7. **Client-Side Secret Isolation**:
+   - Optional GitHub Personal Access Tokens (PATs) and BYO AI provider keys default strictly to browser `sessionStorage`.
+   - Keys are kept in memory for the active browser session, never persisted to server databases, never logged, and redacted from error outputs.
+
+8. **Rate Limiting & Abuse Prevention**:
+   - Platform-trusted client IP extraction (`x-vercel-forwarded-for`, `req.ip`) prevents spoofed `X-Forwarded-For` bypasses.
+   - Multi-tier route-class rate limiting backed by `@upstash/ratelimit` when configured, with an in-memory sliding-window fallback. Request bodies are capped at 64KB on AI and debugger routes.
+
+---
+
+### Out-of-Scope & Known Threat Boundaries:
+
+- **Serverless In-Memory Rate Limiting**: When deployed without Upstash Redis, in-memory rate limiting is best-effort and does not synchronize state across distinct serverless instances.
+- **Untrusted Code Execution**: Users are responsible for inspecting candidate patches before running them on their local machines. RepoPilot labels all generated patches as `"Unverified: review before applying"`.
+- **Public GitHub Quota Exhaustion**: Unauthenticated requests are subject to GitHub's 60 req/hr IP limit. Users experiencing rate limits should provide a scoped PAT.

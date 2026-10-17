@@ -36,9 +36,9 @@
     <img src="https://img.shields.io/badge/License-MIT-5E6AD2.svg" alt="License: MIT" />
     <img src="https://img.shields.io/badge/TypeScript-Strict_Mode-3178C6.svg" alt="TypeScript Strict" />
     <img src="https://img.shields.io/badge/Next.js-14.2.15-000000.svg" alt="Next.js 14" />
-    <img src="https://img.shields.io/badge/Vitest-27_Passed-27A644.svg" alt="Tests" />
+    <img src="https://img.shields.io/badge/Vitest-95_Passed-27A644.svg" alt="Tests" />
     <img src="https://img.shields.io/badge/API_Costs-₹0_/_$0-27A644.svg" alt="Zero API Costs" />
-    <img src="https://img.shields.io/badge/AI-Local_Ollama_(Optional)-828FFF.svg" alt="Local AI" />
+    <img src="https://img.shields.io/badge/AI-Local_Ollama_or_BYO_Key-828FFF.svg" alt="Local AI" />
   </p>
 </div>
 
@@ -48,30 +48,30 @@
 
 **RepoPilot** is an independent, open-source codebase intelligence and developer productivity platform. It enables software engineers, first-time open-source contributors, and researchers to explore, understand, and debug unfamiliar repositories with precision.
 
-Entering an unfamiliar software codebase is one of the most time-consuming activities in engineering. Developers spend up to 70% of their time reading code, deciphering architectural scaffolding, and locating the source of runtime errors. Most existing developer tools either rely on expensive cloud LLM subscriptions that hallucinate non-existent files, or provide basic file trees without architectural context.
+Entering an unfamiliar software codebase is one of the most time-consuming activities in engineering. Developers spend a substantial portion of their daily working time reading existing code, deciphering architectural scaffolding, and locating the source of runtime errors before writing new logic. Most existing developer tools either rely on expensive cloud LLM subscriptions that can hallucinate non-existent files and symbols, or provide basic file trees without architectural context.
 
 RepoPilot solves this through an **evidence-first engineering approach**:
 - **Deterministic core**: File navigation, AST symbol extraction, architecture detection, and ranked code search run entirely on local compute without requiring an AI model or cloud API.
 - **Traceable citations**: Every analysis, symbol jump, and assistant answer is tied to an immutable commit SHA, exact file path, and line coordinate.
-- **Optional private AI**: Supports local open-weights coding models via [Ollama](https://ollama.com) (e.g., `qwen2.5-coder:1.5b`) with strict token bounds and automated citation verification. Operates 100% offline when Ollama is unavailable.
-- **Defensive sandboxing**: Untrusted repository code is never executed automatically. Bug fixes are proposed as unified diffs with reproducible regression tests for human review.
+- **Optional private AI**: Supports local open-weights coding models via [Ollama](https://ollama.com) (e.g., `qwen2.5-coder:7b`) or user-supplied OpenAI-compatible API keys (`sessionStorage` only) with strict token bounds and automated citation verification. Operates 100% offline when AI is unavailable.
+- **Defensive sandboxing**: Untrusted repository code is never executed automatically. Bug fixes are proposed as unified diffs validated in memory against pinned file lines with reproducible regression tests for human review.
 
 ---
 
 ## 2. Key Capabilities & Implementation Status
 
-| Feature Area | Description | Implementation Status | Data Source |
-| :--- | :--- | :--- | :--- |
-| **Repository Ingestion** | Ingests public GitHub repositories, validates URLs, and pins default branch HEAD to an immutable commit SHA. | **Verified / Active** | Public GitHub REST API (`api.github.com`) |
-| **Code Explorer** | Resizable dual-pane directory tree and syntax-highlighted code viewer with line numbers and line highlights. | **Verified / Active** | Pinned Git tree blobs (< 100KB) |
-| **Deterministic Code Search** | Multi-modal search engine ranking file paths, AST symbols, and lexical matches with language filters. | **Verified / Active** | Client-side deterministic ranking engine |
-| **AST Symbol Extraction** | Regex and AST pattern extractors parsing functions, classes, interfaces, and signatures across TS, JS, Python, Go, and Rust. | **Verified / Active** | Local AST pattern parser |
-| **3D Architecture Visualization** | WebGL orbital perspective map with node selection, dependency linking, and accessible 2D planar mode. | **Verified / Active** | Manifest analysis (`package.json`, `go.mod`, etc.) |
-| **Architecture Evidence Brief** | Summarizes detected frameworks, confirmed application entry points, and directory roles. | **Verified / Active** | Manifest heuristics & directory inspection |
-| **Grounded Code Assistant** | Evidence-grounded conversational assistant with bounded prompt contexts and automated citation validation. | **Verified / Active** | Optional local Ollama (`qwen2.5-coder`) or offline fallback |
-| **Bug & Stack Trace Analyzer** | Correlates Node/V8 and Python stack traces with repository source lines to formulate ranked root-cause hypotheses. | **Verified / Active** | Stack frame parser & pattern matcher |
-| **Patch Review & PR Export** | Formulates candidate minimal unified diffs, regression test checklists, and exportable Markdown PR drafts. | **Verified / Active** | Local hypothesis diff engine |
-| **Rate Limit Management** | Monitors GitHub REST quota headers and supports optional client-side Personal Access Tokens. | **Verified / Active** | Browser `LocalStorage` & GitHub response headers |
+| Feature Area | Description | Status | Works on Public Demo Without Key? | Data Source |
+| :--- | :--- | :--- | :--- | :--- |
+| **Repository Ingestion** | Ingests public GitHub repositories via tarball streaming, validates URLs against SSRF, and pins default branch HEAD to an immutable commit SHA. | **Stable** | Yes (up to public rate limits) | Pinned GitHub Tarball / REST API |
+| **Code Explorer** | Resizable dual-pane directory tree and syntax-highlighted code viewer with line numbers and line highlights. | **Stable** | Yes | In-memory extracted source files (< 100KB) |
+| **Deterministic Code Search** | Multi-modal search engine combining BM25 lexical scoring, path matching, entry-point boosts, and symbol ranking with language filters. | **Stable** | Yes | In-memory index & client search engine |
+| **AST Symbol Extraction** | Real Tree-sitter WASM grammars (TS/TSX, JS, Python, Go, Rust) with heuristic regex fallback (`confidence: heuristic`). | **Beta** | Yes | Tree-sitter WASM / heuristic fallback parser |
+| **Architecture Visualization** | Interactive 2D graph (default) with optional WebGL 3D orbital perspective map and dependency linking. | **Beta** | Yes | Manifest analysis (`package.json`, `go.mod`, etc.) |
+| **Architecture Evidence Brief** | Summarizes detected frameworks, confirmed application entry points, and directory roles from repo evidence. | **Stable** | Yes | Manifest heuristics & directory inspection |
+| **Grounded Code Assistant** | Grounded Q&A with bounded context, anti-prompt injection delimiters, and strict citation verification against the pinned commit SHA. | **Beta** | Yes (Deterministic citation mode without key; BYO key / Ollama for AI generation) | Local Ollama, BYO OpenAI-compatible key, or offline search |
+| **Bug & Stack Trace Analyzer** | Multi-language stack trace parser (Node/V8, Python chained, Go, Rust) with ANSI stripping, 64KB cap, and culprit hypothesis ranking. | **Beta** | Yes (Parsing, hypothesis ranking, and test checklists work without key) | Stack frame parser & pattern matcher |
+| **Patch Review & PR Export** | Validates candidate unified diffs in-memory against pinned file lines (`Unverified: review before applying`) and exports Markdown PR drafts. | **Beta** | Yes (Suggestion scaffolds generated without AI; AI diff validation with BYO key) | In-memory diff validator & hypothesis engine |
+| **Rate Limit Management** | Platform-trusted IP derivation, `@upstash/ratelimit` Redis support with in-memory fallback, and session-only PAT handling. | **Stable** | Yes | Vercel platform headers, Redis/Memory store |
 
 ---
 
@@ -165,17 +165,25 @@ RepoPilot uses a cohesive, high-density dark interface tailored for engineering 
 
 ---
 
-## 6. Zero-Hosted-API Operating Model
+## 6. Honest Comparison Against Real Alternatives
 
-RepoPilot has a strict **₹0 / $0 operating cost**:
+RepoPilot is designed for fast, evidence-grounded public repository exploration without mandatory subscriptions. Here is how it compares directly against existing tools:
 
-| Requirement | Conventional AI Platform | RepoPilot Architecture |
-| :--- | :--- | :--- |
-| **LLM Inference** | $20–$50/month hosted API subscriptions | **$0** (Optional local open-weights models via Ollama) |
-| **Vector Database** | $50–$100/month managed Pinecone/Qdrant | **$0** (Local deterministic symbol tables & in-memory search) |
-| **Repository Ingestion** | Paid third-party indexing services | **$0** (Public GitHub REST API with rate-limit monitoring) |
-| **Infrastructure Hosting** | Multi-container cloud cluster | **$0** (Self-hosted single Node.js process) |
-| **Telemetry & Tracking** | Commercial SaaS analytics | **$0** (Zero external telemetry; local client-side state) |
+| Dimension | RepoPilot | DeepWiki | Sourcegraph | Cursor / GitHub Copilot | Raw Chat Model (ChatGPT / Claude) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Setup & Onboarding** | **Zero setup**: Open browser, paste public URL | Web-based; requires repository indexing | Enterprise self-host or cloud account | IDE installation & plugin configuration | Paste snippets into web chat |
+| **Source Privacy** | **Local / Private**: BYO key stored only in `sessionStorage`; local Ollama supported | Cloud-hosted index | Enterprise on-prem or cloud SOC2 | Cloud-hosted telemetry & prompts | Cloud provider data retention policies |
+| **Offline Operation** | **Full offline core**: Browsing, search, symbols, architecture work 100% offline | No (requires hosted platform) | No (requires server connectivity) | Partial (editor works, AI requires cloud) | No (cloud only) |
+| **Citation Rigor** | **Strict SHA verification**: Verifies commit SHA, file existence, line bounds, and symbol scope; rejects hallucinations | Page-level or document-level citations | Precise compiler-grade LSIF/SCIP code graph | In-editor inline completions; no formal citation verification | Frequent hallucination of non-existent files or APIs |
+| **Cost** | **$0 / Free**: Deterministic core free forever; BYO key or free local Ollama | Freemium / Paid subscription | Free tier; Enterprise license ($$$) | $10–$20/month per user | Free tier or $20/month |
+| **Scope Limits** | Public GitHub repos up to 25MB archive / 1,500 files | Public & private GitHub repos | Multi-repo, multi-million line enterprise codebases | Workspace-wide codebase indexing | Context window limit (128k–200k tokens per prompt) |
+
+### Where RepoPilot is Weaker:
+- **No Private Repository OAuth**: RepoPilot currently targets public repositories. It does not provide private GitHub organization OAuth flows.
+- **Single-Repo Scope**: It does not perform cross-repository code graph linking or multi-repo enterprise search like Sourcegraph.
+- **Repository Size Bounds**: Monorepos exceeding 25MB compressed tarballs or 1,500 active source files are capped or truncated for browser performance.
+- **Model Reasoning Capacity**: Small local models (e.g. `qwen2.5-coder:1.5b` or `7b`) do not match the advanced multi-step reasoning capabilities of frontier cloud models (Claude 3.5 Sonnet, GPT-4o).
+- **Serverless Rate Limiting**: Without Upstash Redis configured via environment variables, rate limiting in serverless environments is best-effort and resets across cold starts.
 
 ---
 
@@ -248,7 +256,7 @@ RepoPilot includes automated verification scripts to ensure code health:
 # Type checking (TypeScript Strict Mode)
 npm run typecheck
 
-# Unit and integration test suite (27 tests across 10 files)
+# Unit, integration, and security test suite (95 tests across 14 files)
 npm test
 
 # Production bundle build
@@ -268,11 +276,11 @@ npm start
 3. Select any supported text or source file to inspect it in the right pane.
 4. Line numbers and syntax highlighting are rendered automatically. Click on symbol definition jump chips to navigate directly to functions, classes, or interfaces.
 
-### B. Interactive 3D Spatial Architecture (`/architecture`)
-1. Click the **3D Spatial Map** tab to enter the interactive WebGL orbital perspective.
-2. Drag with the mouse to orbit, scroll to zoom, and right-click to pan.
-3. Click any module node (lavender for entry points, cyan for modules, emerald for configuration) to open its details drawer and inspect connected dependencies.
-4. Use the **2D Planar Mode** toggle for an accessible, low-power fallback view.
+### B. Interactive Architecture Map (`/architecture`)
+1. Access the 2D planar graph by default for an accessible, low-power view of modules and imports.
+2. Toggle **3D Spatial Mode** to enter the interactive WebGL orbital perspective map with dynamic node clustering.
+3. Drag with the mouse to orbit, scroll to zoom, and right-click to pan.
+4. Click any module node (lavender for entry points, cyan for modules, emerald for configuration) to open its details drawer and inspect connected dependencies.
 5. Click the **Architecture Evidence Brief** tab to view detected frameworks, confirmed application entry points, and directory roles derived from repository evidence.
 
 ### C. Ranked Code Search (`/search`)
@@ -282,32 +290,37 @@ npm start
 4. Click any ranked match card to navigate to the exact source line in the Explorer.
 
 ### D. Grounded Code Assistant (`/assistant`)
-1. *(Optional)* Start Ollama locally: `ollama run qwen2.5-coder:1.5b`.
+1. *(Optional)* Start Ollama locally (`ollama run qwen2.5-coder:7b`) or configure an OpenAI-compatible BYO key in `/settings/ai`.
 2. Type an architectural or functional question into the input form.
-3. The assistant returns a concise explanation accompanied by clickable source citation cards (`file.ts:L12-L45`).
-4. If Ollama is offline, the assistant operates in deterministic fallback mode, retrieving exact matching source lines.
+3. The assistant returns a grounded response accompanied by clickable source citation cards (`file.ts:L12-L45`). Citations are strictly verified against the pinned commit SHA; invalid or hallucinated citations are automatically stripped.
+4. If no AI provider is configured, the assistant operates in deterministic offline mode, presenting verified BM25 lexical and symbol matches.
 
 ### E. Bug Investigation & Patch Review (`/debugging` → `/patches`)
-1. In `/debugging`, enter an issue title and paste an error log or stack trace.
+1. In `/debugging`, enter an issue title and paste an error log or stack trace (Node/V8, Python chained, Go, Rust).
 2. Click **"Investigate Root Cause"**.
-3. The engine parses the stack trace into user-code frames, formulates ranked hypotheses, and drafts a candidate unified diff.
-4. Click **"Send Candidate Patch to Patch Review →"** to hand off the investigation to `/patches`.
-5. Review the proposed unified diff, verify the suggested regression tests locally, and click **"Copy PR Markdown Draft"** to prepare a pull request for GitHub.
+3. The engine parses the stack trace into user-code vs dependency frames, formulates ranked hypotheses, and proposes testable next steps.
+4. If an AI provider is active, minimal unified diffs are generated and validated in memory against file contents before being displayed (`Unverified: review before applying`).
+5. Click **"Send Candidate Patch to Patch Review →"** to hand off the investigation to `/patches`.
+6. Review the proposed diff, run the suggested regression tests locally, and click **"Copy PR Markdown Draft"** to prepare a pull request for GitHub.
 
 ---
 
-## 11. Security, Privacy & Limitations
+## 11. Security, Privacy & Known Limitations
 
 ### Security Protections:
-- **SSRF Safeguards**: All repository imports are strictly checked against `https://github.com/([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)`. Localhost and private IP ranges are rejected.
-- **Path Traversal Mitigation**: File path lookups are validated against directory navigation sequences (`..`) and null bytes.
-- **Untrusted Code Sandbox**: No arbitrary repository scripts, package install hooks, or test runners are executed on the server.
-- **Client-Side Secrets**: Optional GitHub Personal Access Tokens are stored strictly in browser `LocalStorage` and never transmitted to third parties.
+- **SSRF Safeguards**: All repository imports and AI base URLs are strictly checked against SSRF policies. Resolves DNS ahead of connection, blocking loopback IPs, private RFC1918 subnets, link-local metadata addresses (`169.254.169.254`), and IPv4-mapped IPv6 variants.
+- **Safe Tarball Extraction**: Ingestion downloads a single gzipped tarball from `codeload.github.com`, enforcing a 25MB archive cap, 100KB per-file cap, symlink root containment, and path traversal (`../`) rejection.
+- **Path Traversal Mitigation**: File path lookups within repository trees are validated against directory navigation sequences (`..`) and null bytes.
+- **Untrusted Code Sandbox**: No arbitrary repository scripts, package install hooks, or test runners are executed on the server. Patches are suggestions for human review.
+- **Client-Side Secrets**: Personal Access Tokens (PATs) and BYO AI keys default strictly to browser `sessionStorage` (with explicit opt-in for device persistence), are never logged, and are sent only to their respective upstream providers over HTTPS.
+- **SVG XSS Sanitization**: Mermaid architecture diagrams are sanitized via DOMParser, stripping `<script>`, inline event handlers (`onload`), and `javascript:` pseudo-protocols.
 
-### Operating Limitations:
-- **Unauthenticated GitHub Rate Limits**: GitHub limits unauthenticated requests to 60 requests per hour per IP. To increase this to 5,000 req/hr, provide an optional Personal Access Token in `/settings`.
-- **Repository Tree Bounds**: For browser performance, repositories are indexed up to 1,500 source code files. Files exceeding 100KB and binary assets are automatically skipped.
-- **Hardware for Local AI**: If using Ollama, 8GB+ of system RAM is recommended for lightweight models (1B–3B parameters). No GPU is required. The platform remains 100% operational without Ollama.
+### Known Limitations:
+- **Public Repositories Only**: RepoPilot targets public GitHub repositories. Private repository OAuth authentication and organization access are not currently supported.
+- **Repository Size Caps**: Repositories are bounded to a maximum archive size of 25MB, up to 1,500 active source files, and individual source files capped at 100KB. Files exceeding these bounds are omitted from indexing.
+- **AST Language Coverage**: Tree-sitter WASM grammars are provided for TypeScript/TSX, JavaScript, Python, Go, and Rust. Other file types fall back to heuristic pattern extraction (`confidence: heuristic`).
+- **Model-Quality Caveats**: Models under 7B parameters (such as `1.5B` fast models) can struggle with complex architectural synthesis. While RepoPilot's citation verifier strips hallucinated citations, all generated answers and patch suggestions should be reviewed by an engineer before use.
+- **Serverless Rate Limiting**: In-memory rate limiting is best-effort on serverless platforms (e.g. Vercel) and resets across cold starts. Production deployments should configure `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` for distributed rate limiting.
 
 ---
 

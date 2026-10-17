@@ -17,7 +17,8 @@
     "start": "next start -p 3000",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "docs:pdf": "node scripts/generate_readme_pdf.js"
   },
   "keywords": [
     "codebase-intelligence",
@@ -45,9 +46,11 @@
   },
   "devDependencies": {
     "@types/node": "^22.7.5",
+    "@types/pdfkit": "^0.17.6",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
     "autoprefixer": "^10.4.20",
+    "pdfkit": "^0.20.2",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
     "typescript": "^5.6.3",
