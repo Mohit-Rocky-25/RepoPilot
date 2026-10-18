@@ -30,31 +30,16 @@ export class ArchitectureAnalyzer {
       }
     }
 
-    // Identify entry points
-    const ENTRY_CANDIDATES = new Set([
-      "src/index.ts",
-      "src/index.js",
-      "src/main.ts",
-      "src/main.js",
-      "src/app/page.tsx",
-      "src/app/layout.tsx",
-      "app/page.tsx",
-      "pages/index.tsx",
-      "pages/index.js",
-      "index.html",
-      "index.js",
-      "main.py",
-      "app.py",
-      "wsgi.py",
-      "asgi.py",
-      "main.go",
-      "cmd/main.go",
-      "src/main.rs",
-      "src/lib.rs"
-    ]);
+    // Identify entry points using comprehensive structural patterns
+    const ENTRY_PATTERNS = [
+      /^(?:src\/|app\/|pages\/|lib\/|cmd\/[^/]+\/|backend\/|api\/)?(?:index|main|app|server|cli|page|layout|run|manage)\.(?:ts|tsx|js|jsx|mjs|py|go|rs|rb|php|java)$/i,
+      /^(?:src\/)?(?:App|Server|Main)\.(?:tsx|jsx|ts|js|java)$/,
+      /^(?:src\/)?(?:lib|main)\.rs$/i,
+      /^(?:cmd\/main\.go|main\.go|app\.py|wsgi\.py|asgi\.py|index\.html)$/i
+    ];
 
     for (const file of files) {
-      if (ENTRY_CANDIDATES.has(file.path.toLowerCase())) {
+      if (ENTRY_PATTERNS.some((pat) => pat.test(file.path))) {
         entryPoints.push(file.path);
       }
 
@@ -77,6 +62,23 @@ export class ArchitectureAnalyzer {
       }
     }
 
+    // Fallback: If no conventional entry point was detected, pick root source files
+    if (entryPoints.length === 0) {
+      const rootSourceFiles = files.filter(
+        (f) => !f.path.includes("/") && f.language && !f.path.startsWith(".")
+      );
+      if (rootSourceFiles.length > 0) {
+        entryPoints.push(rootSourceFiles[0].path);
+      } else {
+        const srcFiles = files.filter(
+          (f) => f.path.startsWith("src/") && f.path.split("/").length === 2 && f.language
+        );
+        if (srcFiles.length > 0) {
+          entryPoints.push(srcFiles[0].path);
+        }
+      }
+    }
+
     // Inspect manifestContent (e.g. package.json)
     if (manifestContent) {
       try {
@@ -95,6 +97,10 @@ export class ArchitectureAnalyzer {
         if (allDepKeys.includes("tailwindcss")) frameworks.add("Tailwind CSS");
         if (allDepKeys.includes("vitest")) frameworks.add("Vitest");
         if (allDepKeys.includes("jest")) frameworks.add("Jest");
+        if (allDepKeys.includes("@angular/core")) frameworks.add("Angular");
+        if (allDepKeys.includes("prisma") || allDepKeys.includes("@prisma/client")) frameworks.add("Prisma");
+        if (allDepKeys.includes("zustand")) frameworks.add("Zustand");
+        if (allDepKeys.includes("redux") || allDepKeys.includes("@reduxjs/toolkit")) frameworks.add("Redux");
 
         for (const [dep, ver] of Object.entries(deps)) {
           dependencies.push({ name: dep, version: String(ver), isDev: false });
@@ -123,7 +129,7 @@ export class ArchitectureAnalyzer {
     }
 
     const keyModules = Array.from(dirMap.entries())
-      .filter(([dir]) => !dir.startsWith("."))
+      .filter(([dir]) => !dir.startsWith(".") && !dir.startsWith("node_modules"))
       .map(([dir, count]) => ({
         directory: dir,
         description: getModuleDescription(dir),
@@ -371,14 +377,26 @@ export class ArchitectureAnalyzer {
 
 function getModuleDescription(dir: string): string {
   const lower = dir.toLowerCase();
+  if (lower.includes("feature")) return "Domain Feature Modules & Workflows";
+  if (lower.includes("suite")) return "Integrated Feature Suites";
   if (lower.includes("component")) return "UI Presentational & Interactive Components";
-  if (lower.includes("hook")) return "Custom React State & Lifecycle Hooks";
+  if (lower.includes("hook")) return "Custom State & Lifecycle Hooks";
   if (lower.includes("api") || lower.includes("route")) return "Server API Endpoints & Route Handlers";
+  if (lower.includes("controller") || lower.includes("handler")) return "Request Controllers & Handlers";
+  if (lower.includes("service")) return "Business Logic & Service Layer";
+  if (lower.includes("model") || lower.includes("entity") || lower.includes("schema") || lower.includes("db") || lower.includes("prisma")) return "Data Models, Schema & Persistence";
+  if (lower.includes("ai") || lower.includes("llm") || lower.includes("prompt")) return "AI Models & Intelligence Engine";
+  if (lower.includes("store") || lower.includes("state") || lower.includes("redux") || lower.includes("zustand")) return "Global State Management & Stores";
   if (lower.includes("lib") || lower.includes("util")) return "Shared Helper Functions & Utilities";
-  if (lower.includes("test")) return "Test Suites & Mock Fixtures";
+  if (lower.includes("test") || lower.includes("spec") || lower.includes("__tests__")) return "Automated Test Suites & Fixtures";
   if (lower.includes("doc")) return "Documentation & Guides";
-  if (lower.includes("style")) return "Design System, CSS & Theme Tokens";
+  if (lower.includes("style") || lower.includes("theme")) return "Design System, CSS & Theme Tokens";
   if (lower.includes("package")) return "Modular Packages & Domain Libraries";
-  if (lower.includes("core")) return "Core Domain Models & Business Logic";
-  return "Module directory";
+  if (lower.includes("core") || lower.includes("engine")) return "Core Domain Logic & Execution Engine";
+  if (lower.includes("middleware")) return "Request Interceptors & Security Middleware";
+  if (lower.includes("type") || lower.includes("interface")) return "TypeScript Types & Interface Contracts";
+  if (lower.includes("config")) return "Build Tooling & Environment Configuration";
+  if (lower.includes("script")) return "Automation Scripts & Tooling";
+  if (lower.includes("asset") || lower.includes("public")) return "Static Assets & Media";
+  return "Modular Subsystem";
 }

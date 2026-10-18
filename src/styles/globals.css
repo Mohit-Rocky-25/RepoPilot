@@ -70,3 +70,57 @@
 pre, code, kbd, samp {
   font-family: "JetBrains Mono", "Geist Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
+
+/* Picture-Perfect High-Contrast Mermaid Diagram Styling */
+.mermaid-viewport svg {
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.5));
+}
+
+.mermaid-viewport svg text,
+.mermaid-viewport svg text tspan {
+  fill: #FFFFFF !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 12.5px !important;
+}
+
+.mermaid-viewport svg .cluster rect {
+  fill: #0C0E14 !important;
+  stroke: #262A36 !important;
+  stroke-width: 1.5px !important;
+  rx: 12px !important;
+  ry: 12px !important;
+}
+
+.mermaid-viewport svg .cluster text,
+.mermaid-viewport svg .cluster text tspan {
+  fill: #94A3B8 !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+.mermaid-viewport svg .edgePath path {
+  stroke: #64748B !important;
+  stroke-width: 1.5px !important;
+}
+
+.mermaid-viewport svg .edgeLabel {
+  background-color: #141516 !important;
+  color: #CBD5E1 !important;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+.mermaid-viewport svg .node rect,
+.mermaid-viewport svg .node circle,
+.mermaid-viewport svg .node polygon {
+  rx: 8px !important;
+  ry: 8px !important;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+}
+

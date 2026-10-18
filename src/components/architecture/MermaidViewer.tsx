@@ -13,7 +13,9 @@ import {
   Network,
   RotateCcw,
   Sparkles,
-  Loader2
+  Loader2,
+  ZoomIn,
+  ZoomOut
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -41,6 +43,7 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
   const [svgContent, setSvgContent] = useState<string>("");
   const [isRendering, setIsRendering] = useState<boolean>(true);
   const [renderError, setRenderError] = useState<string | null>(null);
+  const [zoom, setZoom] = useState<number>(1);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -83,17 +86,43 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
 
         window.mermaid.initialize({
           startOnLoad: false,
-          theme: "dark",
+          theme: "base",
           securityLevel: "loose",
+          fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+          flowchart: {
+            htmlLabels: false, // Critical: Renders native SVG <text> elements so labels never get stripped
+            curve: "basis",
+            nodeSpacing: 45,
+            rankSpacing: 55,
+            padding: 16,
+            useMaxWidth: true
+          },
           themeVariables: {
             darkMode: true,
-            background: "#0F1011",
-            primaryColor: "#1e1b4b",
-            primaryTextColor: "#F7F8F8",
-            primaryBorderColor: "#828FFF",
-            lineColor: "#62666D",
-            secondaryColor: "#0f172a",
-            tertiaryColor: "#141516"
+            background: "#0C0D0E",
+            fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+            fontSize: "12.5px",
+            // Subgraph / Cluster styles
+            clusterBkg: "#0C0E14",
+            clusterBorder: "#262A36",
+            titleColor: "#E2E8F0",
+            // Edge lines
+            lineColor: "#64748B",
+            edgeLabelBackground: "#141516",
+            // Nodes base
+            mainBkg: "#0C243B",
+            nodeBorder: "#38BDF8",
+            nodeTextColor: "#FFFFFF",
+            // Color palettes
+            primaryColor: "#1E1B4B",
+            primaryTextColor: "#FFFFFF",
+            primaryBorderColor: "#818CF8",
+            secondaryColor: "#082F49",
+            secondaryTextColor: "#FFFFFF",
+            secondaryBorderColor: "#38BDF8",
+            tertiaryColor: "#064E3B",
+            tertiaryTextColor: "#FFFFFF",
+            tertiaryBorderColor: "#34D399"
           }
         });
 
@@ -139,6 +168,10 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
     URL.revokeObjectURL(url);
   };
 
+  const handleZoomIn = () => setZoom((z) => Math.min(Number((z + 0.15).toFixed(2)), 2.0));
+  const handleZoomOut = () => setZoom((z) => Math.max(Number((z - 0.15).toFixed(2)), 0.5));
+  const handleZoomReset = () => setZoom(1);
+
   return (
     <div className="space-y-4">
       {/* Control Header */}
@@ -182,8 +215,37 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
           </button>
         </div>
 
-        {/* View mode toggle & Action Buttons */}
-        <div className="flex items-center gap-2">
+        {/* View mode toggle, Zoom & Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Zoom controls (only in visual mode) */}
+          {viewMode === "visual" && (
+            <div className="flex items-center p-0.5 bg-[#0F1011] border border-[#23252A] rounded-md text-xs font-mono">
+              <button
+                onClick={handleZoomOut}
+                disabled={zoom <= 0.5}
+                title="Zoom Out"
+                className="p-1.5 rounded hover:bg-[#141516] text-[#8A8F98] hover:text-[#F7F8F8] disabled:opacity-40 transition-colors"
+              >
+                <ZoomOut className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={handleZoomReset}
+                title="Reset Zoom"
+                className="px-2 py-0.5 rounded text-[11px] font-mono text-[#8A8F98] hover:text-[#F7F8F8] hover:bg-[#141516] transition-colors"
+              >
+                {Math.round(zoom * 100)}%
+              </button>
+              <button
+                onClick={handleZoomIn}
+                disabled={zoom >= 2.0}
+                title="Zoom In"
+                className="p-1.5 rounded hover:bg-[#141516] text-[#8A8F98] hover:text-[#F7F8F8] disabled:opacity-40 transition-colors"
+              >
+                <ZoomIn className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           {/* Visual vs Code Toggle */}
           <div className="flex items-center p-0.5 bg-[#0F1011] border border-[#23252A] rounded-md text-xs font-mono">
             <button
@@ -253,13 +315,13 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
       </div>
 
       {/* Main Content Area */}
-      <Card className="p-6 bg-[#0F1011] border border-[#23252A] rounded-xl overflow-hidden min-h-[460px] flex flex-col justify-center">
+      <Card className="p-6 bg-[#0B0C0E] border border-[#23252A] rounded-xl overflow-hidden min-h-[500px] flex flex-col justify-center relative">
         {viewMode === "visual" ? (
-          <div className="w-full flex flex-col items-center justify-center">
+          <div className="w-full flex flex-col items-center justify-center overflow-hidden">
             {isRendering ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3 text-xs font-mono text-[#8A8F98]">
+              <div className="flex flex-col items-center justify-center py-20 gap-3 text-xs font-mono text-[#8A8F98]">
                 <Loader2 className="w-6 h-6 animate-spin text-[#828FFF]" />
-                <span>Compiling deterministic Mermaid vector diagram...</span>
+                <span>Compiling high-contrast Mermaid vector diagram...</span>
               </div>
             ) : renderError ? (
               <div className="space-y-4 text-center py-10 max-w-lg mx-auto">
@@ -274,11 +336,18 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
                 </Button>
               </div>
             ) : (
-              <div
-                ref={containerRef}
-                className="w-full flex items-center justify-center overflow-x-auto py-4 [&_svg]:max-w-full [&_svg]:h-auto transition-all"
-                dangerouslySetInnerHTML={{ __html: svgContent }}
-              />
+              <div className="w-full overflow-auto max-h-[750px] flex items-center justify-center p-4">
+                <div
+                  ref={containerRef}
+                  style={{
+                    transform: `scale(${zoom})`,
+                    transformOrigin: "center center",
+                    transition: "transform 0.15s ease-out"
+                  }}
+                  className="mermaid-viewport w-full flex items-center justify-center transition-all select-none"
+                  dangerouslySetInnerHTML={{ __html: svgContent }}
+                />
+              </div>
             )}
           </div>
         ) : (
