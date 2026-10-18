@@ -18,11 +18,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import type { ArchitectureGraph, ArchitectureGraphNode } from "@repopilot/core";
+import type { ArchitectureGraph, ArchitectureGraphNode, ArchitectureSummary } from "@repopilot/core";
 
 interface Props {
   graph: ArchitectureGraph;
   repoFullName: string;
+  summary?: ArchitectureSummary | null;
 }
 
 const TYPE_COLORS: Record<ArchitectureGraphNode["type"], string> = {
@@ -49,7 +50,7 @@ const TYPE_LABELS: Record<ArchitectureGraphNode["type"], string> = {
 
 const NODE_CAP = 50;
 
-export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
+export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summary }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -636,7 +637,11 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
                     </Badge>
                     {node.path && (
                       <Link
-                        href={`/explore?file=${encodeURIComponent(node.path)}`}
+                        href={
+                          node.type === "dir"
+                            ? `/explore?dir=${encodeURIComponent(node.path)}`
+                            : `/explore?file=${encodeURIComponent(node.path)}`
+                        }
                         onClick={(e) => e.stopPropagation()}
                         className="text-[11px] text-[#828FFF] hover:underline"
                       >
@@ -774,23 +779,75 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName }) => {
                 </div>
               )}
 
-              {selectedNode.path && (
-                <div className="pt-2">
-                  <Link
-                    href={`/explore?file=${encodeURIComponent(selectedNode.path)}`}
-                    className="w-full"
-                  >
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="w-full"
-                      icon={<ExternalLink className="w-3.5 h-3.5" />}
-                    >
-                      Open in Code Explorer →
-                    </Button>
-                  </Link>
+              {/* Architectural Module Brief (if directory) */}
+              {selectedNode.type === "dir" && (
+                <div className="p-2.5 rounded-lg bg-[#141516] border border-[#23252A] space-y-1">
+                  <span className="text-[10px] text-[#62666D] uppercase block font-semibold">
+                    Architectural Module Brief
+                  </span>
+                  <p className="text-[#D0D6E0] font-sans text-xs leading-relaxed">
+                    {summary?.keyModules?.find((m) => m.directory === selectedNode.path)?.description ||
+                      "Module directory grouping related implementation targets."}
+                  </p>
+                  {summary?.keyModules?.find((m) => m.directory === selectedNode.path)?.fileCount !== undefined && (
+                    <span className="text-[10px] text-[#828FFF] block font-mono">
+                      {summary.keyModules.find((m) => m.directory === selectedNode.path)?.fileCount} tracked files in this module
+                    </span>
+                  )}
                 </div>
               )}
+
+              {selectedNode.path && (() => {
+                const childFiles = graph.nodes.filter(
+                  (n) => n.type !== "dir" && n.path && n.path.startsWith(`${selectedNode.path}/`)
+                );
+                const primaryChild = childFiles.find((c) => c.type === "entry") || childFiles[0];
+                const exploreUrl =
+                  selectedNode.type === "dir"
+                    ? primaryChild
+                      ? `/explore?dir=${encodeURIComponent(selectedNode.path)}&file=${encodeURIComponent(primaryChild.path)}`
+                      : `/explore?dir=${encodeURIComponent(selectedNode.path)}`
+                    : `/explore?file=${encodeURIComponent(selectedNode.path)}`;
+
+                return (
+                  <div className="space-y-2 pt-1">
+                    {childFiles.length > 0 && selectedNode.type === "dir" && (
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-[#62666D] uppercase block font-semibold">
+                          Files in this Module ({childFiles.length})
+                        </span>
+                        <div className="max-h-24 overflow-y-auto divide-y divide-[#23252A] border border-[#23252A] rounded bg-[#141516]">
+                          {childFiles.slice(0, 10).map((child) => (
+                            <Link
+                              key={child.id}
+                              href={`/explore?dir=${encodeURIComponent(selectedNode.path!)}&file=${encodeURIComponent(child.path!)}`}
+                              className="p-1.5 hover:bg-[#18191A] flex items-center justify-between text-[11px] group transition-colors"
+                            >
+                              <span className="text-[#D0D6E0] group-hover:text-[#828FFF] truncate">
+                                {child.name}
+                              </span>
+                              <span className="text-[10px] text-[#62666D] group-hover:text-[#8A8F98]">
+                                inspect →
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <Link href={exploreUrl} className="w-full block">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="w-full"
+                        icon={<ExternalLink className="w-3.5 h-3.5" />}
+                      >
+                        {selectedNode.type === "dir" ? "Open Module in Code Explorer →" : "Open in Code Explorer →"}
+                      </Button>
+                    </Link>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>

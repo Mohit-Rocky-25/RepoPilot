@@ -282,7 +282,11 @@ ${summary.dependencies.slice(0, 30).map((d) => `- ${d.name} (${d.isDev ? "dev" :
           {/* Tab 1: Interactive 3D Spatial Map */}
           {activeTab === "map" && graph && (
             <div className="space-y-4">
-              <ArchitectureMap3D graph={graph} repoFullName={currentRepo.fullName} />
+              <ArchitectureMap3D
+                graph={graph}
+                summary={summary}
+                repoFullName={currentRepo.fullName}
+              />
             </div>
           )}
 
