@@ -39,7 +39,7 @@
     <img src="https://img.shields.io/badge/License-MIT-5E6AD2.svg" alt="License: MIT" />
     <img src="https://img.shields.io/badge/TypeScript-Strict_Mode-3178C6.svg" alt="TypeScript Strict" />
     <img src="https://img.shields.io/badge/Next.js-14.2.15-000000.svg" alt="Next.js 14" />
-    <img src="https://img.shields.io/badge/Vitest-156_Passed-27A644.svg" alt="Tests" />
+    <img src="https://img.shields.io/badge/Vitest-167_Passed-27A644.svg" alt="Tests" />
     <img src="https://img.shields.io/badge/Security-Defended_&_Scanned-27A644.svg" alt="Security Hardened" />
     <img src="https://img.shields.io/badge/AI-Deterministic_|_BYO_Key_|_Ollama-828FFF.svg" alt="AI Modes" />
   </p>
@@ -100,11 +100,13 @@ RepoPilot solves this through an **evidence-first engineering approach**:
 | Feature Area | Description | Status | Works on Public Demo Without Key? | Data Source |
 | :--- | :--- | :--- | :--- | :--- |
 | **Repository Ingestion** | Ingests public GitHub repositories via tarball streaming, validates URLs against SSRF, and pins default branch HEAD to an immutable commit SHA. | **Stable** | Yes (up to public rate limits) | Pinned GitHub Tarball / REST API |
+| **Local Workspace Ingestion** | Opens and indexes local directories directly in-browser with 100% privacy via FileSystem API / drag-and-drop. Zero network upload. | **Stable** | Yes (100% Client-Side) | Native Browser FileSystem API |
 | **Code Explorer** | Resizable dual-pane directory tree and syntax-highlighted code viewer with line numbers and line highlights. | **Stable** | Yes | In-memory extracted source files (< 100KB) |
 | **Deterministic Code Search** | Multi-modal search engine combining BM25 lexical scoring, path matching, entry-point boosts, and symbol ranking with language filters. | **Stable** | Yes | In-memory index & client search engine |
 | **AST Symbol Extraction** | Real Tree-sitter WASM grammars (TS/TSX, JS, Python, Go, Rust) with heuristic regex fallback (`confidence: heuristic`). | **Beta** | Yes | Tree-sitter WASM / heuristic fallback parser |
 | **Architecture Visualization** | Interactive 2D graph (default) with optional WebGL 3D orbital perspective map and dependency linking. | **Beta** | Yes | Manifest analysis (`package.json`, `go.mod`, etc.) |
 | **Architecture Evidence Brief** | Summarizes detected frameworks, confirmed application entry points, and directory roles from repo evidence. | **Stable** | Yes | Manifest heuristics & directory inspection |
+| **Codebase Health & Audit Export** | Deterministic quality grading (A+ through D), Markdown audit report export, and print/PDF documentation generator. | **Stable** | Yes | In-memory health scoring engine & markdown generator |
 | **Grounded Code Assistant** | Grounded Q&A with bounded context, anti-prompt injection delimiters, and strict citation verification against the pinned commit SHA. | **Beta** | Yes (Deterministic citation mode without key; BYO key / Ollama for AI generation) | Local Ollama, BYO OpenAI-compatible key, or offline search |
 | **Bug & Stack Trace Analyzer** | Multi-language stack trace parser (Node/V8, Python chained, Go, Rust) with ANSI stripping, 64KB cap, and culprit hypothesis ranking. | **Beta** | Yes (Parsing, hypothesis ranking, and test checklists work without key) | Stack frame parser & pattern matcher |
 | **Patch Review & PR Export** | Validates candidate unified diffs in-memory against pinned file lines (`Unverified: review before applying`) and exports Markdown PR drafts. | **Beta** | Yes (Suggestion scaffolds generated without AI; AI diff validation with BYO key) | In-memory diff validator & hypothesis engine |

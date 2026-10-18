@@ -22,10 +22,21 @@ export const GitHubUrlSchema = z
     return normalized;
   });
 
+export const RepoUrlSchema = z.union([
+  GitHubUrlSchema,
+  z
+    .string()
+    .trim()
+    .regex(
+      /^local:\/\/[a-zA-Z0-9_.-]+(?:\/[a-zA-Z0-9_.-]+)*$/,
+      "Must be a valid local workspace identifier (e.g. local://workspace/project)"
+    )
+]);
+
 export const RepositoryReferenceSchema = z.object({
   owner: z.string().min(1),
   repo: z.string().min(1),
-  url: GitHubUrlSchema,
+  url: RepoUrlSchema,
   fullName: z.string().min(1),
   defaultBranch: z.string().default("main"),
   selectedRevision: z.string().optional(),
@@ -34,7 +45,8 @@ export const RepositoryReferenceSchema = z.object({
   description: z.string().nullable().optional(),
   primaryLanguage: z.string().nullable().optional(),
   openIssuesCount: z.number().nonnegative().optional(),
-  license: z.string().nullable().optional()
+  license: z.string().nullable().optional(),
+  isLocal: z.boolean().optional()
 });
 
 export const RepositoryRevisionSchema = z.object({

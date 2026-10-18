@@ -27,7 +27,10 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import type { RepositoryFile, IndexedSymbol } from "@repopilot/core";
 import { extractSymbols } from "@repopilot/indexer";
+import { ArchitectureAnalyzer } from "@repopilot/analysis";
 import { clientFetch } from "@/lib/api";
+import { generateMarkdownReport, downloadMarkdownReport } from "@/lib/reportGenerator";
+import { Download, ShieldCheck } from "lucide-react";
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -87,7 +90,7 @@ function ExploreContent() {
 
   // Load tree if repo is active but files are not in memory yet
   useEffect(() => {
-    if (currentRepo && files.length === 0) {
+    if (currentRepo && !currentRepo.isLocal && files.length === 0) {
       setLoadingTree(true);
       clientFetch("/api/github/import", {
         method: "POST",
@@ -186,6 +189,21 @@ function ExploreContent() {
     if (selectedFile.isBinary) {
       setFileContent("(Binary file content cannot be displayed)");
       setSymbols([]);
+      return;
+    }
+
+    // Direct in-memory content from local folder ingestion or cached file
+    if (selectedFile.content !== undefined || currentRepo.isLocal) {
+      const content = selectedFile.content ?? "";
+      setFileContent(content);
+      setLoadingContent(false);
+      extractSymbols(selectedFile.path, content, selectedFile.language)
+        .then((extracted) => {
+          setSymbols(extracted);
+        })
+        .catch(() => {
+          setSymbols([]);
+        });
       return;
     }
 
@@ -331,6 +349,11 @@ function ExploreContent() {
           <h1 className="text-sm font-semibold text-[#F7F8F8] font-mono">
             {currentRepo.owner}/{currentRepo.repo}
           </h1>
+          {currentRepo.isLocal && (
+            <Badge variant="success" size="sm">
+              Local
+            </Badge>
+          )}
           <span className="text-xs text-[#62666D]">·</span>
           <span className="text-xs font-mono text-[#8A8F98]">
             {files.length} indexed files
@@ -345,8 +368,31 @@ function ExploreContent() {
           </Link>
         </div>
 
-        {selectedFile && (
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<Download className="w-3.5 h-3.5 text-[#5E6AD2]" />}
+            onClick={() => {
+              const manifestFile = files.find(
+                (f) =>
+                  f.path === "package.json" ||
+                  f.path === "requirements.txt" ||
+                  f.path === "go.mod" ||
+                  f.path === "Cargo.toml" ||
+                  f.path === "pyproject.toml"
+              );
+              const summary = ArchitectureAnalyzer.analyze(files, manifestFile?.content);
+              const markdown = generateMarkdownReport(currentRepo, summary, files);
+              const dateStr = new Date().toISOString().slice(0, 10);
+              downloadMarkdownReport(`repopilot-audit-${currentRepo.repo}-${dateStr}.md`, markdown);
+            }}
+            title="Download complete Markdown audit report"
+          >
+            Export Audit (.md)
+          </Button>
+
+          {selectedFile && !currentRepo.isLocal && (
             <a
               href={`${currentRepo.url}/blob/${currentRepo.selectedRevision || currentRepo.defaultBranch}/${selectedFile.path}`}
               target="_blank"
@@ -356,8 +402,15 @@ function ExploreContent() {
               <span>View on GitHub</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
-          </div>
-        )}
+          )}
+
+          {currentRepo.isLocal && (
+            <span className="text-xs font-mono text-[#27A644] flex items-center gap-1 px-2 py-0.5 rounded bg-[#27A644]/10 border border-[#27A644]/20">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Local Memory</span>
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Mobile Tab Switcher */}

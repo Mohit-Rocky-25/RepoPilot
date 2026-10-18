@@ -10,7 +10,8 @@ import {
   Plus,
   ArrowLeft,
   Home,
-  ChevronRight
+  ChevronRight,
+  ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -20,6 +21,7 @@ interface HeaderProps {
     repo: string;
     defaultBranch?: string;
     commitSha?: string;
+    isLocal?: boolean;
   } | null;
   onOpenImport?: () => void;
   rateLimit?: {
@@ -126,16 +128,25 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="text-[#F7F8F8] font-semibold">
                 {currentRepo.owner}/{currentRepo.repo}
               </span>
-              <span className="text-[#62666D]">@</span>
-              <span className="text-[#828FFF] flex items-center gap-1 font-medium">
-                <GitBranch className="w-3 h-3 text-[#5E6AD2]" />
-                {currentRepo.defaultBranch || "main"}
-              </span>
-              {currentRepo.commitSha && (
-                <span className="text-[#8A8F98] hidden sm:flex items-center gap-0.5 ml-1 pl-1.5 border-l border-[#23252A]">
-                  <GitCommit className="w-3 h-3 text-[#62666D]" />
-                  {currentRepo.commitSha.slice(0, 7)}
+              {currentRepo.isLocal ? (
+                <span className="text-[#27A644] flex items-center gap-1 font-medium bg-[#27A644]/10 px-1.5 py-0.5 rounded text-[10px]">
+                  <ShieldCheck className="w-3 h-3 text-[#27A644]" />
+                  <span>Local</span>
                 </span>
+              ) : (
+                <>
+                  <span className="text-[#62666D]">@</span>
+                  <span className="text-[#828FFF] flex items-center gap-1 font-medium">
+                    <GitBranch className="w-3 h-3 text-[#5E6AD2]" />
+                    {currentRepo.defaultBranch || "main"}
+                  </span>
+                  {currentRepo.commitSha && (
+                    <span className="text-[#8A8F98] hidden sm:flex items-center gap-0.5 ml-1 pl-1.5 border-l border-[#23252A]">
+                      <GitCommit className="w-3 h-3 text-[#62666D]" />
+                      {currentRepo.commitSha.slice(0, 7)}
+                    </span>
+                  )}
+                </>
               )}
             </div>
           </div>

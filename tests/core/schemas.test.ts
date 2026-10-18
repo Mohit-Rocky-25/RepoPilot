@@ -47,6 +47,35 @@ describe("Domain Contracts - RepositoryReferenceSchema", () => {
     expect(parsed.fullName).toBe("facebook/react");
     expect(parsed.defaultBranch).toBe("main");
   });
+
+  it("validates a local repository reference with private local workspace URL", () => {
+    const localRepo = {
+      owner: "local",
+      repo: "my-service",
+      url: "local://workspace/my-service",
+      fullName: "local/my-service",
+      defaultBranch: "local",
+      primaryLanguage: "TypeScript",
+      isLocal: true
+    };
+
+    const parsed = RepositoryReferenceSchema.parse(localRepo);
+    expect(parsed.isLocal).toBe(true);
+    expect(parsed.url).toBe("local://workspace/my-service");
+    expect(parsed.owner).toBe("local");
+  });
+
+  it("rejects invalid local workspace URLs", () => {
+    const invalidLocalRepo = {
+      owner: "local",
+      repo: "bad",
+      url: "local://invalid url with spaces",
+      fullName: "local/bad",
+      isLocal: true
+    };
+
+    expect(() => RepositoryReferenceSchema.parse(invalidLocalRepo)).toThrow();
+  });
 });
 
 describe("Domain Contracts - SourceReferenceSchema", () => {
