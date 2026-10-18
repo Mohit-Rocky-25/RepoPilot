@@ -41,8 +41,6 @@ interface RepositoryContextType {
   setActiveInvestigation: (inv: ActiveInvestigation | null) => void;
   isImportModalOpen: boolean;
   setIsImportModalOpen: (open: boolean) => void;
-  isSearchModalOpen: boolean;
-  setIsSearchModalOpen: (open: boolean) => void;
   aiConfig: AIProviderConfiguration;
   setAiConfig: React.Dispatch<React.SetStateAction<AIProviderConfiguration>>;
   rateLimit: { remaining: number; limit: number };
@@ -58,7 +56,6 @@ export const RepositoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [files, setFiles] = useState<RepositoryFile[]>([]);
   const [recentRepos, setRecentRepos] = useState<RepositoryReference[]>([]);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [rateLimit, setRateLimit] = useState<{ remaining: number; limit: number }>({
     remaining: 5000,
     limit: 5000
@@ -167,12 +164,12 @@ export const RepositoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
   };
 
-  // Keyboard shortcut for quick search (Ctrl+K or Cmd+K)
+  // Keyboard shortcut: Redirect to dedicated /search page on Ctrl+K or Cmd+K
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
-        setIsSearchModalOpen((prev) => !prev);
+        window.location.href = "/search";
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -192,8 +189,6 @@ export const RepositoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setActiveInvestigation,
         isImportModalOpen,
         setIsImportModalOpen,
-        isSearchModalOpen,
-        setIsSearchModalOpen,
         aiConfig,
         setAiConfig,
         rateLimit,

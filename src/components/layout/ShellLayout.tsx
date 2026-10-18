@@ -4,7 +4,6 @@ import React from "react";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { ImportModal } from "@/components/modals/ImportModal";
-import { SearchModal } from "@/components/modals/SearchModal";
 import { useRepository } from "@/context/RepositoryContext";
 import { usePathname } from "next/navigation";
 
@@ -14,7 +13,6 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
   const {
     currentRepo,
     setIsImportModalOpen,
-    setIsSearchModalOpen,
     rateLimit,
     aiConfig,
     authStatus
@@ -25,7 +23,6 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
       <div className="min-h-screen w-full bg-[#010102] text-[#F7F8F8] font-sans antialiased selection:bg-[#5E6AD2]/30 selection:text-[#F7F8F8]">
         {children}
         <ImportModal />
-        <SearchModal />
       </div>
     );
   }
@@ -41,7 +38,6 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         <Header
           currentRepo={currentRepo}
           onOpenImport={() => setIsImportModalOpen(true)}
-          onOpenSearch={() => setIsSearchModalOpen(true)}
           rateLimit={rateLimit}
           aiStatus={aiConfig.isAvailable ? "ready" : "offline"}
           authStatus={authStatus}
@@ -55,7 +51,6 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
 
       {/* Modals */}
       <ImportModal />
-      <SearchModal />
     </div>
   );
 };

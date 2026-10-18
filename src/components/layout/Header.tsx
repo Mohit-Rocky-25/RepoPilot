@@ -22,7 +22,6 @@ interface HeaderProps {
     commitSha?: string;
   } | null;
   onOpenImport?: () => void;
-  onOpenSearch?: () => void;
   rateLimit?: {
     remaining: number;
     limit: number;
@@ -65,7 +64,6 @@ const getSectionDetails = (path: string) => {
 export const Header: React.FC<HeaderProps> = ({
   currentRepo,
   onOpenImport,
-  onOpenSearch,
   rateLimit = { remaining: 5000, limit: 5000 },
   aiStatus = "offline",
   authStatus
@@ -156,19 +154,8 @@ export const Header: React.FC<HeaderProps> = ({
         )}
       </div>
 
-      {/* Global Actions, Search, Rate Limits & AI Telemetry */}
+      {/* Global Actions, Rate Limits & AI Telemetry */}
       <div className="flex items-center gap-3">
-        {/* Global Command Palette / Search Trigger */}
-        <button
-          onClick={onOpenSearch}
-          className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#34343A] text-xs text-[#8A8F98] hover:text-[#F7F8F8] transition-all font-mono shadow-xs cursor-pointer"
-        >
-          <Search className="w-3.5 h-3.5 text-[#62666D]" />
-          <span>Quick command search...</span>
-          <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded-[4px] bg-[#18191A] text-[#8A8F98] border border-[#34343A] ml-2">
-            Ctrl+K
-          </kbd>
-        </button>
 
         {/* Local AI Status Pill */}
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#141516] border border-[#23252A] text-[11px] font-mono">

@@ -99,13 +99,13 @@ function getNodeExploreUrl(
 
 describe("Code Explorer & Architecture Navigation Engine", () => {
   const mockRepoFiles: RepositoryFile[] = [
-    { path: "README.md", type: "blob", size: 1200, isBinary: false },
-    { path: "package.json", type: "blob", size: 600, isBinary: false },
-    { path: "src/index.ts", type: "blob", size: 450, language: "TypeScript", isBinary: false },
-    { path: "src/components/Header.tsx", type: "blob", size: 850, language: "TypeScript", isBinary: false },
-    { path: "src/components/Footer.tsx", type: "blob", size: 600, language: "TypeScript", isBinary: false },
-    { path: "src/components/ui/Button.tsx", type: "blob", size: 950, language: "TypeScript", isBinary: false },
-    { path: "src/lib/api.ts", type: "blob", size: 1200, language: "TypeScript", isBinary: false }
+    { path: "README.md", type: "blob", size: 1200, sha: "sha-readme", isBinary: false },
+    { path: "package.json", type: "blob", size: 600, sha: "sha-pkg", isBinary: false },
+    { path: "src/index.ts", type: "blob", size: 450, sha: "sha-idx", language: "TypeScript", isBinary: false },
+    { path: "src/components/Header.tsx", type: "blob", size: 850, sha: "sha-hdr", language: "TypeScript", isBinary: false },
+    { path: "src/components/Footer.tsx", type: "blob", size: 600, sha: "sha-ftr", language: "TypeScript", isBinary: false },
+    { path: "src/components/ui/Button.tsx", type: "blob", size: 950, sha: "sha-btn", language: "TypeScript", isBinary: false },
+    { path: "src/lib/api.ts", type: "blob", size: 1200, sha: "sha-api", language: "TypeScript", isBinary: false }
   ];
 
   it("resolves exact file targets correctly and sets parent directory", () => {
