@@ -58,6 +58,12 @@ export class StackTraceParser {
     // 4. Rust: at src/main.rs:24:5 or panicked at '...', src/main.rs:24:5
     const rustPattern = /(?:at\s+|panicked at[^,\n]*,?\s*)([a-zA-Z0-9_\-./\\]+\.rs):(\d+)(?::(\d+))?/;
 
+    // 5. Java / Kotlin: at com.example.MyService.process(MyService.java:45)
+    const jvmPattern = /^\s*at\s+([a-zA-Z0-9_$.]+)\(([a-zA-Z0-9_\-./\\]+\.(?:java|kt)):(\d+)\)$/;
+
+    // 6. C# / .NET: at MyNamespace.MyClass.MyMethod() in C:\repo\src\MyClass.cs:line 24
+    const dotnetPattern = /^\s*at\s+([a-zA-Z0-9_$.<>]+\(?\)?)\s+in\s+([a-zA-Z]:[\\/][^:]+|\/[^:]+|[a-zA-Z0-9_\-./\\]+\.cs):line\s+(\d+)$/;
+
     // Helper to map and classify file paths
     const classifyPath = (
       rawFilePath: string
@@ -78,7 +84,13 @@ export class StackTraceParser {
         lower.includes(".cargo/registry/") ||
         lower.includes("<anonymous>") ||
         lower.startsWith("node:") ||
-        lower.startsWith("internal/");
+        lower.startsWith("internal/") ||
+        lower.startsWith("java.") ||
+        lower.startsWith("javax.") ||
+        lower.startsWith("sun.") ||
+        lower.startsWith("jdk.") ||
+        lower.startsWith("system.") ||
+        lower.startsWith("microsoft.");
 
       // Match against repo files by exact or suffix match
       const matching: string[] = [];
@@ -166,9 +178,10 @@ export class StackTraceParser {
           if (
             prefix.endsWith("Error") ||
             prefix.endsWith("Exception") ||
-            prefix === "AssertionError"
+            prefix === "AssertionError" ||
+            prefix.includes("Exception in thread")
           ) {
-            errorType = prefix;
+            errorType = prefix.replace(/^Exception in thread "[^"]*"\s+/, "");
             errorMessage = line.slice(colonIdx + 1).trim();
             continue;
           }
@@ -248,6 +261,46 @@ export class StackTraceParser {
           filePath: info.filePath,
           lineNumber: lineNum,
           columnNumber: colNum,
+          isUserCode: info.isUserCode,
+          isDependency: info.isDependency,
+          candidateFiles: info.candidateFiles
+        });
+        continue;
+      }
+
+      // 5. Check Java / Kotlin
+      match = jvmPattern.exec(line);
+      if (match) {
+        const fnName = match[1];
+        const rawFilePath = match[2];
+        const lineNum = parseInt(match[3], 10);
+        const info = classifyPath(rawFilePath);
+
+        frames.push({
+          raw: line,
+          filePath: info.filePath,
+          lineNumber: lineNum,
+          functionName: fnName,
+          isUserCode: info.isUserCode,
+          isDependency: info.isDependency,
+          candidateFiles: info.candidateFiles
+        });
+        continue;
+      }
+
+      // 6. Check C# / .NET
+      match = dotnetPattern.exec(line);
+      if (match) {
+        const fnName = match[1];
+        const rawFilePath = match[2];
+        const lineNum = parseInt(match[3], 10);
+        const info = classifyPath(rawFilePath);
+
+        frames.push({
+          raw: line,
+          filePath: info.filePath,
+          lineNumber: lineNum,
+          functionName: fnName,
           isUserCode: info.isUserCode,
           isDependency: info.isDependency,
           candidateFiles: info.candidateFiles

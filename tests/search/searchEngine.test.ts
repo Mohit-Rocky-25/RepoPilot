@@ -135,4 +135,22 @@ describe("Search Engine - Deterministic Code & Symbol Search", () => {
     expect(retrieval.includedFiles.length).toBe(1);
     expect(retrieval.omittedCount).toBeGreaterThanOrEqual(1);
   });
+
+  it("handles empty or whitespace-only search queries gracefully", () => {
+    const results = engine.search({ query: "   ", type: "all" });
+    expect(results).toEqual([]);
+  });
+
+  it("treats regex metacharacters in queries as literal text without throwing syntax errors", () => {
+    const regexQueries = [".*", "(.*)", "[a-z]+", "\\d+", "Button(.*)", "(?=.*)", "src/(index)?"];
+    for (const q of regexQueries) {
+      expect(() => engine.search({ query: q, type: "all" })).not.toThrow();
+    }
+  });
+
+  it("matches paths and symbols case-insensitively", () => {
+    const results = engine.search({ query: "bUtToN", type: "path" });
+    expect(results.length).toBeGreaterThanOrEqual(1);
+    expect(results.some((r) => r.filePath === "src/components/Button.tsx")).toBe(true);
+  });
 });

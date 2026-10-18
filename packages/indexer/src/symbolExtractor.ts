@@ -101,6 +101,10 @@ export async function extractSymbols(
   content: string,
   language?: string
 ): Promise<IndexedSymbol[]> {
+  if (!content || typeof content !== "string") {
+    return [];
+  }
+
   const ext = filePath.split(".").pop()?.toLowerCase();
   const langKey = resolveLanguageKey(ext, language);
 
@@ -533,6 +537,10 @@ export function extractSymbolsHeuristic(
   content: string,
   language?: string
 ): IndexedSymbol[] {
+  if (!content || typeof content !== "string") {
+    return [];
+  }
+
   const symbols: IndexedSymbol[] = [];
   const lines = content.split("\n");
   const ext = filePath.split(".").pop()?.toLowerCase();

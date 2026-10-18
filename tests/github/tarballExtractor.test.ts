@@ -143,6 +143,50 @@ describe("GitHub Ingestion & Tarball Safety (extractTarballSafely)", () => {
     ).toThrow(/exceeds maximum total size/);
   });
 
+  it("handles empty repository archive gracefully without crashing", () => {
+    const emptyArchive = createTarArchive([]);
+    const result = extractTarballSafely(emptyArchive);
+    expect(result.files.length).toBe(0);
+    expect(result.contents.size).toBe(0);
+    expect(result.totalFilesExtracted).toBe(0);
+  });
+
+  it("rejects completely corrupted or non-gzipped archive buffers", () => {
+    const corruptedBuffer = Buffer.from("NOT_A_VALID_GZIP_STREAM_1234567890");
+    expect(() => extractTarballSafely(corruptedBuffer)).toThrow(/Failed to decompress repository archive/);
+  });
+
+  it("handles deeply nested paths across multiple subdirectory levels", () => {
+    const nestedArchive = createTarArchive([
+      {
+        name: "test-repo-sha1234/src/features/suite/credentials/engine/timelineEngine.ts",
+        content: "export const engine = true;"
+      }
+    ]);
+    const result = extractTarballSafely(nestedArchive);
+    expect(result.files.length).toBe(1);
+    expect(result.files[0].path).toBe("src/features/suite/credentials/engine/timelineEngine.ts");
+    expect(result.contents.get("src/features/suite/credentials/engine/timelineEngine.ts")).toBe(
+      "export const engine = true;"
+    );
+  });
+
+  it("omits text content from memory cache when file exceeds maxFileSize but retains file metadata", () => {
+    const largeFileArchive = createTarArchive([
+      { name: "test-repo-sha1234/data.json", content: "X".repeat(600) }
+    ]);
+
+    const result = extractTarballSafely(largeFileArchive, {
+      maxFileSize: 500 // 500 bytes max per cached file
+    });
+
+    expect(result.files.length).toBe(1);
+    expect(result.files[0].path).toBe("data.json");
+    expect(result.files[0].size).toBe(600);
+    // Should NOT be stored in contents map to protect serverless memory
+    expect(result.contents.has("data.json")).toBe(false);
+  });
+
   describe("InMemoryLruRepositoryCache", () => {
     it("stores and retrieves repository archives by key with LRU eviction", () => {
       const cache = new InMemoryLruRepositoryCache(2);

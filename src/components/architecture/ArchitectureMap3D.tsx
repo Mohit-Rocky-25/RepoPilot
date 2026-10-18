@@ -433,6 +433,90 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
     setDistance((prev) => Math.max(140, Math.min(850, prev + delta)));
   };
 
+  // Mobile Touch Gestures (Single finger orbit/pan, two-finger pinch zoom, tap select)
+  const touchStartRef = useRef<{ x: number; y: number; dist?: number }>({ x: 0, y: 0 });
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      setIsDragging(true);
+      dragStartRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        yaw,
+        pitch,
+        panX: pan.x,
+        panY: pan.y
+      };
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      touchStartRef.current.dist = Math.hypot(dx, dy);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    if (e.touches.length === 1 && isDragging) {
+      const touch = e.touches[0];
+      const dx = touch.clientX - dragStartRef.current.x;
+      const dy = touch.clientY - dragStartRef.current.y;
+
+      if (is2DMode) {
+        setPan({
+          x: dragStartRef.current.panX + dx,
+          y: dragStartRef.current.panY + dy
+        });
+      } else {
+        setYaw(dragStartRef.current.yaw + dx * 0.008);
+        const newPitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, dragStartRef.current.pitch + dy * 0.008));
+        setPitch(newPitch);
+      }
+    } else if (e.touches.length === 2 && touchStartRef.current.dist) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const newDist = Math.hypot(dx, dy);
+      const delta = (touchStartRef.current.dist - newDist) * 1.5;
+      setDistance((prev) => Math.max(140, Math.min(850, prev + delta)));
+      touchStartRef.current.dist = newDist;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    setIsDragging(false);
+    if (e.changedTouches.length === 1) {
+      const touch = e.changedTouches[0];
+      const moveDist = Math.hypot(touch.clientX - touchStartRef.current.x, touch.clientY - touchStartRef.current.y);
+      if (moveDist < 10) {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        const touchY = touch.clientY - rect.top;
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+
+        let closestNode: ArchitectureGraphNode | null = null;
+        let minDistance = 24;
+        for (const node of displayNodes) {
+          const proj = project3D(node.x || 0, node.y || 0, node.z || 0, width, height);
+          if (!proj.visible) continue;
+          const dist = Math.hypot(proj.screenX - touchX, proj.screenY - touchY);
+          if (dist < minDistance) {
+            minDistance = dist;
+            closestNode = node;
+          }
+        }
+        if (closestNode) {
+          setSelectedNode(closestNode);
+        }
+      }
+    }
+  };
+
   // Keyboard navigation for accessibility (Rule 5)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
     if (e.key === "ArrowRight") {
@@ -666,6 +750,9 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             onClick={handleClick}
             onWheel={handleWheel}
             onContextMenu={(e) => e.preventDefault()}

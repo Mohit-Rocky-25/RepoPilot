@@ -12,7 +12,9 @@ describe("Stack Trace Parser - Multi-Language & Classification", () => {
     "src/main.rs",
     "src/lib.rs",
     "packages/core/src/utils.ts",
-    "src/utils.ts"
+    "src/utils.ts",
+    "src/main/java/com/example/PaymentService.java",
+    "src/Controllers/HomeController.cs"
   ];
 
   it("parses Node.js stack traces with Windows paths and ANSI stripping", () => {
@@ -125,5 +127,51 @@ stack backtrace:
     expect(parsed.frames[0].candidateFiles.length).toBe(2);
     expect(parsed.frames[0].candidateFiles).toContain("src/utils.ts");
     expect(parsed.frames[0].candidateFiles).toContain("packages/core/src/utils.ts");
+  });
+
+  it("parses Java/JVM stack traces and classifies spring/java dependencies", () => {
+    const javaTrace = `Exception in thread "main" java.lang.NullPointerException: Cannot invoke method on null
+    at com.example.PaymentService.process(PaymentService.java:64)
+    at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+    at java.base/java.lang.Thread.run(Thread.java:833)`;
+
+    const parsed = StackTraceParser.parse(javaTrace, repoFiles);
+    expect(parsed.errorType).toBe("java.lang.NullPointerException");
+    expect(parsed.errorMessage).toBe("Cannot invoke method on null");
+    expect(parsed.frames.length).toBe(1); // User frame mapped
+    expect(parsed.frames[0].filePath).toBe("src/main/java/com/example/PaymentService.java");
+    expect(parsed.frames[0].lineNumber).toBe(64);
+    expect(parsed.frames[0].isUserCode).toBe(true);
+  });
+
+  it("parses C# / .NET stack traces with line numbers", () => {
+    const dotnetTrace = `System.InvalidOperationException: Sequence contains no elements
+   at RepoPilot.Controllers.HomeController.Index() in C:\\Users\\runner\\project\\src\\Controllers\\HomeController.cs:line 32
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.Execute(IActionResultTypeMapper mapper, MethodInfo methodInfo, Object target, Object[] arguments)`;
+
+    const parsed = StackTraceParser.parse(dotnetTrace, repoFiles);
+    expect(parsed.errorType).toBe("System.InvalidOperationException");
+    expect(parsed.errorMessage).toBe("Sequence contains no elements");
+    expect(parsed.frames.length).toBe(1);
+    expect(parsed.frames[0].filePath).toBe("src/Controllers/HomeController.cs");
+    expect(parsed.frames[0].lineNumber).toBe(32);
+    expect(parsed.frames[0].isUserCode).toBe(true);
+  });
+
+  it("handles empty, malformed, non-string, or random text inputs gracefully", () => {
+    expect(StackTraceParser.parse("").frames).toEqual([]);
+    expect(StackTraceParser.parse(null as any).frames).toEqual([]);
+    expect(StackTraceParser.parse(undefined as any).frames).toEqual([]);
+    expect(StackTraceParser.parse("just some normal logs with no trace here\nsecond line").frames).toEqual([]);
+  });
+
+  it("safely truncates massive traces exceeding 64KB without crashing or hanging", () => {
+    const largeLine = "    at render (src/components/Dashboard.tsx:42:18)\n";
+    const hugeTrace = "Error: Overload\n" + largeLine.repeat(2000); // ~100KB
+    expect(hugeTrace.length).toBeGreaterThan(65536);
+
+    const parsed = StackTraceParser.parse(hugeTrace, repoFiles);
+    expect(parsed.frames.length).toBeGreaterThan(0);
+    expect(parsed.frames[0].filePath).toBe("src/components/Dashboard.tsx");
   });
 });

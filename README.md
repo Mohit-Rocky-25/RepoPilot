@@ -39,7 +39,7 @@
     <img src="https://img.shields.io/badge/License-MIT-5E6AD2.svg" alt="License: MIT" />
     <img src="https://img.shields.io/badge/TypeScript-Strict_Mode-3178C6.svg" alt="TypeScript Strict" />
     <img src="https://img.shields.io/badge/Next.js-14.2.15-000000.svg" alt="Next.js 14" />
-    <img src="https://img.shields.io/badge/Vitest-133_Passed-27A644.svg" alt="Tests" />
+    <img src="https://img.shields.io/badge/Vitest-147_Passed-27A644.svg" alt="Tests" />
     <img src="https://img.shields.io/badge/Security-Defended_&_Scanned-27A644.svg" alt="Security Hardened" />
     <img src="https://img.shields.io/badge/AI-Deterministic_|_BYO_Key_|_Ollama-828FFF.svg" alt="AI Modes" />
   </p>

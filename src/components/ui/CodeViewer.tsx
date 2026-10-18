@@ -1,13 +1,105 @@
 import React, { useState } from "react";
 import { Copy, Check } from "lucide-react";
 
-interface CodeViewerProps {
+export interface CodeViewerProps {
   code: string;
   filePath?: string;
   language?: string;
-  highlightLines?: [number, number]; // [startLine, endLine]
-  onLineClick?: (lineNumber: number) => void;
+  highlightLines?: [number, number];
+  onLineClick?: (line: number) => void;
   maxHeight?: string;
+}
+
+const TOKEN_REGEX =
+  /(\/\/[^\n]*|\/\*.*?\*\/|#[^\n]*)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(\b(?:import|export|from|const|let|var|function|return|if|else|switch|case|break|continue|default|for|while|do|try|catch|finally|throw|new|typeof|instanceof|async|await|yield|class|extends|interface|type|enum|implements|public|private|protected|readonly|static|as|is|in|of|def|elif|except|raise|with|lambda|pass|assert|func|package|struct|map|chan|go|defer|select|range|fn|mut|pub|use|mod|trait|impl|match|loop|crate|where)\b)|(\b(?:true|false|null|undefined|nil|None|True|False)\b)|(\b\d+(?:\.\d+)?\b)|(\b[A-Z][a-zA-Z0-9_]*\b)|([a-zA-Z_$][a-zA-Z0-9_$]*(?=\s*\())/g;
+
+function renderHighlightedTokens(line: string): React.ReactNode {
+  if (!line) return " ";
+
+  const elements: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  // Reset regex state
+  TOKEN_REGEX.lastIndex = 0;
+
+  while ((match = TOKEN_REGEX.exec(line)) !== null) {
+    const matchIndex = match.index;
+    const matchText = match[0];
+
+    // Push any unhighlighted text preceding this match
+    if (matchIndex > lastIndex) {
+      elements.push(
+        <span key={`text-${lastIndex}`} className="text-[#D0D6E0]">
+          {line.substring(lastIndex, matchIndex)}
+        </span>
+      );
+    }
+
+    if (match[1]) {
+      // Comment
+      elements.push(
+        <span key={`comm-${matchIndex}`} className="text-[#62666D] italic">
+          {matchText}
+        </span>
+      );
+    } else if (match[2]) {
+      // String
+      elements.push(
+        <span key={`str-${matchIndex}`} className="text-[#34D399]">
+          {matchText}
+        </span>
+      );
+    } else if (match[3]) {
+      // Keyword
+      elements.push(
+        <span key={`kw-${matchIndex}`} className="text-[#A78BFA] font-medium">
+          {matchText}
+        </span>
+      );
+    } else if (match[4]) {
+      // Boolean / Null
+      elements.push(
+        <span key={`bool-${matchIndex}`} className="text-[#F59E0B]">
+          {matchText}
+        </span>
+      );
+    } else if (match[5]) {
+      // Number
+      elements.push(
+        <span key={`num-${matchIndex}`} className="text-[#F59E0B]">
+          {matchText}
+        </span>
+      );
+    } else if (match[6]) {
+      // Type / Class
+      elements.push(
+        <span key={`type-${matchIndex}`} className="text-[#38BDF8]">
+          {matchText}
+        </span>
+      );
+    } else if (match[7]) {
+      // Function call
+      elements.push(
+        <span key={`fn-${matchIndex}`} className="text-[#60A5FA]">
+          {matchText}
+        </span>
+      );
+    }
+
+    lastIndex = TOKEN_REGEX.lastIndex;
+  }
+
+  // Push any trailing unhighlighted text
+  if (lastIndex < line.length) {
+    elements.push(
+      <span key={`text-${lastIndex}`} className="text-[#D0D6E0]">
+        {line.substring(lastIndex)}
+      </span>
+    );
+  }
+
+  return elements.length > 0 ? elements : line;
 }
 
 export const CodeViewer: React.FC<CodeViewerProps> = ({
@@ -75,7 +167,7 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
       >
         <table className="w-full border-collapse">
           <tbody>
-            {lines.map((lineContent, idx) => {
+            {lines.map((lineContent: string, idx: number) => {
               const lineNum = idx + 1;
               const highlighted = isHighlighted(lineNum);
               return (
@@ -92,8 +184,8 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
                   <td className="w-12 py-0.5 pr-3 pl-3 text-right select-none text-[#62666D] group-hover:text-[#8A8F98] text-[11px] align-top font-mono">
                     {lineNum}
                   </td>
-                  <td className="py-0.5 pr-4 pl-1 text-[#D0D6E0] whitespace-pre font-mono leading-relaxed text-xs">
-                    {lineContent || " "}
+                  <td className="py-0.5 pr-4 pl-1 whitespace-pre font-mono leading-relaxed text-xs">
+                    {renderHighlightedTokens(lineContent)}
                   </td>
                 </tr>
               );

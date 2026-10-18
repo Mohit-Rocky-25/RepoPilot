@@ -317,4 +317,27 @@ def add_numbers(a, b):
     expect(symbols[0].name).toBe("add_numbers");
     expect(symbols[0].confidence).toBe("heuristic");
   });
+
+  it("handles null, undefined, empty, and non-string inputs safely without throwing", async () => {
+    expect(await extractSymbols("test.ts", "" as any)).toEqual([]);
+    expect(await extractSymbols("test.ts", null as any)).toEqual([]);
+    expect(await extractSymbols("test.ts", undefined as any)).toEqual([]);
+    expect(extractSymbolsHeuristic("test.ts", "" as any)).toEqual([]);
+    expect(extractSymbolsHeuristic("test.ts", null as any)).toEqual([]);
+    expect(extractSymbolsSync("test.ts", undefined as any)).toEqual([]);
+  });
+
+  it("safely handles non-code files and unknown extensions", async () => {
+    const binSymbols = await extractSymbols("assets/logo.png", "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR");
+    expect(binSymbols).toEqual([]);
+
+    const lockSymbols = await extractSymbols("package-lock.json", '{"name": "test", "lockfileVersion": 3}');
+    expect(lockSymbols).toEqual([]);
+  });
+
+  it("processes minified single-line files without hanging", async () => {
+    const minified = "function a(){return 1;}function b(){return 2;}function c(){return 3;}";
+    const symbols = await extractSymbols("dist/bundle.min.js", minified, "JavaScript");
+    expect(Array.isArray(symbols)).toBe(true);
+  });
 });
