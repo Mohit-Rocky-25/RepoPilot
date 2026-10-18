@@ -83,9 +83,12 @@ export default function AssistantPage() {
   const sampleQuestions = [
     "Generate a GitHub Mermaid architecture diagram for this repository",
     "Where is the main application entry point and how does initialization work?",
-    "How is routing and URL dispatching structured in this project?",
-    "What state management or persistence mechanism is used?",
-    "Where are network API requests configured and handled?"
+    "Where are the automated tests and what test runner is configured?",
+    "What is the tech stack, frameworks, and declared dependencies?",
+    "Where are project configuration files and environment variables located?",
+    "What database, schemas, models, or state management are used?",
+    "How is API routing and network request handling structured?",
+    "What are the contributing guidelines, conventions, and licenses?"
   ];
 
   const abortControllerRef = React.useRef<AbortController | null>(null);

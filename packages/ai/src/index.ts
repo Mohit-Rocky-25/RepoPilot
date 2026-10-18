@@ -1,6 +1,7 @@
 export * from "./ollamaClient";
 export * from "./promptBuilder";
 export * from "./citationValidator";
+export * from "./knowledgeBase";
 export * from "./modelProvider";
 export * from "./providers/ollamaProvider";
 export * from "./providers/openaiCompatibleProvider";

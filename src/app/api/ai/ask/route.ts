@@ -5,7 +5,8 @@ import {
   PromptBuilder,
   CitationValidator,
   createModelProvider,
-  redactSecret
+  redactSecret,
+  CodebaseKnowledgeBase
 } from "@repopilot/ai";
 import { ArchitectureAnalyzer } from "@repopilot/analysis";
 import { generateMermaidDiagram } from "@/lib/mermaidGenerator";
@@ -109,6 +110,48 @@ export async function POST(req: NextRequest) {
       ? "Selected model has under 7B parameters. For grounded multi-file reasoning, a 7B+ model (e.g., qwen2.5-coder:7b) is recommended."
       : undefined;
 
+    // Fetch manifest if available
+    const manifestFile = tree.find((f) => f.path.toLowerCase() === "package.json");
+    let manifestContent: string | undefined;
+    if (manifestFile) {
+      try {
+        manifestContent = await ghClient.fetchFileContent(owner, repo, sha || "HEAD", manifestFile.path);
+      } catch {
+        // ignore manifest fetch failure
+      }
+    }
+
+    // Comprehensive query intent & repository knowledge analysis
+    const analysis = CodebaseKnowledgeBase.analyzeQuery(question, tree, manifestContent);
+
+    // Prompt injection edge case defense
+    if (analysis.isInjectionAttempt) {
+      return NextResponse.json({
+        success: true,
+        answer: CodebaseKnowledgeBase.generateDeterministicAnswer(question, analysis, `${owner}/${repo}`),
+        citations: [],
+        validatedCitations: [],
+        confidence: "high",
+        modelUsed: "security-sandbox",
+        qualityWarning,
+        limitations: ["Prompt injection pattern detected and neutralized."]
+      });
+    }
+
+    // Negative component check (e.g. asking for Docker, DB, Tests when none exist)
+    if (analysis.negativeAssertion) {
+      return NextResponse.json({
+        success: true,
+        answer: CodebaseKnowledgeBase.generateDeterministicAnswer(question, analysis, `${owner}/${repo}`),
+        citations: [],
+        validatedCitations: [],
+        confidence: "high",
+        modelUsed: "deterministic-knowledge-base",
+        qualityWarning,
+        limitations: [analysis.negativeAssertion]
+      });
+    }
+
     // 6. Select Model Provider
     const provider = createModelProvider({
       type: providerType,
@@ -127,8 +170,16 @@ export async function POST(req: NextRequest) {
       maxTokens: maxContextTokens
     });
 
-    // 8. Refusal path: Refuse when retrieval finds no relevant evidence
-    if (!retrieval.hasRelevantMatches && !/mermaid|diagram|architecture|flowchart|structure|graph|3d/i.test(question)) {
+    const combinedIncludedFiles = Array.from(
+      new Set([...analysis.relevantFiles, ...retrieval.includedFiles])
+    );
+
+    // 8. Refusal path: Refuse when retrieval finds no relevant evidence AND no knowledge base matches
+    if (
+      !retrieval.hasRelevantMatches &&
+      analysis.relevantFiles.length === 0 &&
+      !/mermaid|diagram|architecture|flowchart|structure|graph|3d/i.test(question)
+    ) {
       return NextResponse.json({
         success: true,
         answer: "Based on the indexed repository files, no relevant evidence was found for your query. RepoPilot does not guess or answer ungrounded questions from model memory.",
@@ -149,7 +200,7 @@ export async function POST(req: NextRequest) {
     const chunks: { filePath: string; startLine: number; endLine: number; content: string }[] = [];
     const citations: SourceReference[] = [];
 
-    const candidateFiles = retrieval.includedFiles.slice(0, 4);
+    const candidateFiles = combinedIncludedFiles.slice(0, 4);
     const chunkResults = await Promise.allSettled(
       candidateFiles.map(async (filePath) => {
         const content = await ghClient.fetchFileContent(owner, repo, sha || "HEAD", filePath);
@@ -229,39 +280,35 @@ ${mermaidCode}
         ? `Provider "${provider.name}" unavailable: ${redactSecret(status.error, customApiKey)}`
         : "Selected AI provider is offline.";
 
-      const fallbackAnswer = `### 🔍 Deterministic Code Intelligence Analysis
-
-**Query:** "${question}"
-
-#### 📌 Grounding Code Locations Discovered (${chunks.length}):
-${chunks.map((c) => `- **[\`${c.filePath}:${c.startLine}-${c.endLine}\`](/explore?file=${encodeURIComponent(c.filePath)}&line=${c.startLine})**`).join("\n")}
-
-#### 📄 Code Context Preview:
-${chunks.slice(0, 2).map((c) => `**${c.filePath}** (Lines ${c.startLine}-${c.endLine}):\n\`\`\`${c.filePath.endsWith(".ts") || c.filePath.endsWith(".tsx") ? "typescript" : "text"}\n${c.content.slice(0, 350)}\n\`\`\``).join("\n\n")}
-
----
-*⚡ Powered by RepoPilot Deterministic Search Engine. To enable neural synthesis, configure your BYO API key in [Settings](/settings/ai) or start local Ollama with: \`ollama run ${model}\`.*`;
+      const fallbackAnswer = CodebaseKnowledgeBase.generateDeterministicAnswer(
+        question,
+        analysis,
+        `${owner}/${repo}`,
+        chunks
+      );
 
       return NextResponse.json({
         success: true,
         answer: fallbackAnswer,
         citations,
-        confidence: "medium",
-        modelUsed: "deterministic-search-engine",
+        confidence: "high",
+        modelUsed: "deterministic-knowledge-base",
         qualityWarning,
         contextSummary: {
-          includedFiles: retrieval.includedFiles,
+          includedFiles: combinedIncludedFiles,
           omittedCount: retrieval.omittedCount
         },
         limitations: [fallbackReason]
       });
     }
 
-    // 10. Provider is available: Build grounded prompt and generate response
+    // 10. Provider is available: Build grounded prompt enriched with system context
+    const systemContext = CodebaseKnowledgeBase.buildSystemContext(analysis.summary, `${owner}/${repo}`);
     const { systemPrompt, userPrompt } = PromptBuilder.buildGroundedPrompt(
       question,
       chunks,
-      `${owner}/${repo}`
+      `${owner}/${repo}`,
+      systemContext
     );
 
     const rawResponse = await provider.generate({
