@@ -72,27 +72,33 @@ pre, code, kbd, samp {
 }
 
 /* Picture-Perfect High-Contrast Mermaid Diagram Styling */
+.mermaid-viewport {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .mermaid-viewport svg {
   max-width: 100%;
   height: auto;
   overflow: visible;
-  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 8px 32px rgba(0, 0, 0, 0.65));
 }
 
 .mermaid-viewport svg text,
 .mermaid-viewport svg text tspan {
   fill: #FFFFFF !important;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif !important;
+  font-family: var(--font-geist-sans), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   font-weight: 500 !important;
   font-size: 12.5px !important;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
 }
 
 .mermaid-viewport svg .cluster rect {
-  fill: #0C0E14 !important;
-  stroke: #262A36 !important;
+  fill: #0B0E14 !important;
+  stroke: #1E293B !important;
   stroke-width: 1.5px !important;
-  rx: 12px !important;
-  ry: 12px !important;
+  rx: 14px !important;
+  ry: 14px !important;
 }
 
 .mermaid-viewport svg .cluster text,
@@ -100,27 +106,56 @@ pre, code, kbd, samp {
   fill: #94A3B8 !important;
   font-weight: 700 !important;
   font-size: 11px !important;
-  letter-spacing: 0.06em !important;
+  letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
 }
 
 .mermaid-viewport svg .edgePath path {
   stroke: #64748B !important;
-  stroke-width: 1.5px !important;
+  stroke-width: 1.75px !important;
+  transition: stroke 0.2s ease, stroke-width 0.2s ease;
+}
+
+.mermaid-viewport svg .edgePath:hover path {
+  stroke: #818CF8 !important;
+  stroke-width: 2.5px !important;
+}
+
+.mermaid-viewport svg .marker,
+.mermaid-viewport svg marker path,
+.mermaid-viewport svg .arrowheadPath {
+  fill: #818CF8 !important;
+  stroke: #818CF8 !important;
 }
 
 .mermaid-viewport svg .edgeLabel {
-  background-color: #141516 !important;
+  background-color: #0F172A !important;
   color: #CBD5E1 !important;
-  border-radius: 4px;
-  padding: 2px 4px;
+  border-radius: 6px;
+  padding: 3px 6px;
+  border: 1px solid #1E293B;
+  font-size: 11px !important;
+  font-weight: 500;
 }
 
 .mermaid-viewport svg .node rect,
 .mermaid-viewport svg .node circle,
-.mermaid-viewport svg .node polygon {
+.mermaid-viewport svg .node polygon,
+.mermaid-viewport svg .node ellipse,
+.mermaid-viewport svg .node path {
   rx: 8px !important;
   ry: 8px !important;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
+  transition: filter 0.2s ease, stroke-width 0.2s ease, transform 0.2s ease;
+}
+
+.mermaid-viewport svg .node:hover rect,
+.mermaid-viewport svg .node:hover circle,
+.mermaid-viewport svg .node:hover polygon,
+.mermaid-viewport svg .node:hover ellipse,
+.mermaid-viewport svg .node:hover path {
+  filter: drop-shadow(0 0 16px rgba(129, 140, 248, 0.6)) brightness(1.2);
+  stroke-width: 2.5px !important;
+  cursor: pointer;
 }
 

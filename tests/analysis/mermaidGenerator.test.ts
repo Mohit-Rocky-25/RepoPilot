@@ -91,4 +91,23 @@ describe("Mermaid Diagram Generator", () => {
     expect(hierCode).toContain("flowchart LR");
     expect(hierCode).toContain("empty_repo");
   });
+
+  it("generates Data Flow & Execution Pipeline diagram", () => {
+    const dataflowCode = generateMermaidDiagram(sampleSummary, sampleGraph, "dataflow", "owner/test-repo");
+    expect(dataflowCode).toContain("flowchart TD");
+    expect(dataflowCode).toContain("subgraph IngestPipeline");
+    expect(dataflowCode).toContain("subgraph ProcessingPipeline");
+    expect(dataflowCode).toContain("subgraph StatePipeline");
+    expect(dataflowCode).toContain("subgraph OutputPipeline");
+    expect(dataflowCode).toContain("df_entry");
+    expect(dataflowCode).toContain("df_router");
+  });
+
+  it("respects custom orientation parameter (TD vs LR)", () => {
+    const lrSystem = generateMermaidDiagram(sampleSummary, sampleGraph, "system", "owner/test-repo", "LR");
+    expect(lrSystem).toContain("flowchart LR");
+
+    const tdHier = generateMermaidDiagram(sampleSummary, sampleGraph, "hierarchy", "owner/test-repo", "TD");
+    expect(tdHier).toContain("flowchart TD");
+  });
 });

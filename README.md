@@ -131,28 +131,77 @@ RepoPilot solves this through an **evidence-first engineering approach**:
 
 ```mermaid
 flowchart TD
-    A["Public GitHub URL"] --> B["SSRF Safety Validation"]
-    B --> C["Resolve & Pin Commit SHA"]
-    C --> D["Recursive Tree Streaming"]
-    
-    D --> E["File Tree & Code Viewer"]
-    D --> F["Deterministic Symbol Parser"]
-    D --> G["Manifest & Architecture Detector"]
-    
-    F --> H["Ranked Search Engine"]
-    G --> I["3D Spatial Architecture Map"]
-    
-    E & F & G --> J["Bounded Context RAG"]
-    J --> K{"Local Ollama Available?"}
-    K -- Yes --> L["Local Model Inference (qwen2.5-coder)"]
-    K -- No --> M["Deterministic Offline Search Fallback"]
-    L --> N["Citation Verifier (Validates Paths & Lines)"]
-    N & M --> O["Grounded Code Intelligence"]
-    
-    P["Error Stack Trace"] --> Q["Stack Frame Parser"]
-    Q --> R["Ranked Culprit Hypotheses"]
-    R --> S["Minimal Unified Patch Proposal"]
-    S --> T["Human Review & PR Draft Export"]
+  %% Modern High-Contrast RepoPilot End-to-End System Architecture
+
+  classDef gateway fill:#1E1B4B,stroke:#818CF8,stroke-width:2px,color:#FFFFFF,font-weight:600,rx:8px;
+  classDef parser fill:#064E3B,stroke:#34D399,stroke-width:2px,color:#FFFFFF,font-weight:600,rx:8px;
+  classDef ui fill:#082F49,stroke:#38BDF8,stroke-width:2px,color:#FFFFFF,font-weight:600,rx:8px;
+  classDef ai fill:#2E1065,stroke:#C084FC,stroke-width:2px,color:#FFFFFF,font-weight:600,rx:8px;
+  classDef debug fill:#4C0519,stroke:#FB7185,stroke-width:2px,color:#FFFFFF,font-weight:600,rx:8px;
+  classDef store fill:#18181B,stroke:#FBBF24,stroke-width:2px,color:#FFFFFF,font-weight:600,rx:8px;
+  classDef branch fill:#451A03,stroke:#F59E0B,stroke-width:2px,color:#FFFFFF,font-weight:600;
+
+  subgraph IngestLayer["  🌐 1. INGESTION & SSRF SECURITY GATEWAY  "]
+    A(["🌍 Public GitHub URL"]):::gateway
+    B[["🔒 SSRF Safety & Host Validation"]]:::gateway
+    C[("📌 Resolve & Pin Commit SHA")]:::store
+    D[["🌲 Recursive Git Tree Streaming"]]:::gateway
+    A --> B --> C --> D
+  end
+
+  subgraph AnalysisLayer["  ⚡ 2. DETERMINISTIC AST & ARCHITECTURE ENGINE  "]
+    E["📂 In-Memory Safe File Tree"]:::parser
+    F[["🔍 AST Tree-Sitter Symbol Parser"]]:::parser
+    G[["📜 Manifest & Framework Detector"]]:::parser
+    H[("📊 Ranked Symbol Lexical Index")]:::store
+    I[("🗺️ 3D Spatial Architecture Graph")]:::store
+    D --> E
+    D --> F --> H
+    D --> G --> I
+  end
+
+  subgraph ExplorerLayer["  💻 3. WORKSPACE NAVIGATION & VISUALIZATION  "]
+    J["🖥️ File Tree & Multi-Language Viewer"]:::ui
+    K["🔎 Instant Symbol & Code Search Engine"]:::ui
+    L["🌐 Interactive 3D Architecture Canvas"]:::ui
+    E --> J
+    H --> K
+    I --> L
+  end
+
+  subgraph AiLayer["  🧠 4. BOUNDED CONTEXT RAG & VERIFIED AI  "]
+    M["📦 Bounded Context Packager (4,000 Tokens)"]:::ai
+    N{"⚡ Local Ollama Active?"}:::branch
+    O[["🤖 Local LLM Inference (qwen2.5-coder)"]]:::ai
+    P["🛡️ Deterministic Offline Knowledge Base"]:::store
+    Q[["✅ Line-Level Citation Verifier"]]:::ai
+    R(["💡 Evidence-Grounded Answer + Exact Lines"]):::gateway
+
+    J & K & L --> M
+    M --> N
+    N -->|Yes: Local Daemon| O --> Q --> R
+    N -->|No: Offline Fallback| P --> R
+  end
+
+  subgraph DebugLayer["  🛠️ 5. CAUSAL DEBUGGING & PATCH POLICY  "]
+    S(["💥 Runtime Error Stack Trace"]):::debug
+    T[["🧩 AST Stack Frame Parser & Correlator"]]:::debug
+    U["🎯 Ranked Culprit Hypotheses"]:::debug
+    V[["📝 Minimal Unified Patch Proposal"]]:::debug
+    W(["👤 Developer Verification & PR Export"]):::gateway
+
+    S --> T
+    H & E -.->|Symbol Correlation| T
+    T --> U --> V --> W
+  end
+
+  style IngestLayer fill:#0B0F19,stroke:#312E81,stroke-width:1.5px,color:#C7D2FE;
+  style AnalysisLayer fill:#061A14,stroke:#065F46,stroke-width:1.5px,color:#A7F3D0;
+  style ExplorerLayer fill:#081A26,stroke:#0369A1,stroke-width:1.5px,color:#BAE6FD;
+  style AiLayer fill:#150A21,stroke:#6B21A8,stroke-width:1.5px,color:#E9D5FF;
+  style DebugLayer fill:#1F0910,stroke:#9F1239,stroke-width:1.5px,color:#FECDD3;
+
+  linkStyle default stroke:#64748B,stroke-width:1.5px;
 ```
 
 ### The 6-Stage Workflow:
