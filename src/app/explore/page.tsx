@@ -102,6 +102,9 @@ function ExploreContent() {
           if (data.tree) {
             setFiles(data.tree);
           }
+          if (data.repository) {
+            setCurrentRepo(data.repository);
+          }
         })
         .catch(() => setError("Failed to load file tree."))
         .finally(() => setLoadingTree(false));
@@ -218,7 +221,7 @@ function ExploreContent() {
     setLoadingContent(true);
     setError(null);
 
-    const sha = currentRepo.selectedRevision || "HEAD";
+    const sha = currentRepo.selectedRevision || currentRepo.defaultBranch || "HEAD";
     const url = `/api/github/file?owner=${encodeURIComponent(
       currentRepo.owner
     )}&repo=${encodeURIComponent(currentRepo.repo)}&sha=${encodeURIComponent(
@@ -255,6 +258,10 @@ function ExploreContent() {
   };
 
   const handleFileSelect = (file: RepositoryFile) => {
+    if (file.type === "tree") {
+      handleDirectorySelect(file.path);
+      return;
+    }
     setSelectedFile(file);
     setSelectedDirectory(getParentDirectory(file.path));
     setViewMode("code");
@@ -266,14 +273,22 @@ function ExploreContent() {
     setSelectedDirectory(dirPath);
     setViewMode("directory");
     setActiveMobileTab("code");
-    const children = files.filter((f) => f.path.startsWith(`${dirPath}/`));
-    if (children.length > 0 && (!selectedFile || !selectedFile.path.startsWith(`${dirPath}/`))) {
+    const cleanDir = dirPath.replace(/^\/+|\/+$/g, "");
+    const cleanDirLower = cleanDir.toLowerCase();
+    const children = files.filter(
+      (f) =>
+        f.path.startsWith(`${cleanDir}/`) ||
+        f.path.toLowerCase().startsWith(`${cleanDirLower}/`)
+    );
+    if (children.length > 0 && (!selectedFile || !selectedFile.path.toLowerCase().startsWith(`${cleanDirLower}/`))) {
       const entry =
         children.find(
           (f) =>
             f.path.endsWith("/index.ts") ||
             f.path.endsWith("/index.tsx") ||
-            f.path.endsWith("/page.tsx")
+            f.path.endsWith("/page.tsx") ||
+            f.path.endsWith("/main.py") ||
+            f.path.endsWith("/main.go")
         ) || children[0];
       if (entry) setSelectedFile(entry);
     }
@@ -282,7 +297,13 @@ function ExploreContent() {
   // Files in current directory
   const currentDirFiles = useMemo(() => {
     if (!selectedDirectory) return [];
-    return files.filter((f) => f.path.startsWith(`${selectedDirectory}/`));
+    const cleanDir = selectedDirectory.replace(/^\/+|\/+$/g, "");
+    const cleanDirLower = cleanDir.toLowerCase();
+    return files.filter(
+      (f) =>
+        f.path.startsWith(`${cleanDir}/`) ||
+        f.path.toLowerCase().startsWith(`${cleanDirLower}/`)
+    );
   }, [files, selectedDirectory]);
 
   // Filtered files in current directory
@@ -658,9 +679,16 @@ function ExploreContent() {
                               {formatFileSize(file.size || 0)}
                             </td>
                             <td className="py-2.5 px-3 text-right">
-                              <span className="text-[11px] text-[#828FFF] hover:underline font-medium">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleFileSelect(file);
+                                }}
+                                className="text-[11px] text-[#828FFF] hover:text-white hover:underline font-medium cursor-pointer"
+                              >
                                 Inspect →
-                              </span>
+                              </button>
                             </td>
                           </tr>
                         );
