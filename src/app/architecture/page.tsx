@@ -7,6 +7,8 @@ import {
   Layers,
   FileCode,
   FolderTree,
+  Folder,
+  FileText,
   Box,
   AlertCircle,
   Loader2,
@@ -21,7 +23,9 @@ import {
   Printer,
   ShieldCheck,
   CheckCircle2,
-  XCircle
+  XCircle,
+  ArrowUpRight,
+  ExternalLink
 } from "lucide-react";
 import { useRepository } from "@/context/RepositoryContext";
 import { Card } from "@/components/ui/Card";
@@ -334,20 +338,34 @@ export default function ArchitecturePage() {
               </div>
             </Card>
 
-            <Card className="p-4 space-y-1">
-              <span className="text-[11px] font-mono text-[#62666D] uppercase">
-                Identified Entry Points
-              </span>
-              <div className="text-base font-semibold text-[#F7F8F8] font-mono">
+            <Card
+              className="p-4 space-y-1 cursor-pointer hover:border-[#5E6AD2]/50 hover:bg-[#141516] transition-all group"
+              onClick={() => setActiveTab("brief")}
+              title="Click to view identified application entry points in brief"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-mono text-[#62666D] group-hover:text-[#8A8F98] uppercase">
+                  Identified Entry Points
+                </span>
+                <ArrowUpRight className="w-3.5 h-3.5 text-[#52525A] group-hover:text-[#828FFF] transition-colors" />
+              </div>
+              <div className="text-base font-semibold text-[#F7F8F8] font-mono group-hover:text-[#828FFF] transition-colors">
                 {summary.entryPoints.length} Files
               </div>
             </Card>
 
-            <Card className="p-4 space-y-1">
-              <span className="text-[11px] font-mono text-[#62666D] uppercase">
-                Modular Hierarchy
-              </span>
-              <div className="text-base font-semibold text-[#F7F8F8] font-mono">
+            <Card
+              className="p-4 space-y-1 cursor-pointer hover:border-[#5E6AD2]/50 hover:bg-[#141516] transition-all group"
+              onClick={() => setActiveTab("brief")}
+              title="Click to view modular directory roles in brief"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-mono text-[#62666D] group-hover:text-[#8A8F98] uppercase">
+                  Modular Hierarchy
+                </span>
+                <ArrowUpRight className="w-3.5 h-3.5 text-[#52525A] group-hover:text-[#828FFF] transition-colors" />
+              </div>
+              <div className="text-base font-semibold text-[#F7F8F8] font-mono group-hover:text-[#828FFF] transition-colors">
                 {summary.keyModules.length} Modules
               </div>
             </Card>
@@ -378,27 +396,42 @@ export default function ArchitecturePage() {
             <div className="space-y-6">
               {/* Entry Points Section */}
               <Card className="p-5 space-y-3">
-                <div className="flex items-center gap-2">
-                  <FileCode className="w-4 h-4 text-[#5E6AD2]" />
-                  <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono uppercase">
-                    Application Entry Points ({summary.entryPoints.length})
-                  </h2>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileCode className="w-4 h-4 text-[#5E6AD2]" />
+                    <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono uppercase">
+                      Application Entry Points ({summary.entryPoints.length})
+                    </h2>
+                  </div>
+                  <span className="text-[11px] font-mono text-[#8A8F98]">
+                    Click any entrypoint to inspect in Code Explorer
+                  </span>
                 </div>
 
                 {summary.entryPoints.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 font-mono text-xs">
-                    {summary.entryPoints.map((ep) => (
-                      <Link
-                        key={ep}
-                        href={`/explore?file=${encodeURIComponent(ep)}`}
-                        className="p-2.5 rounded-lg bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#34343A] text-[#828FFF] flex items-center justify-between group transition-all"
-                      >
-                        <span className="truncate">{ep}</span>
-                        <Badge variant="primary" size="sm">
-                          Entry
-                        </Badge>
-                      </Link>
-                    ))}
+                    {summary.entryPoints.map((ep) => {
+                      const cleanEp = ep.replace(/^\/+/, "");
+                      const epUrl = currentRepo && !currentRepo.isLocal
+                        ? `/explore?owner=${encodeURIComponent(currentRepo.owner)}&repo=${encodeURIComponent(currentRepo.repo)}&file=${encodeURIComponent(cleanEp)}`
+                        : `/explore?file=${encodeURIComponent(cleanEp)}`;
+                      return (
+                        <Link
+                          key={ep}
+                          href={epUrl}
+                          className="p-2.5 rounded-lg bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#5E6AD2]/50 text-[#828FFF] flex items-center justify-between group transition-all cursor-pointer"
+                          title={`Open ${cleanEp} in Code Explorer`}
+                        >
+                          <span className="truncate group-hover:text-white transition-colors">{cleanEp}</span>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <Badge variant="primary" size="sm">
+                              Entry
+                            </Badge>
+                            <ArrowUpRight className="w-3.5 h-3.5 text-[#52525A] group-hover:text-[#828FFF] transition-colors" />
+                          </div>
+                        </Link>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="p-4 text-center text-xs text-[#62666D] font-mono">
@@ -409,58 +442,132 @@ export default function ArchitecturePage() {
 
               {/* Module Roles & Directory Hierarchy */}
               <Card className="p-5 space-y-3">
-                <div className="flex items-center gap-2">
-                  <FolderTree className="w-4 h-4 text-[#5E6AD2]" />
-                  <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono uppercase">
-                    Module Roles & Responsibilities (Inferred)
-                  </h2>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FolderTree className="w-4 h-4 text-[#5E6AD2]" />
+                    <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono uppercase">
+                      Module Roles & Responsibilities (Inferred)
+                    </h2>
+                  </div>
+                  <span className="text-[11px] font-mono text-[#8A8F98]">
+                    Click any directory or files badge to open in Code Explorer
+                  </span>
                 </div>
 
                 <div className="divide-y divide-[#23252A] border border-[#23252A] rounded-xl overflow-hidden font-mono text-xs">
-                  {summary.keyModules.map((mod) => (
-                    <div
-                      key={mod.directory}
-                      className="flex items-center justify-between p-3 bg-[#0F1011] hover:bg-[#141516] transition-colors"
-                    >
-                      <div className="flex items-center gap-2.5 truncate">
-                        <span className="font-semibold text-[#F7F8F8]">
-                          {mod.directory}/
-                        </span>
-                        <span className="text-[#8A8F98] text-[11px]">
-                          ({mod.description})
-                        </span>
-                      </div>
-                      <Badge variant="neutral" size="sm">
-                        {mod.fileCount} files
-                      </Badge>
-                    </div>
-                  ))}
+                  {summary.keyModules.map((mod) => {
+                    const cleanDir = mod.directory.replace(/^\/+|\/+$/g, "");
+                    const exploreUrl = currentRepo && !currentRepo.isLocal
+                      ? `/explore?owner=${encodeURIComponent(currentRepo.owner)}&repo=${encodeURIComponent(currentRepo.repo)}&dir=${encodeURIComponent(cleanDir)}`
+                      : `/explore?dir=${encodeURIComponent(cleanDir)}`;
+
+                    return (
+                      <Link
+                        key={mod.directory}
+                        href={exploreUrl}
+                        className="flex items-center justify-between p-3.5 bg-[#0F1011] hover:bg-[#18191A] transition-all group cursor-pointer border-b border-[#23252A] last:border-b-0"
+                        title={`Explore ${cleanDir}/ (${mod.fileCount} files) in Code Explorer`}
+                      >
+                        <div className="flex items-center gap-2.5 truncate">
+                          <Folder className="w-4 h-4 text-[#5E6AD2] shrink-0 group-hover:text-[#828FFF] transition-colors" />
+                          <span className="font-semibold text-[#F7F8F8] group-hover:text-[#828FFF] transition-colors">
+                            {cleanDir}/
+                          </span>
+                          <span className="text-[#8A8F98] text-[11px] group-hover:text-[#CBD5E1] transition-colors">
+                            ({mod.description})
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          <Badge
+                            variant="neutral"
+                            size="sm"
+                            className="group-hover:border-[#5E6AD2]/50 group-hover:text-white transition-colors"
+                          >
+                            {mod.fileCount} files
+                          </Badge>
+                          <ArrowUpRight className="w-3.5 h-3.5 text-[#52525A] group-hover:text-[#828FFF] transition-colors" />
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               </Card>
 
-              {/* Dependencies & Manifests */}
+              {/* Manifest & Configuration Files */}
+              {summary.manifestFiles && summary.manifestFiles.length > 0 && (
+                <Card className="p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-[#5E6AD2]" />
+                      <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono uppercase">
+                        Configuration & Manifest Files ({summary.manifestFiles.length})
+                      </h2>
+                    </div>
+                    <span className="text-[11px] font-mono text-[#8A8F98]">
+                      Click to open file in Code Explorer
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 font-mono text-xs">
+                    {summary.manifestFiles.map((mf) => {
+                      const cleanMf = mf.replace(/^\/+/, "");
+                      const mfUrl = currentRepo && !currentRepo.isLocal
+                        ? `/explore?owner=${encodeURIComponent(currentRepo.owner)}&repo=${encodeURIComponent(currentRepo.repo)}&file=${encodeURIComponent(cleanMf)}`
+                        : `/explore?file=${encodeURIComponent(cleanMf)}`;
+                      return (
+                        <Link
+                          key={mf}
+                          href={mfUrl}
+                          className="p-2.5 rounded-lg bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#5E6AD2]/50 text-[#F7F8F8] flex items-center justify-between group transition-all cursor-pointer"
+                          title={`Open ${cleanMf} in Code Explorer`}
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            <FileCode className="w-3.5 h-3.5 text-[#5E6AD2] shrink-0" />
+                            <span className="truncate group-hover:text-[#828FFF] transition-colors font-medium">{cleanMf}</span>
+                          </div>
+                          <ArrowUpRight className="w-3.5 h-3.5 text-[#52525A] group-hover:text-[#828FFF] transition-colors" />
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </Card>
+              )}
+
+              {/* Dependencies Section */}
               {summary.dependencies.length > 0 && (
                 <Card className="p-5 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Box className="w-4 h-4 text-[#5E6AD2]" />
-                    <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono uppercase">
-                      Declared Dependencies & Manifests ({summary.dependencies.length})
-                    </h2>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Box className="w-4 h-4 text-[#5E6AD2]" />
+                      <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono uppercase">
+                        Declared Dependencies ({summary.dependencies.length})
+                      </h2>
+                    </div>
+                    <span className="text-[11px] font-mono text-[#8A8F98]">
+                      Click to search package registry
+                    </span>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 font-mono text-xs">
                     {summary.dependencies.map((dep) => (
-                      <div
+                      <a
                         key={dep.name}
-                        className="p-2.5 rounded-lg bg-[#141516] border border-[#23252A] flex items-center justify-between"
+                        href={`https://www.google.com/search?q=${encodeURIComponent(dep.name + " " + (summary.primaryLanguage || "") + " package")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2.5 rounded-lg bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#38BDF8]/50 flex items-center justify-between group transition-all cursor-pointer"
+                        title={`Search package documentation for ${dep.name}`}
                       >
-                        <span className="text-[#F7F8F8] truncate font-medium">
+                        <span className="text-[#F7F8F8] group-hover:text-[#38BDF8] truncate font-medium transition-colors">
                           {dep.name}
                         </span>
-                        <Badge variant={dep.isDev ? "neutral" : "primary"} size="sm">
-                          {dep.isDev ? "dev" : "prod"}
-                        </Badge>
-                      </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Badge variant={dep.isDev ? "neutral" : "primary"} size="sm">
+                            {dep.isDev ? "dev" : "prod"}
+                          </Badge>
+                          <ExternalLink className="w-3 h-3 text-[#52525A] group-hover:text-[#38BDF8] transition-colors" />
+                        </div>
+                      </a>
                     ))}
                   </div>
                 </Card>

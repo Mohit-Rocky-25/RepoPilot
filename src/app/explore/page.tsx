@@ -112,11 +112,14 @@ function ExploreContent() {
   useEffect(() => {
     if (files.length === 0) return;
 
-    const target = fileParam || dirParam;
+    const rawTarget = fileParam || dirParam;
 
-    if (target) {
+    if (rawTarget) {
+      const target = rawTarget.replace(/^\/+|\/+$/g, "");
+      if (!target) return;
+
       // 1. Direct file match
-      const exactFile = files.find((f) => f.path === target && f.type === "blob");
+      const exactFile = files.find((f) => (f.path === target || f.path === rawTarget) && f.type === "blob");
       if (exactFile) {
         setSelectedFile(exactFile);
         setSelectedDirectory(getParentDirectory(exactFile.path));
@@ -125,7 +128,12 @@ function ExploreContent() {
       }
 
       // 2. Directory match (either explicit dirParam or fileParam was actually a folder path)
-      const childFiles = files.filter((f) => f.path.startsWith(`${target}/`));
+      const childFiles = files.filter(
+        (f) =>
+          f.path.startsWith(`${target}/`) ||
+          f.path.toLowerCase().startsWith(`${target.toLowerCase()}/`)
+      );
+
       if (childFiles.length > 0) {
         setSelectedDirectory(target);
         // Find best primary file in directory
