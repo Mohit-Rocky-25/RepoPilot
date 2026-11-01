@@ -164,26 +164,26 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
           themeVariables: isDark
             ? {
                 darkMode: true,
-                background: "#202124",
-                fontFamily: "Roboto, Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+                background: "#08090A",
+                fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
                 fontSize: "12.5px",
-                clusterBkg: "#292A2D",
-                clusterBorder: "#3C4043",
-                titleColor: "#E8EAED",
-                lineColor: "#9AA0A6",
-                edgeLabelBackground: "#202124",
-                mainBkg: "#292A2D",
-                nodeBorder: "#8AB4F8",
-                nodeTextColor: "#E8EAED",
+                clusterBkg: "#0B0E14",
+                clusterBorder: "#1E293B",
+                titleColor: "#F8FAFC",
+                lineColor: "#64748B",
+                edgeLabelBackground: "#0F172A",
+                mainBkg: "#0F172A",
+                nodeBorder: "#38BDF8",
+                nodeTextColor: "#FFFFFF",
                 primaryColor: "#1E1B4B",
                 primaryTextColor: "#FFFFFF",
-                primaryBorderColor: "#8AB4F8",
-                secondaryColor: "#064E3B",
+                primaryBorderColor: "#818CF8",
+                secondaryColor: "#082F49",
                 secondaryTextColor: "#FFFFFF",
-                secondaryBorderColor: "#81C995",
-                tertiaryColor: "#4C0519",
+                secondaryBorderColor: "#38BDF8",
+                tertiaryColor: "#064E3B",
                 tertiaryTextColor: "#FFFFFF",
-                tertiaryBorderColor: "#F28B82"
+                tertiaryBorderColor: "#34D399"
               }
             : {
                 darkMode: false,
@@ -292,7 +292,7 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
         canvas.height = height * scale;
         const ctx = canvas.getContext("2d");
         if (ctx) {
-          ctx.fillStyle = theme === "dark" ? "#202124" : "#FFFFFF";
+          ctx.fillStyle = theme === "dark" ? "#08090A" : "#FFFFFF";
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           const pngUrl = canvas.toDataURL("image/png");

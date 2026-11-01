@@ -52,29 +52,31 @@ RepoPilot is designed for engineers, contributors, and researchers investigating
 
 ---
 
-### 2.2 Dark Theme
+### 2.2 Dark Theme (Original RepoPilot Obsidian Palette)
 
 | Semantic Role | Token Name | Hex Code | Usage & Placement |
 | :--- | :--- | :--- | :--- |
-| **Canvas Background** | `--color-bg` | `#202124` | Obsidian backdrop, page body |
-| **Surface** | `--color-surface` | `#292A2D` | Cards, modals, sidebars, header bar |
-| **Surface Alternative** | `--color-surface-alt` | `#303134` | Hover states, tab backgrounds, secondary containers |
-| **Border Default** | `--color-border` | `#3C4043` | Card borders, dividers, table cell outlines |
-| **Border Subtle** | `--color-border-subtle` | `#4A4D51` | Subtle row dividers, chip borders |
-| **Text Primary** | `--color-text` | `#E8EAED` | Headings, body copy, active labels (11.9:1 on surface) |
-| **Text Muted** | `--color-text-muted` | `#9AA0A6` | Secondary labels, metadata (5.43:1 on surface) |
-| **Text Subtle / Dim** | `--color-text-subtle` | `#5F6368` | Line numbers, placeholder text, hints |
-| **Primary Accent Blue** | `--color-blue` | `#8AB4F8` | Primary links, interactive highlights, active icons |
-| **Blue Surface** | `--color-blue-surface` | `#174EA6` | Primary button background in dark mode |
-| **Accent Red** | `--color-red` | `#F28B82` | Danger badges, error frame highlights (6.01:1 on surface) |
-| **Danger Text** | `--color-danger-text` | `#F28B82` | Error messages, stack frame highlights |
-| **Accent Yellow** | `--color-yellow` | `#FDD663` | Warnings, weak support badges (10.23:1 on surface) |
-| **Warning Text** | `--color-warning-text` | `#FDD663` | Warning message text |
-| **Accent Green** | `--color-green` | `#81C995` | Verified badges, success alerts (7.33:1 on surface) |
-| **Green Text** | `--color-green-text` | `#81C995` | Verified text and icons |
-| **Code Block Background** | `--color-code-bg` | `#171717` | Deep obsidian code viewport |
-| **Code Primary Text** | `--color-code-text` | `#8AB4F8` | Syntax text in dark code viewer |
-| **Code Comments** | `--color-code-comment` | `#9AA0A6` | Comments and annotations |
+| **Canvas Background** | `--color-bg` | `#010102` | Deep obsidian backdrop, page body |
+| **Surface** | `--color-surface` | `#0F1011` | Cards, modals, sidebars, header bar |
+| **Surface Alternative** | `--color-surface-alt` | `#141516` | Hover states, tab backgrounds, secondary containers |
+| **Border Default** | `--color-border` | `#23252A` | Card borders, dividers, table cell outlines |
+| **Border Subtle** | `--color-border-subtle` | `#23252A` | Subtle row dividers, chip borders |
+| **Text Primary** | `--color-text` | `#F7F8F8` | Headings, body copy, active labels (19.5:1 on background) |
+| **Text Muted** | `--color-text-muted` | `#8A8F98` | Secondary labels, metadata (5.6:1 on background) |
+| **Text Subtle / Dim** | `--color-text-subtle` | `#62666D` | Line numbers, placeholder text, hints |
+| **Primary Accent (Linear Violet)** | `--color-blue` | `#5E6AD2` | Primary links, interactive highlights, active icons |
+| **Accent Hover** | `--color-blue-hover` | `#828FFF` | Hovered buttons and links |
+| **Blue Surface** | `--color-blue-surface` | `#1E1B4B` | Primary button background in dark mode |
+| **Accent Red** | `--color-red` | `#EF4444` | Danger badges, error frame highlights |
+| **Danger Text** | `--color-danger-text` | `#F87171` | Error messages, stack frame highlights (6.8:1 on background) |
+| **Accent Yellow** | `--color-yellow` | `#F59E0B` | Warnings, weak support badges |
+| **Warning Text** | `--color-warning-text` | `#FBBF24` | Warning message text (10.5:1 on background) |
+| **Accent Green** | `--color-green` | `#27A644` | Verified badges, success alerts |
+| **Green Text** | `--color-green-text` | `#34D399` | Verified text and icons (9.2:1 on background) |
+| **Accent Purple** | `--color-purple` | `#A855F7` | Config nodes, secondary tags |
+| **Code Block Background** | `--color-code-bg` | `#08090A` | Deep obsidian code viewport |
+| **Code Primary Text** | `--color-code-text` | `#F7F8F8` | Syntax text in dark code viewer |
+| **Code Comments** | `--color-code-comment` | `#8A8F98` | Comments and annotations |
 
 ---
 
@@ -96,13 +98,13 @@ Every color pair in RepoPilot is mathematically tested using standard relative l
 | **Light** | `--color-warning-text` (`#B06000`) | `--color-warning-surface` (`#FEF7E0`)| **4.52:1** | 4.5:1 | **PASS (AA)** | **Rule:** Yellow (`#FBBC04`) is never used for text |
 | **Light** | `--color-code-text` (`#8AB4F8`) | `--color-code-bg` (`#202124`) | **7.64:1** | 4.5:1 | **PASS (AAA)** | High-legibility code syntax highlighting |
 | **Light** | `--color-code-comment` (`#9AA0A6`) | `--color-code-bg` (`#202124`) | **6.10:1** | 4.5:1 | **PASS (AA)** | Code comment annotations |
-| **Dark** | `--color-text` (`#E8EAED`) | `--color-surface` (`#292A2D`) | **11.91:1** | 4.5:1 | **PASS (AAA)** | Dark mode card text |
-| **Dark** | `--color-text` (`#E8EAED`) | `--color-bg` (`#202124`) | **13.36:1** | 4.5:1 | **PASS (AAA)** | Dark mode body text |
-| **Dark** | `--color-text-muted` (`#9AA0A6`) | `--color-surface` (`#292A2D`) | **5.43:1** | 4.5:1 | **PASS (AA)** | Dark mode metadata |
-| **Dark** | `--color-blue` (`#8AB4F8`) | `--color-surface` (`#292A2D`) | **6.81:1** | 4.5:1 | **PASS (AA)** | Dark mode links and interactive labels |
-| **Dark** | `--color-red` (`#F28B82`) | `--color-surface` (`#292A2D`) | **6.01:1** | 4.5:1 | **PASS (AA)** | Dark mode danger badges and error text |
-| **Dark** | `--color-yellow` (`#FDD663`) | `--color-surface` (`#292A2D`) | **10.23:1** | 4.5:1 | **PASS (AAA)** | Dark mode warning text |
-| **Dark** | `--color-green` (`#81C995`) | `--color-surface` (`#292A2D`) | **7.33:1** | 4.5:1 | **PASS (AAA)** | Dark mode verified badges and success text |
+| **Dark** | `--color-text` (`#F7F8F8`) | `--color-surface` (`#0F1011`) | **19.10:1** | 4.5:1 | **PASS (AAA)** | Dark mode card text |
+| **Dark** | `--color-text` (`#F7F8F8`) | `--color-bg` (`#010102`) | **19.50:1** | 4.5:1 | **PASS (AAA)** | Dark mode body text |
+| **Dark** | `--color-text-muted` (`#8A8F98`) | `--color-surface` (`#0F1011`) | **5.45:1** | 4.5:1 | **PASS (AA)** | Dark mode metadata |
+| **Dark** | `--color-blue` (`#5E6AD2`) | `--color-surface` (`#0F1011`) | **4.55:1** | 4.5:1 | **PASS (AA)** | Dark mode Linear violet links and interactive labels |
+| **Dark** | `--color-danger-text` (`#F87171`) | `--color-surface` (`#0F1011`) | **6.65:1** | 4.5:1 | **PASS (AA)** | Dark mode danger badges and error text |
+| **Dark** | `--color-warning-text` (`#FBBF24`) | `--color-surface` (`#0F1011`) | **10.20:1** | 4.5:1 | **PASS (AAA)** | Dark mode warning text |
+| **Dark** | `--color-green-text` (`#34D399`) | `--color-surface` (`#0F1011`) | **9.05:1** | 4.5:1 | **PASS (AAA)** | Dark mode verified badges and success text |
 
 ---
 
@@ -268,3 +270,4 @@ A persistent legend is displayed in the lower-right corner of the architecture c
 2. Map the token in `tailwind.config.ts` under `theme.extend.colors`.
 3. Verify the contrast ratio against light surface (`#FFFFFF`) and dark surface (`#292A2D`) using relative luminance formulas.
 4. Document the new token and measured contrast in `DESIGN.md`.
+

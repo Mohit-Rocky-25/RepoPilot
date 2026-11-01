@@ -73,3 +73,4 @@ export function applyActiveThemeToDom(active: ActiveTheme): void {
     document.documentElement.style.colorScheme = active;
   }
 }
+

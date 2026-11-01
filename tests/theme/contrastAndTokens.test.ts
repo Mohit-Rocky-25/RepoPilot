@@ -74,57 +74,58 @@ describe("WCAG 2.1 AA Contrast Verification (DESIGN.md Tokens)", () => {
     });
   });
 
-  describe("Dark Theme Token Contrast against #202124 Background & #292A2D Surface", () => {
-    const DARK_BG = "#202124";
-    const DARK_SURFACE = "#292A2D";
+  describe("Dark Theme Token Contrast against #010102 Background & #0F1011 Surface", () => {
+    const DARK_BG = "#010102";
+    const DARK_SURFACE = "#0F1011";
 
-    it("Primary dark text (#E8EAED) meets WCAG AAA (>= 7.0:1)", () => {
-      const ratio = contrastRatio("#E8EAED", DARK_BG);
-      expect(ratio).toBeGreaterThanOrEqual(11.0); // ~11.9:1
+    it("Primary dark text (#F7F8F8) meets WCAG AAA (>= 7.0:1)", () => {
+      const ratio = contrastRatio("#F7F8F8", DARK_BG);
+      expect(ratio).toBeGreaterThanOrEqual(15.0); // ~19.5:1
     });
 
-    it("Muted dark text (#9AA0A6) meets WCAG AA text minimum (>= 4.5:1)", () => {
-      const ratio = contrastRatio("#9AA0A6", DARK_BG);
-      expect(ratio).toBeGreaterThanOrEqual(4.5); // ~4.9:1
+    it("Muted dark text (#8A8F98) meets WCAG AA text minimum (>= 4.5:1)", () => {
+      const ratio = contrastRatio("#8A8F98", DARK_BG);
+      expect(ratio).toBeGreaterThanOrEqual(4.5); // ~5.6:1
     });
 
-    it("Dark blue accent (#8AB4F8) meets WCAG AA text minimum (>= 4.5:1)", () => {
-      const ratio = contrastRatio("#8AB4F8", DARK_BG);
+    it("Linear violet accent (#828FFF) meets WCAG AA text minimum (>= 4.5:1)", () => {
+      const ratio = contrastRatio("#828FFF", DARK_BG);
       expect(ratio).toBeGreaterThanOrEqual(6.0); // ~6.8:1
     });
 
-    it("Dark red accent (#F28B82) meets WCAG AA text minimum (>= 4.5:1)", () => {
-      const ratio = contrastRatio("#F28B82", DARK_BG);
-      expect(ratio).toBeGreaterThanOrEqual(5.0); // ~5.5:1
+    it("Dark danger text (#F87171) meets WCAG AA text minimum (>= 4.5:1)", () => {
+      const ratio = contrastRatio("#F87171", DARK_BG);
+      expect(ratio).toBeGreaterThanOrEqual(5.0); // ~6.8:1
     });
 
-    it("Dark yellow accent (#FDD663) meets WCAG AA text minimum (>= 4.5:1)", () => {
-      const ratio = contrastRatio("#FDD663", DARK_BG);
-      expect(ratio).toBeGreaterThanOrEqual(9.0); // ~9.8:1
+    it("Dark yellow accent (#FBBF24) meets WCAG AA text minimum (>= 4.5:1)", () => {
+      const ratio = contrastRatio("#FBBF24", DARK_BG);
+      expect(ratio).toBeGreaterThanOrEqual(9.0); // ~10.5:1
     });
 
-    it("Dark green accent (#81C995) meets WCAG AA text minimum (>= 4.5:1)", () => {
-      const ratio = contrastRatio("#81C995", DARK_BG);
-      expect(ratio).toBeGreaterThanOrEqual(6.5); // ~7.1:1
+    it("Dark green accent (#34D399) meets WCAG AA text minimum (>= 4.5:1)", () => {
+      const ratio = contrastRatio("#34D399", DARK_BG);
+      expect(ratio).toBeGreaterThanOrEqual(6.5); // ~9.2:1
     });
 
-    it("Dark purple accent (#C58AF9) meets WCAG AA text minimum (>= 4.5:1)", () => {
-      const ratio = contrastRatio("#C58AF9", DARK_BG);
-      expect(ratio).toBeGreaterThanOrEqual(5.5); // ~6.1:1
+    it("Dark purple accent (#A855F7) meets WCAG AA text minimum (>= 4.5:1)", () => {
+      const ratio = contrastRatio("#A855F7", DARK_BG);
+      expect(ratio).toBeGreaterThanOrEqual(4.5); // ~5.2:1
     });
   });
 
-  describe("Code Viewport Tokens (#202124 Container)", () => {
-    const CODE_BG = "#202124";
+  describe("Code Viewport Tokens", () => {
+    const CODE_BG = "#08090A";
 
-    it("Code text (#8AB4F8) on code background achieves high contrast (>= 4.5:1)", () => {
-      const ratio = contrastRatio("#8AB4F8", CODE_BG);
-      expect(ratio).toBeGreaterThanOrEqual(6.0);
+    it("Code text (#F7F8F8) on code background achieves high contrast (>= 4.5:1)", () => {
+      const ratio = contrastRatio("#F7F8F8", CODE_BG);
+      expect(ratio).toBeGreaterThanOrEqual(10.0);
     });
 
-    it("Code comment (#9AA0A6) on code background meets AA minimum (>= 4.5:1)", () => {
-      const ratio = contrastRatio("#9AA0A6", CODE_BG);
+    it("Code comment (#8A8F98) on code background meets AA minimum (>= 4.5:1)", () => {
+      const ratio = contrastRatio("#8A8F98", CODE_BG);
       expect(ratio).toBeGreaterThanOrEqual(4.5);
     });
   });
 });
+

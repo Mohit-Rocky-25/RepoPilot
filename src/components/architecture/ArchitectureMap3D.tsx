@@ -37,14 +37,14 @@ const LIGHT_TYPE_COLORS: Record<ArchitectureGraphNode["type"], string> = {
 };
 
 const DARK_TYPE_COLORS: Record<ArchitectureGraphNode["type"], string> = {
-  root: "#9AA0A6",
-  dir: "#9AA0A6",
-  entry: "#8AB4F8",
-  route: "#8AB4F8",
-  component: "#F28B82",
-  test: "#C58AF9",
-  config: "#FDD663",
-  source: "#9AA0A6"
+  root: "#F7F8F8",
+  dir: "#8A8F98",
+  entry: "#5E6AD2",
+  route: "#38BDF8",
+  component: "#27A644",
+  test: "#F59E0B",
+  config: "#A855F7",
+  source: "#62666D"
 };
 
 const TYPE_LABELS: Record<ArchitectureGraphNode["type"], string> = {
@@ -309,12 +309,12 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
     const isDark = theme === "dark";
 
     // Theme-Aware Canvas Background
-    ctx.fillStyle = isDark ? "#202124" : "#FFFFFF";
+    ctx.fillStyle = isDark ? "#010102" : "#FFFFFF";
     ctx.fillRect(0, 0, width, height);
 
     // Perspective Grid in 3D Mode
     if (!is2DMode) {
-      ctx.strokeStyle = isDark ? "rgba(60, 64, 67, 0.45)" : "rgba(218, 220, 224, 0.65)";
+      ctx.strokeStyle = isDark ? "rgba(35, 37, 42, 0.45)" : "rgba(218, 220, 224, 0.65)";
       ctx.lineWidth = 1;
       const gridSize = 240;
       const step = 60;
@@ -362,20 +362,20 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
       ctx.lineTo(tgt.proj.screenX, tgt.proj.screenY);
 
       if (isHighlighted) {
-        ctx.strokeStyle = isDark ? "#8AB4F8" : "#1A73E8";
+        ctx.strokeStyle = isDark ? "#828FFF" : "#1A73E8";
         ctx.setLineDash([]);
         ctx.lineWidth = 2;
       } else if (edge.type === "dependency") {
         // High-contrast dashed edge for dependency relationships
-        ctx.strokeStyle = isDark ? "rgba(129, 201, 149, 0.85)" : "rgba(52, 168, 83, 0.85)";
+        ctx.strokeStyle = isDark ? "rgba(52, 211, 153, 0.65)" : "rgba(52, 168, 83, 0.85)";
         ctx.setLineDash([4, 4]);
         ctx.lineWidth = 1.5;
       } else if (edge.type === "entry") {
-        ctx.strokeStyle = isDark ? "rgba(138, 180, 248, 0.75)" : "rgba(26, 115, 232, 0.75)";
+        ctx.strokeStyle = isDark ? "rgba(94, 106, 210, 0.5)" : "rgba(26, 115, 232, 0.75)";
         ctx.setLineDash([]);
         ctx.lineWidth = 1.5;
       } else {
-        ctx.strokeStyle = isDark ? "rgba(60, 64, 67, 0.6)" : "rgba(218, 220, 224, 0.9)";
+        ctx.strokeStyle = isDark ? "rgba(52, 52, 58, 0.4)" : "rgba(218, 220, 224, 0.9)";
         ctx.setLineDash([]);
         ctx.lineWidth = 1;
       }
@@ -402,34 +402,34 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
       ctx.arc(proj.screenX, proj.screenY, radius + 2, 0, Math.PI * 2);
       ctx.fillStyle = isSelected
         ? isDark
-          ? "rgba(138, 180, 248, 0.35)"
+          ? "rgba(94, 106, 210, 0.45)"
           : "rgba(26, 115, 232, 0.25)"
         : isHovered
         ? isDark
-          ? "rgba(138, 180, 248, 0.2)"
+          ? "rgba(130, 143, 255, 0.35)"
           : "rgba(26, 115, 232, 0.15)"
         : isDark
-        ? "rgba(0, 0, 0, 0.4)"
+        ? "rgba(0, 0, 0, 0.5)"
         : "rgba(0, 0, 0, 0.08)";
       ctx.fill();
 
       // Node circle
       ctx.beginPath();
       ctx.arc(proj.screenX, proj.screenY, radius, 0, Math.PI * 2);
-      ctx.fillStyle = typeColors[node.type] || (isDark ? "#9AA0A6" : "#5F6368");
+      ctx.fillStyle = typeColors[node.type] || (isDark ? "#8A8F98" : "#5F6368");
       ctx.fill();
 
       // Node border ring
       ctx.strokeStyle = isSelected
         ? isDark
-          ? "#8AB4F8"
+          ? "#828FFF"
           : "#1A73E8"
         : isHovered
         ? isDark
-          ? "#E8EAED"
+          ? "#F7F8F8"
           : "#202124"
         : isDark
-        ? "#3C4043"
+        ? "#23252A"
         : "#DADCE0";
       ctx.lineWidth = isSelected ? 2.5 : isHovered ? 2 : 1;
       ctx.stroke();
@@ -447,14 +447,14 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
         ctx.font = isHovered || isSelected ? "bold 11px Roboto Mono, monospace" : "10px Roboto Mono, monospace";
         ctx.fillStyle = isSelected
           ? isDark
-            ? "#8AB4F8"
+            ? "#828FFF"
             : "#1A73E8"
           : isHovered
           ? isDark
-            ? "#E8EAED"
+            ? "#F7F8F8"
             : "#202124"
           : isDark
-          ? "#9AA0A6"
+          ? "#8A8F98"
           : "#5F6368";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";

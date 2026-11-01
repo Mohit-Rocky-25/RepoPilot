@@ -14,8 +14,9 @@ const DOT_SIZES = {
 };
 
 /**
- * Signature 4-dot cluster (Blue, Red, Yellow, Green)
- * Subtle accent motif for badges, hero sections, and active statuses.
+ * Signature status motif:
+ * - Light Mode: Google 4-dot cluster (Blue, Red, Yellow, Green)
+ * - Dark Mode: Original Linear single violet status pulse
  */
 export const FourDots: React.FC<FourDotsProps> = ({
   className = "",
@@ -30,10 +31,16 @@ export const FourDots: React.FC<FourDotsProps> = ({
       aria-hidden="true"
       className={`inline-flex items-center gap-1.5 shrink-0 select-none ${className}`}
     >
-      <span className={`${dotSize} rounded-full bg-[#1A73E8] ${animClass}`} />
-      <span className={`${dotSize} rounded-full bg-[#EA4335] ${animClass}`} />
-      <span className={`${dotSize} rounded-full bg-[#FBBC04] ${animClass}`} />
-      <span className={`${dotSize} rounded-full bg-[#34A853] ${animClass}`} />
+      {/* Light Theme: Google 4-dot brand motif */}
+      <div className="inline-flex items-center gap-1.5 dark:hidden">
+        <span className={`${dotSize} rounded-full bg-[#1A73E8] ${animClass}`} />
+        <span className={`${dotSize} rounded-full bg-[#EA4335] ${animClass}`} />
+        <span className={`${dotSize} rounded-full bg-[#FBBC04] ${animClass}`} />
+        <span className={`${dotSize} rounded-full bg-[#34A853] ${animClass}`} />
+      </div>
+
+      {/* Dark Theme: Original Linear single violet status pulse */}
+      <span className="hidden dark:inline-block w-2 h-2 rounded-full bg-[#5E6AD2] animate-pulse" />
     </div>
   );
 };

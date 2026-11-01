@@ -19,8 +19,9 @@ const ACCENT_COLOR_MAP: Record<"blue" | "red" | "yellow" | "green", string> = {
 let globalAutoIndex = 0;
 
 /**
- * Signature AccentCard: Card with a 4px solid left accent bar
- * Left accent automatically rotates through Blue, Red, Yellow, Green, or accepts explicit override.
+ * Signature AccentCard:
+ * - Light Mode: Card with a 4px solid left accent bar rotating through Blue, Red, Yellow, Green.
+ * - Dark Mode: Pristine original Obsidian card with subtle border and Linear violet hover state.
  */
 export const AccentCard: React.FC<AccentCardProps> = ({
   children,
@@ -49,13 +50,14 @@ export const AccentCard: React.FC<AccentCardProps> = ({
           ? "hover:border-theme-blue/40 hover:shadow-card-hover hover:-translate-y-0.5 cursor-pointer"
           : ""
       } ${className}`}
-      style={{
-        borderLeftWidth: "4px",
-        borderLeftColor: resolvedColor,
-        ...style
-      }}
+      style={style}
       {...props}
     >
+      {/* Light Theme: 4px Google colored left accent bar */}
+      <div
+        className="dark:hidden absolute left-0 top-0 bottom-0 w-1 pointer-events-none"
+        style={{ backgroundColor: resolvedColor }}
+      />
       {children}
     </div>
   );

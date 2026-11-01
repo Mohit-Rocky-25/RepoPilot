@@ -24,7 +24,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://repopilot.dev";
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
-    { media: "(prefers-color-scheme: dark)", color: "#202124" }
+    { media: "(prefers-color-scheme: dark)", color: "#010102" }
   ],
   colorScheme: "light dark",
   width: "device-width",

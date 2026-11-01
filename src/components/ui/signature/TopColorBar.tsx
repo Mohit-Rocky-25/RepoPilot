@@ -7,7 +7,8 @@ export interface TopColorBarProps {
 
 /**
  * Signature 4-color top bar (Blue, Red, Yellow, Green)
- * Equal 25% width segments reflecting Google / GDG developer platform identity.
+ * Equal 25% width segments reflecting Google / GDG developer platform identity in Light Mode.
+ * Automatically hidden in Dark Mode to preserve the original sleek Obsidian dark theme.
  */
 export const TopColorBar: React.FC<TopColorBarProps> = ({
   className = "",
@@ -16,7 +17,7 @@ export const TopColorBar: React.FC<TopColorBarProps> = ({
   return (
     <div
       aria-hidden="true"
-      className={`w-full ${height} flex shrink-0 select-none overflow-hidden ${className}`}
+      className={`w-full ${height} flex shrink-0 select-none overflow-hidden dark:hidden ${className}`}
     >
       <div className="w-1/4 h-full bg-[#1A73E8]" />
       <div className="w-1/4 h-full bg-[#EA4335]" />
