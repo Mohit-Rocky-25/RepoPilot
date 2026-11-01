@@ -54,8 +54,10 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Default to 2D Mode as required by Phase 8
-  const [is2DMode, setIs2DMode] = useState(true);
+  // Default to 2D for repos above 50 relevant modules or nodes
+  const totalModuleCount = summary?.keyModules?.length || graph.nodes.filter((n) => n.type === "dir").length;
+  const shouldDefaultTo2D = totalModuleCount > 50 || graph.nodes.length > 50;
+  const [is2DMode, setIs2DMode] = useState(shouldDefaultTo2D);
   const [yaw, setYaw] = useState(0);
   const [pitch, setPitch] = useState(0);
   const [distance, setDistance] = useState(420);
@@ -69,7 +71,23 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
   const [hoveredNode, setHoveredNode] = useState<ArchitectureGraphNode | null>(null);
   const [selectedNode, setSelectedNode] = useState<ArchitectureGraphNode | null>(null);
   const [filterType, setFilterType] = useState<string>("all");
+  const [selectedFolder, setSelectedFolder] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
+  // Available top-level folders
+  const availableFolders = useMemo(() => {
+    const folders = new Set<string>();
+    graph.nodes.forEach((n) => {
+      if (n.path) {
+        const top = n.path.split("/")[0];
+        if (top && !top.startsWith(".")) {
+          folders.add(top);
+        }
+      }
+    });
+    return Array.from(folders).sort();
+  }, [graph.nodes]);
   const [isDragging, setIsDragging] = useState(false);
   const [dragMode, setDragMode] = useState<"orbit" | "pan">("orbit");
   const dragStartRef = useRef({ x: 0, y: 0, yaw: 0, pitch: 0, panX: 0, panY: 0 });
@@ -97,13 +115,18 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
         if (filterType === "test" && node.type !== "test") return false;
         if (filterType === "config" && node.type !== "config") return false;
       }
+      if (selectedFolder !== "all") {
+        if (!node.path || (!node.path.startsWith(selectedFolder + "/") && node.path !== selectedFolder)) {
+          return false;
+        }
+      }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         return node.name.toLowerCase().includes(q) || node.path.toLowerCase().includes(q);
       }
       return true;
     });
-  }, [graph.nodes, filterType, searchQuery]);
+  }, [graph.nodes, filterType, selectedFolder, searchQuery]);
 
   // Capped visible nodes (Rule 3: Cap rendered nodes with a "show more" control)
   const displayNodes = useMemo(() => {
@@ -138,6 +161,17 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
     graph.nodes.forEach((n) => map.set(n.id, n));
     return map;
   }, [graph.nodes]);
+
+  // Search to focus on node
+  const focusNode = (node: ArchitectureGraphNode) => {
+    setSelectedNode(node);
+    const scale = 500 / distance;
+    setPan({
+      x: -(node.x || 0) * scale,
+      y: -(node.y || 0) * scale
+    });
+    setShowSearchResults(false);
+  };
 
   // Reset Camera
   const handleResetCamera = () => {
@@ -572,16 +606,56 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#0F1011] border border-[#23252A] rounded-xl shadow-xs">
         {/* Search & Filter pills */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-44 sm:w-52">
+          <div className="relative w-44 sm:w-56">
             <Search className="w-3.5 h-3.5 text-[#62666D] absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Filter nodes..."
+              placeholder="Search to focus on node..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSearchResults(Boolean(e.target.value.trim()));
+              }}
+              onFocus={() => {
+                if (searchQuery.trim()) setShowSearchResults(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && filteredNodes.length > 0) {
+                  focusNode(filteredNodes[0]);
+                }
+              }}
               className="w-full bg-[#141516] border border-[#23252A] text-[#F7F8F8] font-mono text-xs pl-8 pr-2.5 py-1.5 rounded-lg focus:outline-none focus:border-[#5E6AD2]"
             />
+            {/* Search to focus suggestions dropdown */}
+            {showSearchResults && searchQuery.trim() && (
+              <div className="absolute left-0 top-full mt-1 w-64 bg-[#0F1011] border border-[#23252A] rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto divide-y divide-[#23252A] font-mono text-[11px]">
+                {filteredNodes.slice(0, 6).map((node) => (
+                  <div
+                    key={node.id}
+                    onClick={() => focusNode(node)}
+                    className="p-2 hover:bg-[#18191A] cursor-pointer flex items-center justify-between group transition-colors"
+                  >
+                    <span className="text-[#D0D6E0] group-hover:text-white truncate">{node.name}</span>
+                    <span className="text-[10px] text-[#62666D]">{TYPE_LABELS[node.type]?.slice(0, 10)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Folder filter dropdown */}
+          <select
+            value={selectedFolder}
+            onChange={(e) => setSelectedFolder(e.target.value)}
+            className="bg-[#141516] border border-[#23252A] text-[#8A8F98] hover:text-[#F7F8F8] font-mono text-xs px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-[#5E6AD2] cursor-pointer"
+          >
+            <option value="all">All Folders</option>
+            {availableFolders.map((f) => (
+              <option key={f} value={f}>
+                {f}/
+              </option>
+            ))}
+          </select>
 
           <div className="flex items-center gap-1 overflow-x-auto text-xs font-mono">
             {[
@@ -607,15 +681,15 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
             ))}
           </div>
 
-          {/* Show more / cap toggle (Rule 3) */}
+          {/* Show more / cap toggle */}
           {filteredNodes.length > NODE_CAP && (
             <button
               onClick={() => setShowAllNodes(!showAllNodes)}
-              className="px-2 py-1 rounded-md text-[11px] font-mono bg-[#141516] text-[#828FFF] hover:text-[#F7F8F8] border border-[#23252A] hover:border-[#5E6AD2] transition-colors"
+              className="px-2.5 py-1 rounded-md text-[11px] font-mono bg-[#141516] text-[#828FFF] hover:text-[#F7F8F8] border border-[#23252A] hover:border-[#5E6AD2] transition-colors cursor-pointer"
             >
               {showAllNodes
-                ? `Showing All (${filteredNodes.length})`
-                : `Showing ${displayNodes.length} of ${filteredNodes.length} (Show All)`}
+                ? `Showing All (${filteredNodes.length} modules)`
+                : `Showing 50 of ${filteredNodes.length} modules (Show All)`}
             </button>
           )}
         </div>

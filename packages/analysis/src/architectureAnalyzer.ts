@@ -166,7 +166,10 @@ export class ArchitectureAnalyzer {
     for (const f of files) {
       const parts = f.path.split("/");
       if (parts.length > 1) {
-        const topDir = parts[0] === "src" && parts.length > 2 ? `src/${parts[1]}` : parts[0];
+        const topDir =
+          (parts[0] === "src" || parts[0] === "packages") && parts.length > 2
+            ? `${parts[0]}/${parts[1]}`
+            : parts[0];
         dirMap.set(topDir, (dirMap.get(topDir) || 0) + 1);
       }
     }
