@@ -25,6 +25,7 @@
     <a href="#key-capabilities">Capabilities</a> •
     <a href="#how-repopilot-works">How It Works</a> •
     <a href="#architecture--design-decisions">Architecture</a> •
+    <a href="DESIGN.md">Design System</a> •
     <a href="#zero-hosted-api-operating-model">Zero-Budget Model</a> •
     <a href="#quick-start">Quick Start</a> •
     <a href="DEPLOYMENT.md">Deployment</a> •
@@ -39,7 +40,8 @@
     <img src="https://img.shields.io/badge/License-MIT-5E6AD2.svg" alt="License: MIT" />
     <img src="https://img.shields.io/badge/TypeScript-Strict_Mode-3178C6.svg" alt="TypeScript Strict" />
     <img src="https://img.shields.io/badge/Next.js-14.2.15-000000.svg" alt="Next.js 14" />
-    <img src="https://img.shields.io/badge/Vitest-167_Passed-27A644.svg" alt="Tests" />
+    <img src="https://img.shields.io/badge/Vitest-308_Passed-27A644.svg" alt="Tests" />
+    <img src="https://img.shields.io/badge/Design_System-Google_GDG_Light_%26_Dark-1A73E8.svg" alt="Design System" />
     <img src="https://img.shields.io/badge/Security-Defended_&_Scanned-27A644.svg" alt="Security Hardened" />
     <img src="https://img.shields.io/badge/AI-Deterministic_|_BYO_Key_|_Ollama-828FFF.svg" alt="AI Modes" />
   </p>
@@ -383,7 +385,7 @@ RepoPilot includes automated verification scripts to ensure code health:
 # Type checking (TypeScript Strict Mode)
 npm run typecheck
 
-# Unit, integration, and security test suite (186 tests across 22 files)
+# Unit, integration, and security test suite (308 tests across 40 files)
 npm test
 
 # Automated retrieval, citation validity, and weak-support evaluation (52 questions across 6 repos)
@@ -411,7 +413,29 @@ npm start
 
 ---
 
-## 11. Feature-Specific Usage Instructions
+## 11. Design System & Theming (Google / GDG Specification)
+
+RepoPilot implements a comprehensive Google/GDG-style developer design system, documented in full detail in [`DESIGN.md`](DESIGN.md).
+
+### Visual Principles & Theme Architecture
+- **Light Theme by Default**: High-contrast, clean developer surface inspired by Google Cloud Console, Android Developers, and web.dev (`#F8F9FA` background, `#FFFFFF` surface, `#202124` text, `#5F6368` muted text).
+- **Dark Theme on Demand**: Obsidian-toned dark theme (`#202124` background, `#292A2D` surface, `#E8EAED` text, `#9AA0A6` muted text) available as a user choice via the `ThemeSwitcher` segmented control.
+- **Zero Flash of Wrong Theme (FOUC)**: A synchronous blocking script in `<head>` queries `localStorage['repopilot-theme']` before any CSS or DOM elements render, preventing any flash on dark OS devices.
+- **WCAG 2.1 AA Contrast Strictness**: Every single text-to-background pairing is mathematically verified to exceed 4.5:1. Yellow (`#FBBC04`) is strictly forbidden for text on light backgrounds; high-contrast amber `#B06000` (5.2:1) is used for warning callouts and badges.
+- **Signature Google/GDG Brand Elements**:
+  - `TopColorBar`: Fixed 3px horizontal bar at the top of the viewport featuring equal Blue, Red, Yellow, Green bands.
+  - `FourDots`: Inline 4-color status motif used across hero, dialogs, and loaders.
+  - `AccentCard`: Interactive cards with a 4px rotating brand accent border.
+- **Theme-Aware Non-CSS Surfaces**:
+  - **2D/3D Architecture Map**: Canvas background, perspective grid, node taxonomy circles, edge connections, and labels dynamically react to theme switches.
+  - **Mermaid Vector Diagrams**: Diagram renderer dynamically configures `mermaid.initialize` theme variables and re-renders upon theme changes; PNG exports adapt background color.
+  - **Code Viewer**: Dark obsidian syntax container (`bg-theme-code-bg`) ensuring syntax token contrast across both modes.
+
+For the full specification including contrast measurement tables, token taxonomy, and component guidelines, see [`DESIGN.md`](DESIGN.md).
+
+---
+
+## 12. Feature-Specific Usage Instructions
 
 ### A. Code Explorer (`/explore`)
 1. Import a public GitHub repository URL (e.g. `https://github.com/facebook/react`).
@@ -448,7 +472,7 @@ npm start
 
 ---
 
-## 12. Security, Privacy & Known Limitations
+## 13. Security, Privacy & Known Limitations
 
 ### Security Protections:
 - **SSRF Safeguards**: All repository imports and AI base URLs are strictly checked against SSRF policies. Resolves DNS ahead of connection, blocking loopback IPs, private RFC1918 subnets, link-local metadata addresses (`169.254.169.254`), and IPv4-mapped IPv6 variants.
@@ -467,7 +491,7 @@ npm start
 
 ---
 
-## 13. Project Structure
+## 14. Project Structure
 
 ```
 RepoPilot/
@@ -486,6 +510,7 @@ RepoPilot/
 │   ├── debugging/                   # Stack trace parser & candidate diff generator
 │   └── execution/                   # Sandbox safety policies
 ├── legacy/                          # Archived pre-Next.js static HTML/CSS prototypes
+├── DESIGN.md                        # Single source of truth for Google/GDG design system & WCAG AA tokens
 ├── docs/                            # Architecture specifications & decision records (ADRs)
 ├── tests/                           # Vitest unit and integration test suites
 ├── assets/                          # Official brand logo and banner imagery
@@ -498,7 +523,7 @@ RepoPilot/
 
 ---
 
-## 14. Contributing
+## 15. Contributing
 
 We welcome contributions from developers, researchers, and open-source advocates!
 
@@ -512,7 +537,7 @@ Please read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE
 
 ---
 
-## 15. Roadmap
+## 16. Roadmap
 
 Only verified upcoming enhancements are listed below:
 - [ ] **Tree-sitter WASM Integration**: In-browser Tree-sitter parsers for deep semantic symbol trees across additional languages.
@@ -521,7 +546,7 @@ Only verified upcoming enhancements are listed below:
 
 ---
 
-## 16. License & Attribution
+## 17. License & Attribution
 
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for full details.
 
