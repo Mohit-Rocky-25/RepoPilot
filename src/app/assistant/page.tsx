@@ -44,7 +44,18 @@ interface QAItem {
   citationWarning?: string;
   contextSummary?: {
     includedFiles: string[];
-    omittedCount: number;
+    droppedFiles?: string[];
+    omittedCount?: number;
+    filesIncluded?: number;
+    filesDropped?: number;
+    tokenBudget?: number;
+  };
+  contextMeta?: {
+    tokenBudget: number;
+    includedFiles: string[];
+    droppedFiles: string[];
+    filesIncluded: number;
+    filesDropped: number;
   };
   refused?: boolean;
 }
@@ -53,10 +64,23 @@ export default function AssistantPage() {
   const { currentRepo, aiConfig, setIsImportModalOpen } = useRepository();
 
   const [providerMode, setProviderMode] = useState<"ollama" | "openai-compatible" | "offline">("offline");
+  const [contextTokenBudget, setContextTokenBudget] = useState<number>(4000);
   const [question, setQuestion] = useState("");
   const [history, setHistory] = useState<QAItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    try {
+      const savedBudget = localStorage.getItem("REPOPILOT_CONTEXT_BUDGET");
+      if (savedBudget) {
+        const parsed = parseInt(savedBudget, 10);
+        if (!isNaN(parsed) && parsed >= 500 && parsed <= 16000) {
+          setContextTokenBudget(parsed);
+        }
+      }
+    } catch {}
+  }, []);
 
   React.useEffect(() => {
     try {
@@ -116,7 +140,8 @@ export default function AssistantPage() {
           sha: currentRepo.selectedRevision,
           question: qText.trim(),
           baseUrl: aiConfig.baseUrl,
-          model: aiConfig.modelName
+          model: aiConfig.modelName,
+          contextTokenBudget: contextTokenBudget
         })
       });
 
@@ -134,6 +159,7 @@ export default function AssistantPage() {
         qualityWarning: data.qualityWarning,
         citationWarning: data.citationWarning,
         contextSummary: data.contextSummary,
+        contextMeta: data.contextMeta,
         refused: data.refused
       };
 
@@ -236,6 +262,29 @@ export default function AssistantPage() {
               AI: Offline (deterministic only)
             </Badge>
           )}
+
+          {/* Context Token Budget Setting */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#141516] border border-[#23252A] text-xs font-mono text-[#8A8F98]">
+            <Layers className="w-3.5 h-3.5 text-[#828FFF]" />
+            <span className="hidden sm:inline">Context Budget:</span>
+            <select
+              value={contextTokenBudget}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                setContextTokenBudget(val);
+                try {
+                  localStorage.setItem("REPOPILOT_CONTEXT_BUDGET", val.toString());
+                } catch {}
+              }}
+              className="bg-transparent text-white font-mono text-xs focus:outline-none cursor-pointer"
+              title="Configurable Context Token Budget (max 16,000 tokens)"
+            >
+              <option value={2000} className="bg-[#141516] text-white">2,000 tokens</option>
+              <option value={4000} className="bg-[#141516] text-white">4,000 tokens (Default)</option>
+              <option value={8000} className="bg-[#141516] text-white">8,000 tokens</option>
+              <option value={16000} className="bg-[#141516] text-white">16,000 tokens (Max)</option>
+            </select>
+          </div>
           <Link href="/architecture">
             <Button variant="secondary" size="sm" icon={<Network className="w-3.5 h-3.5 text-[#828FFF]" />}>
               3D Spatial Map
@@ -441,20 +490,52 @@ export default function AssistantPage() {
               </div>
 
               {/* Context Summary Bar */}
-              {item.contextSummary && item.contextSummary.includedFiles.length > 0 && (
-                <div className="p-2.5 rounded-lg bg-[#0F1011] border border-[#23252A] text-[11px] font-mono text-[#8A8F98] space-y-1">
-                  <div className="flex items-center gap-1.5 font-semibold text-white">
-                    <FileCode className="w-3.5 h-3.5 text-[#5E6AD2]" />
-                    <span>Retrieved Context ({item.contextSummary.includedFiles.length} files included{item.contextSummary.omittedCount > 0 ? `, ${item.contextSummary.omittedCount} omitted by token bound` : ""}):</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1 text-[10px] text-[#828FFF]">
-                    {item.contextSummary.includedFiles.map((f) => (
-                      <span key={f} className="px-1.5 py-0.5 rounded bg-[#141516] border border-[#23252A]">
-                        {f}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+              {(item.contextMeta || item.contextSummary) && (
+                (() => {
+                  const meta = item.contextMeta || {
+                    tokenBudget: item.contextSummary?.tokenBudget || 4000,
+                    includedFiles: item.contextSummary?.includedFiles || [],
+                    droppedFiles: item.contextSummary?.droppedFiles || [],
+                    filesIncluded: item.contextSummary?.filesIncluded ?? item.contextSummary?.includedFiles?.length ?? 0,
+                    filesDropped: item.contextSummary?.filesDropped ?? item.contextSummary?.omittedCount ?? 0
+                  };
+                  if (meta.filesIncluded === 0 && meta.filesDropped === 0) return null;
+                  return (
+                    <div className="p-2.5 rounded-lg bg-[#0F1011] border border-[#23252A] text-[11px] font-mono text-[#8A8F98] space-y-1.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 font-semibold text-white">
+                          <FileCode className="w-3.5 h-3.5 text-[#5E6AD2]" />
+                          <span>
+                            Context used: {meta.filesIncluded} files, {meta.filesDropped} dropped
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-[#64748B]">
+                          Budget: {meta.tokenBudget.toLocaleString()} tokens
+                        </span>
+                      </div>
+                      {meta.includedFiles.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1 text-[10px]">
+                          <span className="text-[#A1A1AA]">Included:</span>
+                          {meta.includedFiles.map((f) => (
+                            <span key={f} className="px-1.5 py-0.5 rounded bg-[#141516] border border-[#23252A] text-[#828FFF]">
+                              {f}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {meta.droppedFiles.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1 text-[10px]">
+                          <span className="text-[#EAB308]">Dropped:</span>
+                          {meta.droppedFiles.map((f) => (
+                            <span key={f} className="px-1.5 py-0.5 rounded bg-[#141516] border border-[#3E3E44] text-[#A1A1AA] line-through">
+                              {f}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()
               )}
 
               {/* Quality & Citation Warnings */}

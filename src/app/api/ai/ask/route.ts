@@ -51,8 +51,10 @@ export async function POST(req: NextRequest) {
       baseUrl = headerBaseUrl || process.env.OLLAMA_BASE_URL || "http://localhost:11434",
       model = headerModel || process.env.DEFAULT_MODEL || "qwen2.5-coder:7b",
       providerType = headerProvider || (customApiKey ? "openai-compatible" : "ollama"),
-      maxContextTokens = body.maxContextTokens || parseInt(process.env.MAX_CONTEXT_TOKENS || "4000", 10)
+      contextTokenBudget = body.contextTokenBudget || body.maxContextTokens
     } = body;
+
+    const resolvedBudget = PromptBuilder.resolveTokenBudget(contextTokenBudget);
 
     // 4. Strict Input Validation
     if (!validateGitHubOwner(owner) || !validateGitHubRepo(repo)) {
@@ -167,7 +169,7 @@ export async function POST(req: NextRequest) {
     const retrieval = searchEngine.retrieveContext({
       query: question,
       targetFilePath,
-      maxTokens: maxContextTokens
+      maxTokens: resolvedBudget
     });
 
     const combinedIncludedFiles = Array.from(
@@ -189,18 +191,29 @@ export async function POST(req: NextRequest) {
         confidence: "uncertain",
         qualityWarning,
         limitations: ["No matching files or symbols found in repository revision."],
+        contextMeta: {
+          tokenBudget: resolvedBudget,
+          includedFiles: [],
+          droppedFiles: [],
+          filesIncluded: 0,
+          filesDropped: 0
+        },
         contextSummary: {
           includedFiles: [],
-          omittedCount: 0
+          droppedFiles: [],
+          omittedCount: 0,
+          filesIncluded: 0,
+          filesDropped: 0,
+          tokenBudget: resolvedBudget
         }
       });
     }
 
-    // Gather file chunks concurrently from ranked files
-    const chunks: { filePath: string; startLine: number; endLine: number; content: string }[] = [];
-    const citations: SourceReference[] = [];
+    // Gather file chunks concurrently from ranked files based on resolved budget
+    const maxFilesToSample = Math.max(2, Math.floor(resolvedBudget / 350));
+    const candidateFiles = combinedIncludedFiles.slice(0, Math.min(maxFilesToSample, 15));
+    const rawChunks: { filePath: string; startLine: number; endLine: number; content: string }[] = [];
 
-    const candidateFiles = combinedIncludedFiles.slice(0, 4);
     const chunkResults = await Promise.allSettled(
       candidateFiles.map(async (filePath) => {
         const content = await ghClient.fetchFileContent(owner, repo, sha || "HEAD", filePath);
@@ -218,23 +231,43 @@ export async function POST(req: NextRequest) {
     for (const res of chunkResults) {
       if (res.status === "fulfilled" && res.value) {
         const { filePath, startLine, endLine, snippet } = res.value;
-        chunks.push({
+        rawChunks.push({
           filePath,
           startLine,
           endLine,
           content: snippet
         });
-
-        citations.push({
-          repoKey: `${owner}/${repo}`,
-          commitSha: sha || "HEAD",
-          filePath,
-          startLine,
-          endLine,
-          codeSnippet: snippet.slice(0, 300)
-        });
       }
     }
+
+    // Enforce transparent context token budget
+    const budgetResult = PromptBuilder.enforceBudget(rawChunks, resolvedBudget);
+    const chunks = budgetResult.includedChunks;
+
+    const citations: SourceReference[] = chunks.map((c) => ({
+      repoKey: `${owner}/${repo}`,
+      commitSha: sha || "HEAD",
+      filePath: c.filePath,
+      startLine: c.startLine,
+      endLine: c.endLine,
+      codeSnippet: c.content.slice(0, 300)
+    }));
+
+    const contextMeta = {
+      tokenBudget: budgetResult.tokenBudget,
+      includedFiles: budgetResult.includedFiles,
+      droppedFiles: budgetResult.droppedFiles,
+      filesIncluded: budgetResult.filesIncluded,
+      filesDropped: budgetResult.filesDropped
+    };
+    const contextSummary = {
+      includedFiles: budgetResult.includedFiles,
+      droppedFiles: budgetResult.droppedFiles,
+      omittedCount: budgetResult.filesDropped,
+      filesIncluded: budgetResult.filesIncluded,
+      filesDropped: budgetResult.filesDropped,
+      tokenBudget: budgetResult.tokenBudget
+    };
 
     // 9. Fallback if provider is offline or unconfigured
     if (!status.available) {
@@ -268,10 +301,8 @@ ${mermaidCode}
           confidence: "high",
           modelUsed: "deterministic-mermaid-engine",
           qualityWarning,
-          contextSummary: {
-            includedFiles: retrieval.includedFiles,
-            omittedCount: retrieval.omittedCount
-          },
+          contextMeta,
+          contextSummary,
           limitations: []
         });
       }
@@ -294,10 +325,8 @@ ${mermaidCode}
         confidence: "high",
         modelUsed: "deterministic-knowledge-base",
         qualityWarning,
-        contextSummary: {
-          includedFiles: combinedIncludedFiles,
-          omittedCount: retrieval.omittedCount
-        },
+        contextMeta,
+        contextSummary,
         limitations: [fallbackReason]
       });
     }
@@ -335,10 +364,8 @@ ${mermaidCode}
       modelUsed: model,
       providerUsed: provider.name,
       qualityWarning,
-      contextSummary: {
-        includedFiles: retrieval.includedFiles,
-        omittedCount: retrieval.omittedCount
-      },
+      contextMeta,
+      contextSummary,
       rateLimit: ghClient.lastRateLimit
     });
   } catch (error: any) {
