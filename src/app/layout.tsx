@@ -1,14 +1,32 @@
 import "@/styles/globals.css";
 import React from "react";
 import type { Metadata, Viewport } from "next";
+import { Roboto, Roboto_Mono } from "next/font/google";
 import { RepositoryProvider } from "@/context/RepositoryContext";
 import { ShellLayout } from "@/components/layout/ShellLayout";
+
+const roboto = Roboto({
+  weight: ["300", "400", "500", "700"],
+  subsets: ["latin"],
+  variable: "--font-roboto",
+  display: "swap"
+});
+
+const robotoMono = Roboto_Mono({
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+  variable: "--font-roboto-mono",
+  display: "swap"
+});
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://repopilot.dev";
 
 export const viewport: Viewport = {
-  themeColor: "#010102",
-  colorScheme: "dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#202124" }
+  ],
+  colorScheme: "light dark",
   width: "device-width",
   initialScale: 1
 };
@@ -133,20 +151,26 @@ const jsonLd = {
   ]
 };
 
+// Inline blocking script to resolve active theme and set data-theme before first paint (eliminates FOUC)
+const themeInitializerScript = `(function(){try{var stored=localStorage.getItem('repopilot-theme');var t='light';if(stored==='dark'||stored==='light'){t=stored;}else if(stored==='system'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);document.documentElement.style.colorScheme=t;}catch(e){document.documentElement.setAttribute('data-theme','light');document.documentElement.style.colorScheme='light';}})();`;
+
 export default function RootLayout({
   children
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{ __html: themeInitializerScript }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="bg-[#010102] text-[#F7F8F8] antialiased min-h-screen">
+      <body className={`${roboto.variable} ${robotoMono.variable} font-sans bg-theme-bg text-theme-text antialiased min-h-screen transition-colors duration-150`}>
         <RepositoryProvider>
           <ShellLayout>{children}</ShellLayout>
         </RepositoryProvider>

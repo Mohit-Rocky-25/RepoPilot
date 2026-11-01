@@ -73,15 +73,15 @@ function SearchContent() {
 
   if (!currentRepo) {
     return (
-      <Card className="p-8 text-center max-w-xl mx-auto my-12 space-y-4">
-        <div className="w-12 h-12 rounded-xl bg-[#5E6AD2]/15 border border-[#5E6AD2]/30 flex items-center justify-center text-[#828FFF] mx-auto shadow-[0_0_16px_rgba(94,106,210,0.25)]">
+      <Card className="p-8 text-center max-w-xl mx-auto my-12 space-y-4 bg-theme-surface border-theme-border">
+        <div className="w-12 h-12 rounded-xl bg-theme-blue/10 border border-theme-blue/30 flex items-center justify-center text-theme-blue mx-auto shadow-xs">
           <SearchIcon className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-base font-semibold text-[#F7F8F8]">
+          <h2 className="text-base font-semibold text-theme-text">
             No Repository Loaded
           </h2>
-          <p className="text-xs text-[#8A8F98] mt-1.5 leading-relaxed max-w-md mx-auto">
+          <p className="text-xs text-theme-text-muted mt-1.5 leading-relaxed max-w-md mx-auto">
             Import a public GitHub repository to perform deterministic code search and symbol navigation.
           </p>
         </div>
@@ -107,17 +107,17 @@ function SearchContent() {
     <div className="space-y-6">
       {/* Search Header Bar */}
       <div>
-        <h1 className="text-lg font-semibold text-[#F7F8F8] font-sans flex items-center gap-2">
-          <SearchIcon className="w-5 h-5 text-[#5E6AD2]" />
+        <h1 className="text-lg font-semibold text-theme-text font-sans flex items-center gap-2">
+          <SearchIcon className="w-5 h-5 text-theme-blue" />
           <span>Code & Symbol Search</span>
         </h1>
-        <p className="text-xs text-[#8A8F98] mt-0.5 font-mono">
+        <p className="text-xs text-theme-text-muted mt-0.5 font-mono">
           Deterministic indexed search across {files.length} repository files in {currentRepo.owner}/{currentRepo.repo}.
         </p>
       </div>
 
       {/* Query Form Box */}
-      <Card className="p-4 space-y-3">
+      <Card className="p-4 space-y-3 bg-theme-surface border-theme-border shadow-xs">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -148,17 +148,17 @@ function SearchContent() {
         </form>
 
         {/* Filter Controls Row */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-[#23252A] text-xs font-mono">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-theme-border text-xs font-mono">
           <div className="flex items-center gap-1.5">
-            <span className="text-[#62666D] mr-1">Type:</span>
+            <span className="text-theme-text-muted mr-1">Type:</span>
             {(["all", "symbol", "path", "text"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setSearchType(t)}
-                className={`px-2.5 py-1 rounded-md capitalize transition-colors ${
+                className={`px-2.5 py-1 rounded-full capitalize transition-colors cursor-pointer ${
                   searchType === t
-                    ? "bg-[#5E6AD2] text-white font-medium"
-                    : "bg-[#141516] text-[#8A8F98] hover:text-[#F7F8F8] border border-[#23252A] hover:border-[#34343A]"
+                    ? "bg-theme-blue text-white font-medium"
+                    : "bg-theme-surface-alt text-theme-text-muted hover:text-theme-text border border-theme-border"
                 }`}
               >
                 {t}
@@ -168,11 +168,11 @@ function SearchContent() {
 
           {languages.length > 0 && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[#62666D]">Language:</span>
+              <span className="text-theme-text-muted">Language:</span>
               <select
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="bg-[#141516] border border-[#23252A] text-[#F7F8F8] text-xs rounded-lg px-2.5 py-1 focus:outline-none focus:border-[#5E6AD2]"
+                className="bg-theme-surface-alt border border-theme-border text-theme-text text-xs rounded-lg px-2.5 py-1 focus:outline-none focus:border-theme-blue cursor-pointer"
               >
                 <option value="all">All Languages</option>
                 {languages.map((lang) => (
@@ -188,7 +188,7 @@ function SearchContent() {
 
       {/* Results Section */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between text-xs font-mono text-[#8A8F98]">
+        <div className="flex items-center justify-between text-xs font-mono text-theme-text-muted">
           <span>
             {results.length} {results.length === 1 ? "result" : "results"} found
           </span>
@@ -200,15 +200,15 @@ function SearchContent() {
               <Card
                 key={`${res.filePath}:${res.lineNumber}:${idx}`}
                 onClick={() => handleNavigate(res)}
-                className="p-3.5 hover:border-[#34343A] hover:bg-[#141516] transition-all cursor-pointer group font-mono text-xs"
+                className="p-3.5 hover:border-theme-blue/40 hover:bg-theme-surface-alt transition-all cursor-pointer group font-mono text-xs bg-theme-surface border-theme-border shadow-xs"
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2 truncate">
-                    <FileCode className="w-4 h-4 text-[#5E6AD2] shrink-0" />
-                    <span className="text-[#F7F8F8] font-semibold group-hover:text-[#828FFF] truncate transition-colors">
+                    <FileCode className="w-4 h-4 text-theme-blue shrink-0" />
+                    <span className="text-theme-text font-semibold group-hover:text-theme-blue truncate transition-colors">
                       {res.filePath}
                     </span>
-                    <span className="text-[#62666D]">
+                    <span className="text-theme-text-muted">
                       :line {res.lineNumber}
                     </span>
                   </div>
@@ -224,37 +224,37 @@ function SearchContent() {
                     >
                       {res.matchType}
                     </Badge>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#62666D] group-hover:text-[#828FFF] group-hover:translate-x-0.5 transition-all" />
+                    <ArrowRight className="w-3.5 h-3.5 text-theme-text-muted group-hover:text-theme-blue group-hover:translate-x-0.5 transition-all" />
                   </div>
                 </div>
 
-                <div className="pl-6 text-[#8A8F98] text-[11px] truncate bg-[#141516] py-1 px-2 rounded-md border border-[#23252A]">
+                <div className="pl-6 text-theme-text-muted text-[11px] truncate bg-theme-surface-alt py-1 px-2 rounded-md border border-theme-border">
                   {res.previewText}
                 </div>
               </Card>
             ))}
           </div>
         ) : !currentRepo ? (
-          <Card className="p-12 text-center space-y-3 bg-[#0F1011] border-[#23252A]">
-            <SearchIcon className="w-8 h-8 text-[#5E6AD2] mx-auto opacity-60" />
-            <h3 className="text-sm font-mono font-semibold text-white">No Active Repository Loaded</h3>
-            <p className="text-xs text-[#8A8F98] max-w-sm mx-auto">
+          <Card className="p-12 text-center space-y-3 bg-theme-surface border-theme-border shadow-xs">
+            <SearchIcon className="w-8 h-8 text-theme-blue mx-auto opacity-60" />
+            <h3 className="text-sm font-mono font-semibold text-theme-text">No Active Repository Loaded</h3>
+            <p className="text-xs text-theme-text-muted max-w-sm mx-auto">
               Import a public GitHub repository or load an example to search files and extracted symbols deterministically.
             </p>
             <div className="pt-2">
               <Link
                 href="/examples"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#5E6AD2] text-white text-xs font-mono font-semibold hover:bg-[#6875E5] transition-all"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-theme-blue text-white text-xs font-mono font-semibold hover:bg-theme-blue-hover transition-all"
               >
                 <span>Browse Examples →</span>
               </Link>
             </div>
           </Card>
         ) : (
-          <Card className="p-12 text-center space-y-3 bg-[#0F1011] border-[#23252A]">
-            <SearchIcon className="w-8 h-8 text-[#5E6AD2] mx-auto opacity-60" />
-            <h3 className="text-sm font-mono font-semibold text-white">Deterministic Search Console</h3>
-            <p className="text-xs text-[#8A8F98] max-w-sm mx-auto">
+          <Card className="p-12 text-center space-y-3 bg-theme-surface border-theme-border shadow-xs">
+            <SearchIcon className="w-8 h-8 text-theme-blue mx-auto opacity-60" />
+            <h3 className="text-sm font-mono font-semibold text-theme-text">Deterministic Search Console</h3>
+            <p className="text-xs text-theme-text-muted max-w-sm mx-auto">
               Type a filename, directory, or symbol identifier above to search across {currentRepo.owner}/{currentRepo.repo}.
             </p>
           </Card>
@@ -268,7 +268,7 @@ export default function SearchPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-8 text-center text-xs font-mono text-[#8A8F98]">
+        <div className="p-8 text-center text-xs font-mono text-theme-text-muted">
           Loading Search Console...
         </div>
       }

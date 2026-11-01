@@ -21,13 +21,15 @@ import {
   BookOpen,
   Lock,
   Info,
-  ShieldAlert
+  ShieldAlert,
+  SunMoon
 } from "lucide-react";
 import { useRepository } from "@/context/RepositoryContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 
 interface TokenValidationInfo {
   tested: boolean;
@@ -63,7 +65,6 @@ export default function GeneralSettingsPage() {
 
   useEffect(() => {
     try {
-      // Clean up legacy localStorage if found, migrating to sessionStorage
       const legacyLocalToken = localStorage.getItem("REPOPILOT_GH_TOKEN");
       if (legacyLocalToken) {
         if (!sessionStorage.getItem("REPOPILOT_GH_TOKEN")) {
@@ -93,7 +94,6 @@ export default function GeneralSettingsPage() {
     setSavedTokenNotice(true);
     setTimeout(() => setSavedTokenNotice(false), 2500);
 
-    // Validate token before or upon saving
     await handleVerifyToken(trimmed);
   };
 
@@ -193,7 +193,7 @@ export default function GeneralSettingsPage() {
               router.push("/");
             }
           }}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F1011] hover:bg-[#141516] border border-[#23252A] hover:border-[#34343A] text-xs font-mono text-[#8A8F98] hover:text-[#F7F8F8] transition-all cursor-pointer shadow-xs"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-surface hover:bg-theme-surface-alt border border-theme-border text-xs font-mono text-theme-text-muted hover:text-theme-text transition-all cursor-pointer shadow-xs"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Go Back</span>
@@ -202,14 +202,14 @@ export default function GeneralSettingsPage() {
         <div className="flex items-center gap-2">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F1011] hover:bg-[#141516] border border-[#23252A] hover:border-[#34343A] text-xs font-mono text-[#8A8F98] hover:text-[#F7F8F8] transition-all shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-surface hover:bg-theme-surface-alt border border-theme-border text-xs font-mono text-theme-text-muted hover:text-theme-text transition-all shadow-xs"
           >
-            <Home className="w-3.5 h-3.5 text-[#828FFF]" />
+            <Home className="w-3.5 h-3.5 text-theme-blue" />
             <span>Home</span>
           </Link>
           <Link
             href="/explore"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#5E6AD2]/15 hover:bg-[#5E6AD2]/25 border border-[#5E6AD2]/30 text-xs font-mono text-[#828FFF] hover:text-white transition-all shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-blue/10 hover:bg-theme-blue/20 border border-theme-blue/30 text-xs font-mono text-theme-blue hover:text-theme-blue-hover transition-all shadow-xs"
           >
             <span>Workspace</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -218,24 +218,24 @@ export default function GeneralSettingsPage() {
       </div>
 
       {/* Settings Navigation Tabs */}
-      <div className="flex items-center gap-2 p-1 bg-[#0F1011] border border-[#23252A] rounded-lg">
+      <div className="flex items-center gap-2 p-1 bg-theme-surface border border-theme-border rounded-lg shadow-xs">
         <Link
           href="/settings"
-          className="flex-1 text-center py-1.5 px-3 rounded-md text-xs font-mono font-medium bg-[#141516] text-[#F7F8F8] border border-[#34343A] shadow-xs flex items-center justify-center gap-2"
+          className="flex-1 text-center py-1.5 px-3 rounded-md text-xs font-mono font-medium bg-theme-surface-alt text-theme-text border border-theme-border shadow-xs flex items-center justify-center gap-2"
         >
-          <SettingsIcon className="w-3.5 h-3.5 text-[#828FFF]" />
-          <span>General & Credentials</span>
+          <SettingsIcon className="w-3.5 h-3.5 text-theme-blue" />
+          <span>General & Appearance</span>
         </Link>
         <Link
           href="/settings/ai"
-          className="flex-1 text-center py-1.5 px-3 rounded-md text-xs font-mono font-medium text-[#8A8F98] hover:text-[#F7F8F8] hover:bg-[#141516] transition-all flex items-center justify-center gap-2"
+          className="flex-1 text-center py-1.5 px-3 rounded-md text-xs font-mono font-medium text-theme-text-muted hover:text-theme-text hover:bg-theme-surface-alt transition-all flex items-center justify-center gap-2"
         >
           <Activity className="w-3.5 h-3.5" />
           <span>Local AI (Ollama)</span>
         </Link>
         <Link
           href="/docs"
-          className="flex-1 text-center py-1.5 px-3 rounded-md text-xs font-mono font-medium text-[#8A8F98] hover:text-[#F7F8F8] hover:bg-[#141516] transition-all flex items-center justify-center gap-2"
+          className="flex-1 text-center py-1.5 px-3 rounded-md text-xs font-mono font-medium text-theme-text-muted hover:text-theme-text hover:bg-theme-surface-alt transition-all flex items-center justify-center gap-2"
         >
           <BookOpen className="w-3.5 h-3.5" />
           <span>Docs & Guides</span>
@@ -243,219 +243,227 @@ export default function GeneralSettingsPage() {
       </div>
 
       {/* Header */}
-      <div className="pb-3 border-b border-[#23252A]">
-        <h1 className="text-lg font-semibold text-[#F7F8F8] font-mono flex items-center gap-2">
-          <SettingsIcon className="w-5 h-5 text-[#5E6AD2]" />
-          <span>Credentials & GitHub Access</span>
+      <div className="pb-3 border-b border-theme-border">
+        <h1 className="text-lg font-semibold text-theme-text font-mono flex items-center gap-2">
+          <SettingsIcon className="w-5 h-5 text-theme-blue" />
+          <span>General Settings & Appearance</span>
         </h1>
-        <p className="text-xs text-[#8A8F98] mt-0.5">
-          Configure GitHub tokens for private repository analysis with least-privilege scope inspection.
+        <p className="text-xs text-theme-text-muted mt-0.5">
+          Configure design system theme preference and GitHub access tokens for private repository analysis.
         </p>
       </div>
 
-      {/* Step-by-Step Token Creation Guide */}
-      <Card className="p-5 space-y-4 bg-[#0F1011] border-[#23252A]">
+      {/* Theme Appearance Section */}
+      <Card className="p-5 space-y-4 bg-theme-surface border-theme-border shadow-xs">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Info className="w-4 h-4 text-[#828FFF]" />
-            <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono uppercase tracking-wide">
+            <SunMoon className="w-4 h-4 text-theme-blue" />
+            <h2 className="text-sm font-semibold text-theme-text font-mono uppercase tracking-wide">
+              Interface Theme & Appearance
+            </h2>
+          </div>
+          <span className="text-[11px] font-mono text-theme-blue bg-theme-blue/10 px-2 py-0.5 rounded border border-theme-blue/20">
+            Google / GDG System
+          </span>
+        </div>
+
+        <p className="text-xs text-theme-text-muted leading-relaxed font-mono">
+          RepoPilot defaults to a Google/GDG-style Light theme for optimal readability, contrast, and calm presentation. You can also select Dark mode or have it track your operating system.
+        </p>
+
+        <div className="pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 rounded-lg bg-theme-surface-alt border border-theme-border">
+          <div>
+            <span className="text-xs font-semibold text-theme-text block font-mono">Theme Mode</span>
+            <span className="text-[11px] text-theme-text-muted block font-mono mt-0.5">
+              Zero flash-of-wrong-theme on page load · Stored in local browser
+            </span>
+          </div>
+          <ThemeSwitcher />
+        </div>
+      </Card>
+
+      {/* Step-by-Step Token Creation Guide */}
+      <Card className="p-5 space-y-4 bg-theme-surface border-theme-border shadow-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Info className="w-4 h-4 text-theme-blue" />
+            <h2 className="text-sm font-semibold text-theme-text font-mono uppercase tracking-wide">
               Step-by-Step: Creating a Read-Only Token
             </h2>
           </div>
-          <span className="text-[11px] font-mono text-[#828FFF] bg-[#828FFF]/10 px-2 py-0.5 rounded border border-[#828FFF]/20">
+          <span className="text-[11px] font-mono text-theme-blue bg-theme-blue/10 px-2 py-0.5 rounded border border-theme-blue/20">
             Least Privilege
           </span>
         </div>
 
-        <p className="text-xs text-[#8A8F98] leading-relaxed font-mono">
+        <p className="text-xs text-theme-text-muted leading-relaxed font-mono">
           To inspect private repositories without compromising your account, generate a fine-grained token with read-only permissions:
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono">
-          <div className="p-3 rounded-lg bg-[#141516] border border-[#23252A] space-y-1">
-            <div className="flex items-center gap-1.5 text-[#F7F8F8] font-medium">
-              <span className="w-4 h-4 rounded-full bg-[#5E6AD2] text-white inline-flex items-center justify-center text-[10px]">1</span>
+          <div className="p-3 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1">
+            <div className="flex items-center gap-1.5 text-theme-text font-medium">
+              <span className="w-4 h-4 rounded-full bg-theme-blue text-white inline-flex items-center justify-center text-[10px]">1</span>
               <span>Open Token Settings</span>
             </div>
-            <p className="text-[11px] text-[#8A8F98]">
+            <p className="text-[11px] text-theme-text-muted">
               Visit GitHub &rarr; Settings &rarr; Developer settings &rarr; Personal access tokens &rarr; Fine-grained tokens.
             </p>
             <a
               href="https://github.com/settings/personal-access-tokens/new"
               target="_blank"
               rel="noreferrer"
-              className="text-[#828FFF] hover:text-white inline-flex items-center gap-1 text-[11px] pt-1"
+              className="text-theme-blue hover:text-theme-blue-hover inline-flex items-center gap-1 text-[11px] pt-1"
             >
               Open Fine-grained Tokens page <ExternalLink className="w-3 h-3" />
             </a>
           </div>
 
-          <div className="p-3 rounded-lg bg-[#141516] border border-[#23252A] space-y-1">
-            <div className="flex items-center gap-1.5 text-[#F7F8F8] font-medium">
-              <span className="w-4 h-4 rounded-full bg-[#5E6AD2] text-white inline-flex items-center justify-center text-[10px]">2</span>
+          <div className="p-3 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1">
+            <div className="flex items-center gap-1.5 text-theme-text font-medium">
+              <span className="w-4 h-4 rounded-full bg-theme-blue text-white inline-flex items-center justify-center text-[10px]">2</span>
               <span>Select Repository</span>
             </div>
-            <p className="text-[11px] text-[#8A8F98]">
+            <p className="text-[11px] text-theme-text-muted">
               Under <strong>Repository access</strong>, select <strong>&quot;Only select repositories&quot;</strong> and choose your target repository.
             </p>
           </div>
 
-          <div className="p-3 rounded-lg bg-[#141516] border border-[#23252A] space-y-1">
-            <div className="flex items-center gap-1.5 text-[#F7F8F8] font-medium">
-              <span className="w-4 h-4 rounded-full bg-[#5E6AD2] text-white inline-flex items-center justify-center text-[10px]">3</span>
-              <span>Grant Minimal Permissions</span>
+          <div className="p-3 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1">
+            <div className="flex items-center gap-1.5 text-theme-text font-medium">
+              <span className="w-4 h-4 rounded-full bg-theme-blue text-white inline-flex items-center justify-center text-[10px]">3</span>
+              <span>Set Read-Only Scope</span>
             </div>
-            <p className="text-[11px] text-[#8A8F98]">
-              Under <strong>Repository permissions</strong>, enable only:
-              <br />
-              &bull; <code>Contents: Read-only</code>
-              <br />
-              &bull; <code>Metadata: Read-only</code>
+            <p className="text-[11px] text-theme-text-muted">
+              Under <strong>Repository permissions</strong>, find <strong>Contents</strong> and set it to <strong>Read-only</strong>. Leave all other permissions blank.
             </p>
           </div>
 
-          <div className="p-3 rounded-lg bg-[#141516] border border-[#23252A] space-y-1">
-            <div className="flex items-center gap-1.5 text-[#F7F8F8] font-medium">
-              <span className="w-4 h-4 rounded-full bg-[#5E6AD2] text-white inline-flex items-center justify-center text-[10px]">4</span>
+          <div className="p-3 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1">
+            <div className="flex items-center gap-1.5 text-theme-text font-medium">
+              <span className="w-4 h-4 rounded-full bg-theme-blue text-white inline-flex items-center justify-center text-[10px]">4</span>
               <span>Paste & Validate Below</span>
             </div>
-            <p className="text-[11px] text-[#8A8F98]">
-              Generate token, copy the <code>github_pat_...</code> secret, paste into the field below, and click <strong>Validate & Save</strong>.
+            <p className="text-[11px] text-theme-text-muted">
+              Generate the token and paste it below. It is stored exclusively in your browser&apos;s ephemeral <code>sessionStorage</code>.
             </p>
           </div>
         </div>
       </Card>
 
-      {/* GitHub Token / Rate Limit Card */}
-      <Card className="p-5 space-y-4 bg-[#0F1011] border-[#23252A]">
+      {/* GitHub Personal Access Token Configuration */}
+      <Card className="p-5 space-y-4 bg-theme-surface border-theme-border shadow-xs">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Github className="w-4 h-4 text-[#5E6AD2]" />
-            <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono uppercase">
-              Token Input & Scope Inspector
+            <Lock className="w-4 h-4 text-theme-blue" />
+            <h2 className="text-sm font-semibold text-theme-text font-mono uppercase tracking-wide">
+              GitHub Personal Access Token (PAT)
             </h2>
           </div>
-          <Badge
-            variant={rateLimit.remaining < 20 ? "danger" : authStatus.authenticated ? "success" : "primary"}
-            size="sm"
-          >
-            Quota: {rateLimit.remaining}/{rateLimit.limit} req/hr
-          </Badge>
+          <span className="text-[11px] font-mono text-theme-green bg-theme-green/10 px-2 py-0.5 rounded border border-theme-green/20">
+            Session-Only Storage
+          </span>
         </div>
 
-        <div className="space-y-3 font-mono text-xs">
-          <div className="flex items-center justify-between">
-            <label className="text-[#D0D6E0] font-medium flex items-center gap-1.5">
-              <span>Personal Access Token</span>
-              <span className="text-[#8A8F98] font-normal text-[11px]">(Fine-grained or Classic)</span>
+        <p className="text-xs text-theme-text-muted leading-relaxed font-mono">
+          Private repositories require a personal access token. RepoPilot stores this token in browser <strong>sessionStorage</strong> only. It is wiped when you close the tab.
+        </p>
+
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-mono font-medium text-theme-text mb-1.5">
+              Personal Access Token
             </label>
-            <div className="flex items-center gap-1 text-[11px] text-[#27A644]">
-              <Lock className="w-3 h-3" />
-              <span>Strict sessionStorage only</span>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                type="password"
+                placeholder="github_pat_... or ghp_..."
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                className="flex-1"
+              />
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={handleSaveToken}
+                  isLoading={isVerifying}
+                  icon={<Save className="w-4 h-4" />}
+                >
+                  Save & Validate
+                </Button>
+                {token && (
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    onClick={handleClearToken}
+                    icon={<Trash2 className="w-4 h-4" />}
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <Input
-              type="password"
-              placeholder="github_pat_... or ghp_..."
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-            />
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<RefreshCw className={`w-3.5 h-3.5 ${isVerifying ? "animate-spin text-[#828FFF]" : ""}`} />}
-              onClick={() => handleVerifyToken()}
-              disabled={isVerifying || !token.trim()}
-              className="shrink-0"
-            >
-              {isVerifying ? "Validating..." : "Validate"}
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              icon={<Save className="w-3.5 h-3.5" />}
-              onClick={handleSaveToken}
-              disabled={isVerifying || !token.trim()}
-              className="shrink-0"
-            >
-              Save
-            </Button>
-            {token && (
-              <Button
-                variant="outline"
-                size="sm"
-                icon={<Trash2 className="w-3.5 h-3.5" />}
-                onClick={handleClearToken}
-                disabled={isVerifying}
-                className="shrink-0 text-[#EF4444] hover:bg-[#EF4444]/10"
-              >
-                Clear
-              </Button>
-            )}
-          </div>
-
-          <p className="text-[11px] text-[#8A8F98] leading-relaxed">
-            🔒 <strong>Session-Only Storage:</strong> Your token is stored strictly in <code>sessionStorage</code> in active memory for this tab. It is cleared automatically when you close the browser tab and is never written to disk or persistent <code>localStorage</code>.
-          </p>
-
           {savedTokenNotice && (
-            <p className="text-xs text-[#27A644] flex items-center gap-1 font-medium">
-              <CheckCircle className="w-3.5 h-3.5" /> Token preferences updated in active session.
-            </p>
+            <div className="flex items-center gap-2 text-xs font-mono text-theme-green">
+              <CheckCircle className="w-3.5 h-3.5" />
+              <span>Token saved to ephemeral sessionStorage!</span>
+            </div>
           )}
 
-          {/* Validation Feedback & Scope Inspector Box */}
+          {/* Token Validation Feedback Panel */}
           {validationInfo && (
-            <div
-              className={`p-3.5 rounded-lg border text-xs space-y-2 transition-all ${
-                validationInfo.valid
-                  ? "bg-[#141516] border-[#27A644]/40"
-                  : "bg-[#EF4444]/10 border-[#EF4444]/30 text-[#EF4444]"
-              }`}
-            >
+            <div className="p-3.5 rounded-lg border bg-theme-surface-alt border-theme-border space-y-2 text-xs font-mono">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {validationInfo.valid ? (
-                    <UserCheck className="w-4 h-4 text-[#27A644]" />
+                    <CheckCircle className="w-4 h-4 text-theme-green" />
                   ) : (
-                    <AlertTriangle className="w-4 h-4 text-[#EF4444]" />
+                    <AlertTriangle className="w-4 h-4 text-theme-danger" />
                   )}
-                  <span className="font-semibold text-[#F7F8F8]">
-                    {validationInfo.valid
-                      ? `Valid Token for @${validationInfo.user || "user"}`
-                      : "Token Validation Failed"}
+                  <span className="font-semibold text-theme-text">
+                    {validationInfo.valid ? "Token Validated Successfully" : "Invalid Token"}
                   </span>
                 </div>
                 {validationInfo.tokenType && (
-                  <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-[#23252A] text-[#828FFF]">
+                  <Badge variant="neutral" size="sm">
                     {validationInfo.tokenType}
-                  </span>
+                  </Badge>
                 )}
               </div>
 
               {validationInfo.valid && (
                 <>
-                  {/* Scopes Badges */}
+                  <div className="flex flex-wrap items-center gap-3 text-[11px] text-theme-text-muted">
+                    {validationInfo.user && (
+                      <span>Authenticated as: <strong className="text-theme-text">@{validationInfo.user}</strong></span>
+                    )}
+                    {validationInfo.rateLimit && (
+                      <span>Rate limit: <strong className="text-theme-text">{validationInfo.rateLimit.remaining} / {validationInfo.rateLimit.limit}</strong> req/hr</span>
+                    )}
+                  </div>
+
+                  {/* Scopes Inspection */}
                   <div className="space-y-1 pt-1">
-                    <span className="text-[11px] text-[#8A8F98] block">Detected Token Scopes:</span>
-                    <div className="flex flex-wrap gap-1.5">
+                    <span className="text-[11px] text-theme-text-muted block">Granted Scopes:</span>
+                    <div className="flex flex-wrap gap-1">
                       {validationInfo.scopes && validationInfo.scopes.length > 0 ? (
                         validationInfo.scopes.map((s) => (
                           <span
                             key={s}
                             className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${
-                              validationInfo.elevatedScopes?.includes(s) || s === "repo"
-                                ? "bg-[#EF4444]/15 border border-[#EF4444]/30 text-[#EF4444]"
-                                : "bg-[#27A644]/15 border border-[#27A644]/30 text-[#27A644]"
+                              validationInfo.elevatedScopes?.includes(s)
+                                ? "bg-theme-danger/10 border border-theme-danger/30 text-theme-danger"
+                                : "bg-theme-green/10 border border-theme-green/30 text-theme-green"
                             }`}
                           >
                             {s}
                           </span>
                         ))
                       ) : (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#828FFF]/15 border border-[#828FFF]/30 text-[#828FFF]">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-theme-blue/10 border border-theme-blue/30 text-theme-blue">
                           {validationInfo.tokenType === "fine-grained"
                             ? "Fine-Grained Granular Permissions"
                             : "No OAuth Scopes (Public Only)"}
@@ -466,11 +474,11 @@ export default function GeneralSettingsPage() {
 
                   {/* Broad Scopes Warning Banner */}
                   {validationInfo.hasBroadScopes && (
-                    <div className="p-2.5 rounded bg-[#F5A623]/10 border border-[#F5A623]/30 text-[#F5A623] flex items-start gap-2">
+                    <div className="p-2.5 rounded bg-theme-warning-surface border border-theme-warning/30 text-theme-warning-text flex items-start gap-2">
                       <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
                       <div className="space-y-0.5 text-[11px]">
                         <span className="font-semibold block">Elevated Permissions Detected</span>
-                        <p className="text-opacity-90 leading-relaxed">
+                        <p className="leading-relaxed">
                           {validationInfo.warning}
                         </p>
                       </div>
@@ -479,7 +487,7 @@ export default function GeneralSettingsPage() {
 
                   {/* Recommendation */}
                   {validationInfo.recommendation && (
-                    <p className="text-[11px] text-[#8A8F98] italic">
+                    <p className="text-[11px] text-theme-text-muted italic">
                       Tip: {validationInfo.recommendation}
                     </p>
                   )}
@@ -487,17 +495,17 @@ export default function GeneralSettingsPage() {
               )}
 
               {!validationInfo.valid && (
-                <p className="text-[11px] text-[#EF4444]">{validationInfo.error}</p>
+                <p className="text-[11px] text-theme-danger">{validationInfo.error}</p>
               )}
             </div>
           )}
 
           {/* Current Auth Status Banner */}
           {!validationInfo && authStatus.authenticated && authStatus.user && (
-            <div className="p-2.5 rounded-lg border bg-[#141516] border-[#23252A] text-xs flex items-center gap-2 text-[#828FFF]">
-              <UserCheck className="w-4 h-4 text-[#27A644]" />
+            <div className="p-2.5 rounded-lg border bg-theme-surface-alt border-theme-border text-xs flex items-center gap-2 text-theme-blue">
+              <UserCheck className="w-4 h-4 text-theme-green" />
               <span>
-                Authenticated as <strong className="text-[#F7F8F8]">@{authStatus.user}</strong> with active 5,000 req/hr rate limit.
+                Authenticated as <strong className="text-theme-text">@{authStatus.user}</strong> with active 5,000 req/hr rate limit.
               </span>
             </div>
           )}
@@ -505,11 +513,11 @@ export default function GeneralSettingsPage() {
       </Card>
 
       {/* GitHub App OAuth Card (Behind Feature Flag) */}
-      <Card className="p-5 space-y-3 font-mono text-xs bg-[#0F1011] border-[#23252A]">
+      <Card className="p-5 space-y-3 font-mono text-xs bg-theme-surface border-theme-border shadow-xs">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Github className="w-4 h-4 text-[#828FFF]" />
-            <h2 className="text-sm font-semibold text-[#F7F8F8] uppercase">
+            <Github className="w-4 h-4 text-theme-blue" />
+            <h2 className="text-sm font-semibold text-theme-text uppercase">
               GitHub App OAuth Flow
             </h2>
           </div>
@@ -518,47 +526,47 @@ export default function GeneralSettingsPage() {
           </Badge>
         </div>
 
-        <p className="text-[#8A8F98] leading-relaxed">
-          RepoPilot includes an enterprise-grade GitHub App OAuth flow featuring RFC 7636 PKCE, cryptographic CSRF mitigation, and zero server-side persistence.
+        <p className="text-theme-text-muted leading-relaxed">
+          RepoPilot includes an enterprise-grade GitHub App OAuth flow featuring RFC 7636 PKCE, high-entropy random CSRF state, and zero server-side persistence.
         </p>
 
         {oauthEnabled ? (
           <div className="pt-2">
             <a
               href="/api/auth/github/login"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5E6AD2] hover:bg-[#4E5AC0] text-white text-xs font-mono font-medium transition-colors shadow-xs"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-theme-blue hover:bg-theme-blue-hover text-white text-xs font-mono font-medium transition-colors shadow-xs"
             >
               <Github className="w-4 h-4" />
               <span>Connect with GitHub App</span>
             </a>
           </div>
         ) : (
-          <div className="p-2.5 rounded bg-[#141516] border border-[#23252A] text-[11px] text-[#8A8F98] space-y-1">
+          <div className="p-2.5 rounded bg-theme-surface-alt border border-theme-border text-[11px] text-theme-text-muted space-y-1">
             <p>
               To enable GitHub App OAuth authentication in self-hosted or production deployments, set:
             </p>
-            <code className="block p-1.5 rounded bg-[#0F1011] text-[#828FFF]">
+            <code className="block p-1.5 rounded bg-theme-surface text-theme-blue border border-theme-border">
               ENABLE_GITHUB_APP_OAUTH=true
             </code>
             <p>
-              Full architecture specification: see <Link href="/docs" className="text-[#828FFF] underline">docs/OAUTH_DESIGN.md</Link>.
+              Full architecture specification: see <Link href="/docs" className="text-theme-blue underline">docs/OAUTH_DESIGN.md</Link>.
             </p>
           </div>
         )}
       </Card>
 
       {/* Security & Execution Policy Card */}
-      <Card className="p-5 space-y-3 font-mono text-xs bg-[#0F1011] border-[#23252A]">
+      <Card className="p-5 space-y-3 font-mono text-xs bg-theme-surface border-theme-border shadow-xs">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-[#27A644]" />
-          <h2 className="text-sm font-semibold text-[#F7F8F8] uppercase">
+          <ShieldCheck className="w-4 h-4 text-theme-green" />
+          <h2 className="text-sm font-semibold text-theme-text uppercase">
             Security & Execution Sandbox Policy
           </h2>
         </div>
 
-        <div className="space-y-2 text-[#8A8F98] leading-relaxed">
-          <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#141516] border border-[#23252A]">
-            <span className="font-medium text-[#F7F8F8]">Automated Arbitrary Code Execution</span>
+        <div className="space-y-2 text-theme-text-muted leading-relaxed">
+          <div className="flex items-center justify-between p-2.5 rounded-lg bg-theme-surface-alt border border-theme-border">
+            <span className="font-medium text-theme-text">Automated Arbitrary Code Execution</span>
             <Badge variant="danger" size="sm">
               STRICTLY DISABLED
             </Badge>
@@ -571,15 +579,15 @@ export default function GeneralSettingsPage() {
       </Card>
 
       {/* Local Storage & History Management */}
-      <Card className="p-5 space-y-3 font-mono text-xs bg-[#0F1011] border-[#23252A]">
+      <Card className="p-5 space-y-3 font-mono text-xs bg-theme-surface border-theme-border shadow-xs">
         <div className="flex items-center gap-2">
-          <Trash2 className="w-4 h-4 text-[#EF4444]" />
-          <h2 className="text-sm font-semibold text-[#F7F8F8] uppercase">
+          <Trash2 className="w-4 h-4 text-theme-danger" />
+          <h2 className="text-sm font-semibold text-theme-text uppercase">
             Local Data & Workspace History
           </h2>
         </div>
 
-        <p className="text-[#8A8F98]">
+        <p className="text-theme-text-muted">
           Clear cached repository history and saved configurations stored in your browser.
         </p>
 
@@ -593,7 +601,7 @@ export default function GeneralSettingsPage() {
             Clear Local Cache & Recent History
           </Button>
           {clearedHistoryNotice && (
-            <span className="text-xs text-[#EF4444] font-medium">
+            <span className="text-xs text-theme-danger font-medium">
               History cleared. Reloading...
             </span>
           )}

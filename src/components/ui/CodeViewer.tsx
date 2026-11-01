@@ -20,17 +20,15 @@ function renderHighlightedTokens(line: string): React.ReactNode {
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  // Reset regex state
   TOKEN_REGEX.lastIndex = 0;
 
   while ((match = TOKEN_REGEX.exec(line)) !== null) {
     const matchIndex = match.index;
     const matchText = match[0];
 
-    // Push any unhighlighted text preceding this match
     if (matchIndex > lastIndex) {
       elements.push(
-        <span key={`text-${lastIndex}`} className="text-[#D0D6E0]">
+        <span key={`text-${lastIndex}`} className="text-[#E8EAED]">
           {line.substring(lastIndex, matchIndex)}
         </span>
       );
@@ -39,49 +37,49 @@ function renderHighlightedTokens(line: string): React.ReactNode {
     if (match[1]) {
       // Comment
       elements.push(
-        <span key={`comm-${matchIndex}`} className="text-[#62666D] italic">
+        <span key={`comm-${matchIndex}`} className="text-[#9AA0A6] italic">
           {matchText}
         </span>
       );
     } else if (match[2]) {
       // String
       elements.push(
-        <span key={`str-${matchIndex}`} className="text-[#34D399]">
+        <span key={`str-${matchIndex}`} className="text-[#81C995]">
           {matchText}
         </span>
       );
     } else if (match[3]) {
       // Keyword
       elements.push(
-        <span key={`kw-${matchIndex}`} className="text-[#A78BFA] font-medium">
+        <span key={`kw-${matchIndex}`} className="text-[#C58AF9] font-medium">
           {matchText}
         </span>
       );
     } else if (match[4]) {
       // Boolean / Null
       elements.push(
-        <span key={`bool-${matchIndex}`} className="text-[#F59E0B]">
+        <span key={`bool-${matchIndex}`} className="text-[#FDD663]">
           {matchText}
         </span>
       );
     } else if (match[5]) {
       // Number
       elements.push(
-        <span key={`num-${matchIndex}`} className="text-[#F59E0B]">
+        <span key={`num-${matchIndex}`} className="text-[#FDD663]">
           {matchText}
         </span>
       );
     } else if (match[6]) {
       // Type / Class
       elements.push(
-        <span key={`type-${matchIndex}`} className="text-[#38BDF8]">
+        <span key={`type-${matchIndex}`} className="text-[#8AB4F8]">
           {matchText}
         </span>
       );
     } else if (match[7]) {
       // Function call
       elements.push(
-        <span key={`fn-${matchIndex}`} className="text-[#60A5FA]">
+        <span key={`fn-${matchIndex}`} className="text-[#AECBFA]">
           {matchText}
         </span>
       );
@@ -90,16 +88,15 @@ function renderHighlightedTokens(line: string): React.ReactNode {
     lastIndex = TOKEN_REGEX.lastIndex;
   }
 
-  // Push any trailing unhighlighted text
   if (lastIndex < line.length) {
     elements.push(
-      <span key={`text-${lastIndex}`} className="text-[#D0D6E0]">
+      <span key={`text-${lastIndex}`} className="text-[#E8EAED]">
         {line.substring(lastIndex)}
       </span>
     );
   }
 
-  return elements.length > 0 ? elements : line;
+  return elements;
 }
 
 export const CodeViewer: React.FC<CodeViewerProps> = ({
@@ -125,31 +122,31 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
   };
 
   return (
-    <div className="w-full bg-[#0F1011] border border-[#23252A] rounded-xl overflow-hidden font-mono text-xs shadow-[0_4px_20px_rgba(0,0,0,0.7)]">
+    <div className="w-full bg-[#202124] border border-theme-border rounded-xl overflow-hidden font-mono text-xs shadow-md">
       {/* File header bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#141516] border-b border-[#23252A] text-[#8A8F98]">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-[#171717] border-b border-white/10 text-[#9AA0A6]">
         <div className="flex items-center gap-2.5 truncate">
-          <span className="font-medium text-[#F7F8F8] truncate text-xs">
+          <span className="font-medium text-[#E8EAED] truncate text-xs">
             {filePath || "Code Snippet"}
           </span>
           {language && (
-            <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-[4px] bg-[#18191A] border border-[#34343A] text-[#8A8F98]">
+            <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-[4px] bg-white/10 border border-white/15 text-[#E8EAED]">
               {language}
             </span>
           )}
-          <span className="text-[#62666D] text-[11px]">
+          <span className="text-[#9AA0A6] text-[11px]">
             {lines.length} lines
           </span>
         </div>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 text-[11px] text-[#8A8F98] hover:text-[#F7F8F8] px-2 py-1 rounded-md hover:bg-[#18191A] transition-colors"
+          className="flex items-center gap-1.5 text-[11px] text-[#9AA0A6] hover:text-[#E8EAED] px-2 py-1 rounded-md hover:bg-white/10 transition-colors"
           title="Copy code"
         >
           {copied ? (
             <>
-              <Check className="w-3.5 h-3.5 text-[#27A644]" />
-              <span className="text-[#27A644] font-medium">Copied</span>
+              <Check className="w-3.5 h-3.5 text-[#81C995]" />
+              <span className="text-[#81C995] font-medium">Copied</span>
             </>
           ) : (
             <>
@@ -177,11 +174,11 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
                   onClick={() => onLineClick?.(lineNum)}
                   className={`group transition-colors ${
                     highlighted
-                      ? "bg-[#5E6AD2]/15 border-l-2 border-[#5E6AD2]"
-                      : "hover:bg-[#141516]/60 border-l-2 border-transparent"
+                      ? "bg-[#1A73E8]/25 border-l-2 border-[#8AB4F8]"
+                      : "hover:bg-white/5 border-l-2 border-transparent"
                   }`}
                 >
-                  <td className="w-12 py-0.5 pr-3 pl-3 text-right select-none text-[#62666D] group-hover:text-[#8A8F98] text-[11px] align-top font-mono">
+                  <td className="w-12 py-0.5 pr-3 pl-3 text-right select-none text-[#5F6368] group-hover:text-[#9AA0A6] text-[11px] align-top font-mono">
                     {lineNum}
                   </td>
                   <td className="py-0.5 pr-4 pl-1 whitespace-pre font-mono leading-relaxed text-xs">

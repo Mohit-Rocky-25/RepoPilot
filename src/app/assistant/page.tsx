@@ -244,15 +244,15 @@ export default function AssistantPage() {
 
   if (!currentRepo) {
     return (
-      <Card className="p-8 text-center max-w-xl mx-auto my-12 space-y-4 bg-linear-surface-1 border border-linear-border-1">
-        <div className="w-12 h-12 rounded-full bg-linear-accent/15 border border-linear-accent/30 flex items-center justify-center text-linear-accent mx-auto">
+      <Card className="p-8 text-center max-w-xl mx-auto my-12 space-y-4 bg-theme-surface border-theme-border">
+        <div className="w-12 h-12 rounded-full bg-theme-blue/10 border border-theme-blue/30 flex items-center justify-center text-theme-blue mx-auto shadow-xs">
           <Bot className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-base font-semibold text-linear-text-main">
+          <h2 className="text-base font-semibold text-theme-text">
             No Active Repository
           </h2>
-          <p className="text-xs text-linear-text-muted mt-1 leading-relaxed">
+          <p className="text-xs text-theme-text-muted mt-1 leading-relaxed">
             Import a public GitHub repository to ask questions grounded directly in indexed code files with exact citations.
           </p>
         </div>
@@ -270,7 +270,7 @@ export default function AssistantPage() {
               setCurrentRepo(SAMPLE_SWR_REPO);
               saveRecentRepo(SAMPLE_SWR_REPO);
             }}
-            className="border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
+            className="border-theme-warning/30 text-theme-warning-text hover:bg-theme-warning/10"
           >
             Sample Analysis (Pre-recorded)
           </Button>
@@ -289,13 +289,13 @@ export default function AssistantPage() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Title Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-linear-border-1 gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-theme-border gap-2">
         <div>
-          <h1 className="text-lg font-semibold text-linear-text-main font-mono flex items-center gap-2">
-            <Bot className="w-5 h-5 text-linear-accent" />
+          <h1 className="text-lg font-semibold text-theme-text font-mono flex items-center gap-2">
+            <Bot className="w-5 h-5 text-theme-blue" />
             <span>Grounded Code Assistant</span>
           </h1>
-          <p className="text-xs text-linear-text-muted mt-0.5 font-mono">
+          <p className="text-xs text-theme-text-muted mt-0.5 font-mono">
             Evidence-grounded code intelligence for {currentRepo.owner}/{currentRepo.repo}.
           </p>
         </div>
@@ -304,33 +304,33 @@ export default function AssistantPage() {
           {/* Active Mode Indicator */}
           {providerMode === "openai-compatible" ? (
             <div
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono text-emerald-400"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-theme-green/10 border border-theme-green/30 text-xs font-mono text-theme-green"
               title="Active Mode: Bring-your-own key. Best quality, provider limits/costs apply."
             >
-              <Globe className="w-3.5 h-3.5 text-emerald-400" />
+              <Globe className="w-3.5 h-3.5 text-theme-green" />
               <span>AI Mode: BYO Key (Best Quality)</span>
             </div>
           ) : providerMode === "ollama" ? (
             <div
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-xs font-mono text-indigo-300"
-              title="Active Mode: Local Ollama. Private, hardware limited (recommend 7B for 16GB RAM, 1.5B for 8GB)."
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-theme-blue/10 border border-theme-blue/30 text-xs font-mono text-theme-blue"
+              title="Active Mode: Local Ollama. Private, hardware limited."
             >
-              <Laptop className="w-3.5 h-3.5 text-indigo-400" />
+              <Laptop className="w-3.5 h-3.5 text-theme-blue" />
               <span>AI Mode: Local Ollama ({aiConfig.modelName || "7B / 1.5B"})</span>
             </div>
           ) : (
             <div
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-500/10 border border-gray-500/30 text-xs font-mono text-gray-300"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-theme-surface-alt border border-theme-border text-xs font-mono text-theme-text-muted"
               title="Active Mode: Offline mode. Always works, keyword & AST search."
             >
-              <Sliders className="w-3.5 h-3.5 text-gray-400" />
+              <Sliders className="w-3.5 h-3.5 text-theme-text-muted" />
               <span>AI Mode: Offline (Deterministic AST/Keyword)</span>
             </div>
           )}
 
           {/* Context Token Budget Setting */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#141516] border border-[#23252A] text-xs font-mono text-[#8A8F98]">
-            <Layers className="w-3.5 h-3.5 text-[#828FFF]" />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-theme-surface border border-theme-border text-xs font-mono text-theme-text-muted shadow-xs">
+            <Layers className="w-3.5 h-3.5 text-theme-blue" />
             <span className="hidden sm:inline">Context Budget:</span>
             <select
               value={contextTokenBudget}
@@ -341,13 +341,13 @@ export default function AssistantPage() {
                   localStorage.setItem("REPOPILOT_CONTEXT_BUDGET", val.toString());
                 } catch {}
               }}
-              className="bg-transparent text-white font-mono text-xs focus:outline-none cursor-pointer"
+              className="bg-transparent text-theme-text font-mono text-xs focus:outline-none cursor-pointer"
               title="Configurable Context Token Budget (max 16,000 tokens)"
             >
-              <option value={2000} className="bg-[#141516] text-white">2,000 tokens</option>
-              <option value={4000} className="bg-[#141516] text-white">4,000 tokens (Default)</option>
-              <option value={8000} className="bg-[#141516] text-white">8,000 tokens</option>
-              <option value={16000} className="bg-[#141516] text-white">16,000 tokens (Max)</option>
+              <option value={2000} className="bg-theme-surface text-theme-text">2,000 tokens</option>
+              <option value={4000} className="bg-theme-surface text-theme-text">4,000 tokens (Default)</option>
+              <option value={8000} className="bg-theme-surface text-theme-text">8,000 tokens</option>
+              <option value={16000} className="bg-theme-surface text-theme-text">16,000 tokens (Max)</option>
             </select>
           </div>
           <button
@@ -362,24 +362,24 @@ export default function AssistantPage() {
             }}
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-mono transition-all cursor-pointer ${
               isSampleMode
-                ? "bg-amber-500/20 border-amber-500/50 text-amber-300 font-semibold shadow-xs"
-                : "bg-[#141516] border-[#23252A] text-linear-text-muted hover:text-white"
+                ? "bg-theme-warning-surface border-theme-warning/30 text-theme-warning-text font-semibold shadow-xs"
+                : "bg-theme-surface border-theme-border text-theme-text-muted hover:text-theme-text"
             }`}
             title="Toggle sample analysis on vercel/swr (Pre-recorded example, zero key required)"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <Sparkles className="w-3.5 h-3.5 text-theme-warning-text" />
             <span>{isSampleMode ? "Sample Active" : "Sample Analysis"}</span>
-            <Badge variant="neutral" size="sm" className="text-[9px] bg-amber-500/10 text-amber-300 border-amber-500/30">
-              Pre-recorded example
+            <Badge variant="warning" size="sm" className="text-[9px]">
+              Pre-recorded
             </Badge>
           </button>
           <Link href="/architecture">
-            <Button variant="secondary" size="sm" icon={<Network className="w-3.5 h-3.5 text-[#828FFF]" />}>
+            <Button variant="secondary" size="sm" icon={<Network className="w-3.5 h-3.5 text-theme-blue" />}>
               3D Spatial Map
             </Button>
           </Link>
           <Link href="/settings/ai">
-            <Button variant="secondary" size="sm" icon={<Cpu className="w-3.5 h-3.5 text-[#828FFF]" />}>
+            <Button variant="secondary" size="sm" icon={<Cpu className="w-3.5 h-3.5 text-theme-blue" />}>
               Choose AI Setup
             </Button>
           </Link>
@@ -388,20 +388,20 @@ export default function AssistantPage() {
 
       {/* Sample Analysis Mode Active Banner */}
       {isSampleMode && (
-        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono text-amber-300 shadow-xs">
+        <div className="p-3.5 rounded-xl bg-theme-warning-surface border border-theme-warning/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono text-theme-warning-text shadow-xs">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+            <Sparkles className="w-4 h-4 text-theme-warning-text shrink-0" />
             <span>
               <strong>Sample Analysis Mode Active:</strong> Viewing pre-recorded grounded Q&amp;A on <code>vercel/swr</code> (pinned SHA: <code>5d80486</code>). Full citations without an API key.
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="neutral" size="sm" className="bg-amber-500/20 text-amber-200 border-amber-500/40">
+            <Badge variant="warning" size="sm">
               Pre-recorded example
             </Badge>
             <button
               onClick={() => setIsSampleMode(false)}
-              className="text-[11px] text-amber-400 hover:text-white underline cursor-pointer"
+              className="text-[11px] text-theme-warning-text hover:underline cursor-pointer"
             >
               Exit Sample
             </button>
@@ -411,23 +411,23 @@ export default function AssistantPage() {
 
       {/* Ollama Offline Guidance Banner with 1-Click Copy & Dismiss */}
       {!aiConfig.isAvailable && !hideOllamaBanner && (
-        <div className="p-4 rounded-xl bg-[#0F1011] border border-[#23252A] flex flex-col sm:flex-row sm:items-start justify-between gap-3 text-xs font-mono shadow-xs">
+        <div className="p-4 rounded-xl bg-theme-surface border border-theme-border flex flex-col sm:flex-row sm:items-start justify-between gap-3 text-xs font-mono shadow-xs">
           <div className="flex items-start gap-3">
-            <div className="w-7 h-7 rounded-lg bg-[#5E6AD2]/10 border border-[#5E6AD2]/30 flex items-center justify-center shrink-0 mt-0.5">
-              <Terminal className="w-4 h-4 text-[#828FFF]" />
+            <div className="w-7 h-7 rounded-lg bg-theme-blue/10 border border-theme-blue/30 flex items-center justify-center shrink-0 mt-0.5">
+              <Terminal className="w-4 h-4 text-theme-blue" />
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="text-[#F7F8F8] font-semibold">
+                <span className="text-theme-text font-semibold">
                   Zero-Budget Deterministic Engine Active
                 </span>
-                <Badge variant="violet" size="sm">Native Offline</Badge>
+                <Badge variant="neutral" size="sm">Native Offline</Badge>
               </div>
-              <p className="text-[#8A8F98] leading-relaxed">
+              <p className="text-theme-text-muted leading-relaxed">
                 RepoPilot answers questions using fast deterministic AST and keyword search. To enable private local generative synthesis, run this command in your terminal or Git Bash:
               </p>
               <div className="flex flex-wrap items-center gap-2 pt-1">
-                <code className="px-3 py-1.5 rounded-lg bg-[#141516] border border-[#23252A] text-[#828FFF] font-semibold text-[11px] font-mono select-all">
+                <code className="px-3 py-1.5 rounded-lg bg-theme-surface-alt border border-theme-border text-theme-blue font-semibold text-[11px] font-mono select-all">
                   ollama run {aiConfig.modelName}
                 </code>
                 <button
@@ -436,9 +436,9 @@ export default function AssistantPage() {
                     setCopiedOllamaCmd(true);
                     setTimeout(() => setCopiedOllamaCmd(false), 2000);
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1E1B4B] hover:bg-[#2A2663] border border-[#5E6AD2]/40 text-[#828FFF] hover:text-white text-[11px] font-medium transition-all cursor-pointer shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-surface-alt hover:bg-theme-surface border border-theme-blue/40 text-theme-blue hover:text-theme-blue-hover text-[11px] font-medium transition-all cursor-pointer shadow-xs"
                 >
-                  {copiedOllamaCmd ? <Check className="w-3.5 h-3.5 text-[#27A644]" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedOllamaCmd ? <Check className="w-3.5 h-3.5 text-theme-green" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedOllamaCmd ? "Copied Command!" : "Copy Command"}</span>
                 </button>
               </div>
@@ -447,7 +447,7 @@ export default function AssistantPage() {
 
           <button
             onClick={() => setHideOllamaBanner(true)}
-            className="text-[#62666D] hover:text-[#8A8F98] text-xs p-1.5 rounded hover:bg-[#141516] transition-colors shrink-0 self-start"
+            className="text-theme-text-muted hover:text-theme-text text-xs p-1.5 rounded hover:bg-theme-surface-alt transition-colors shrink-0 self-start cursor-pointer"
             title="Dismiss notification"
           >
             <X className="w-3.5 h-3.5" />
@@ -456,7 +456,7 @@ export default function AssistantPage() {
       )}
 
       {/* Question Form & Quick Actions */}
-      <Card className="p-4 space-y-3 bg-linear-surface-1 border-linear-border-1">
+      <Card className="p-4 space-y-3 bg-theme-surface border-theme-border">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -500,18 +500,18 @@ export default function AssistantPage() {
         </form>
 
         {error && (
-          <p className="text-xs text-linear-danger font-mono pt-1">{error}</p>
+          <p className="text-xs text-theme-danger font-mono pt-1">{error}</p>
         )}
 
         {/* Quick Suggestion Chips */}
-        <div className="pt-2 border-t border-linear-border-1 space-y-2">
+        <div className="pt-2 border-t border-theme-border space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono text-linear-text-subtle uppercase tracking-wider block font-semibold">
+            <span className="text-[11px] font-mono text-theme-text-muted uppercase tracking-wider block font-semibold">
               Quick Analysis & Visual Diagrams:
             </span>
             <Link
               href="/architecture"
-              className="text-[11px] font-mono text-[#828FFF] hover:underline inline-flex items-center gap-1"
+              className="text-[11px] font-mono text-theme-blue hover:underline inline-flex items-center gap-1"
             >
               <span>View 3D Spatial Architecture</span>
               <ArrowRight className="w-3 h-3" />
@@ -527,11 +527,11 @@ export default function AssistantPage() {
                   handleAsk(sq);
                 }}
                 disabled={loading}
-                className="px-2.5 py-1 rounded-lg bg-linear-surface-2 hover:bg-linear-surface-3 border border-linear-border-1 hover:border-linear-accent/40 text-[11px] font-mono text-linear-text-muted hover:text-linear-text-main transition-colors text-left flex items-center gap-1.5"
+                className="px-2.5 py-1 rounded-full bg-theme-surface-alt hover:bg-theme-surface border border-theme-border hover:border-theme-blue/40 text-[11px] font-mono text-theme-text-muted hover:text-theme-text transition-colors text-left flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
-                {i === 0 && <GitBranch className="w-3 h-3 text-[#828FFF]" />}
-                {i === 1 && <FileCode className="w-3 h-3 text-[#27A644]" />}
-                {i === 2 && <Network className="w-3 h-3 text-[#38BDF8]" />}
+                {i === 0 && <GitBranch className="w-3 h-3 text-theme-blue" />}
+                {i === 1 && <FileCode className="w-3 h-3 text-theme-green" />}
+                {i === 2 && <Network className="w-3 h-3 text-theme-blue" />}
                 <span>{sq}</span>
               </button>
             ))}
@@ -542,14 +542,14 @@ export default function AssistantPage() {
       {/* Q&A Stream */}
       <div className="space-y-4">
         {history.length === 0 && (
-          <Card className="p-8 text-center space-y-3 bg-[#0F1011] border-[#23252A]">
-            <Bot className="w-8 h-8 text-[#5E6AD2] mx-auto opacity-70" />
-            <h3 className="text-sm font-mono font-semibold text-white">Grounded Code Intelligence Console</h3>
-            <p className="text-xs text-[#8A8F98] max-w-md mx-auto">
+          <Card className="p-8 text-center space-y-3 bg-theme-surface border-theme-border">
+            <Bot className="w-8 h-8 text-theme-blue mx-auto opacity-70" />
+            <h3 className="text-sm font-mono font-semibold text-theme-text">Grounded Code Intelligence Console</h3>
+            <p className="text-xs text-theme-text-muted max-w-md mx-auto">
               Ask any question about {currentRepo.owner}/{currentRepo.repo}. Answers cite exact commit SHAs, files, and line numbers.
             </p>
             <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
-              <span className="text-[11px] font-mono text-linear-text-muted">Or try asking:</span>
+              <span className="text-[11px] font-mono text-theme-text-muted">Or try asking:</span>
               {sampleQuestions.slice(1, 3).map((sq, i) => (
                 <button
                   key={i}
@@ -558,7 +558,7 @@ export default function AssistantPage() {
                     setQuestion(sq);
                     handleAsk(sq);
                   }}
-                  className="px-2.5 py-1 rounded bg-[#141516] hover:bg-[#1A1B1E] border border-[#23252A] text-[11px] font-mono text-[#828FFF] transition-all cursor-pointer"
+                  className="px-2.5 py-1 rounded-full bg-theme-surface-alt hover:bg-theme-surface border border-theme-border text-[11px] font-mono text-theme-blue transition-all cursor-pointer shadow-xs"
                 >
                   &ldquo;{sq}&rdquo;
                 </button>
@@ -571,15 +571,15 @@ export default function AssistantPage() {
           const hasMermaid = item.answer.includes("```mermaid");
 
           return (
-            <Card key={item.id} className="p-5 space-y-4 bg-linear-surface-1 border-linear-border-1">
-              <div className="flex items-center justify-between border-b border-linear-border-1 pb-2.5">
-                <span className="text-sm font-semibold text-linear-text-main font-mono flex items-center gap-2">
-                  <span className="text-[#828FFF]">Q:</span>
+            <Card key={item.id} className="p-5 space-y-4 bg-theme-surface border-theme-border shadow-card">
+              <div className="flex items-center justify-between border-b border-theme-border pb-2.5">
+                <span className="text-sm font-semibold text-theme-text font-mono flex items-center gap-2">
+                  <span className="text-theme-blue font-bold">Q:</span>
                   <span>{item.question}</span>
                 </span>
                 <div className="flex items-center gap-2">
                   {(item.isSampleAnalysis || item.sampleBadge || isSampleMode) && (
-                    <Badge variant="neutral" size="sm" className="bg-amber-500/10 text-amber-300 border-amber-500/30 font-mono">
+                    <Badge variant="warning" size="sm" className="font-mono">
                       Pre-recorded example
                     </Badge>
                   )}
@@ -588,16 +588,16 @@ export default function AssistantPage() {
                       {item.modelUsed}
                     </Badge>
                   )}
-                  <span className="text-[11px] font-mono text-linear-text-subtle">
+                  <span className="text-[11px] font-mono text-theme-text-muted">
                     {item.timestamp}
                   </span>
                   <button
                     onClick={() => handleCopyAnswer(item.id, item.answer)}
-                    className="p-1 rounded text-[#8A8F98] hover:text-[#F7F8F8] hover:bg-[#141516] transition-colors"
+                    className="p-1 rounded text-theme-text-muted hover:text-theme-text hover:bg-theme-surface-alt transition-colors cursor-pointer"
                     title="Copy full answer"
                   >
                     {copiedItemId === item.id ? (
-                      <Check className="w-3.5 h-3.5 text-[#27A644]" />
+                      <Check className="w-3.5 h-3.5 text-theme-green" />
                     ) : (
                       <Copy className="w-3.5 h-3.5" />
                     )}
@@ -617,23 +617,23 @@ export default function AssistantPage() {
                   };
                   if (meta.filesIncluded === 0 && meta.filesDropped === 0) return null;
                   return (
-                    <div className="p-2.5 rounded-lg bg-[#0F1011] border border-[#23252A] text-[11px] font-mono text-[#8A8F98] space-y-1.5">
+                    <div className="p-2.5 rounded-lg bg-theme-surface-alt border border-theme-border text-[11px] font-mono text-theme-text-muted space-y-1.5 shadow-xs">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 font-semibold text-white">
-                          <FileCode className="w-3.5 h-3.5 text-[#5E6AD2]" />
+                        <div className="flex items-center gap-1.5 font-semibold text-theme-text">
+                          <FileCode className="w-3.5 h-3.5 text-theme-blue" />
                           <span>
                             Context used: {meta.filesIncluded} files, {meta.filesDropped} dropped
                           </span>
                         </div>
-                        <span className="text-[10px] text-[#64748B]">
+                        <span className="text-[10px] text-theme-text-muted">
                           Budget: {meta.tokenBudget.toLocaleString()} tokens
                         </span>
                       </div>
                       {meta.includedFiles.length > 0 && (
                         <div className="flex flex-wrap items-center gap-1 text-[10px]">
-                          <span className="text-[#A1A1AA]">Included:</span>
+                          <span className="text-theme-text-muted">Included:</span>
                           {meta.includedFiles.map((f) => (
-                            <span key={f} className="px-1.5 py-0.5 rounded bg-[#141516] border border-[#23252A] text-[#828FFF]">
+                            <span key={f} className="px-1.5 py-0.5 rounded bg-theme-surface border border-theme-border text-theme-blue font-medium">
                               {f}
                             </span>
                           ))}
@@ -641,9 +641,9 @@ export default function AssistantPage() {
                       )}
                       {meta.droppedFiles.length > 0 && (
                         <div className="flex flex-wrap items-center gap-1 text-[10px]">
-                          <span className="text-[#EAB308]">Dropped:</span>
+                          <span className="text-theme-warning-text font-medium">Dropped:</span>
                           {meta.droppedFiles.map((f) => (
-                            <span key={f} className="px-1.5 py-0.5 rounded bg-[#141516] border border-[#3E3E44] text-[#A1A1AA] line-through">
+                            <span key={f} className="px-1.5 py-0.5 rounded bg-theme-surface border border-theme-border text-theme-text-muted line-through">
                               {f}
                             </span>
                           ))}
@@ -656,39 +656,39 @@ export default function AssistantPage() {
 
               {/* Quality & Citation Warnings */}
               {item.qualityWarning && (
-                <div className="p-2 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-mono flex items-center gap-1.5">
+                <div className="p-2 rounded bg-theme-warning-surface border border-theme-warning/30 text-theme-warning-text text-[11px] font-mono flex items-center gap-1.5">
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                   <span>{item.qualityWarning}</span>
                 </div>
               )}
 
               {item.citationWarning && (
-                <div className="p-2 rounded bg-blue-500/10 border border-blue-500/30 text-blue-300 text-[11px] font-mono flex items-center gap-1.5">
+                <div className="p-2 rounded bg-theme-blue/10 border border-theme-blue/30 text-theme-blue text-[11px] font-mono flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
                   <span>{item.citationWarning}</span>
                 </div>
               )}
 
               {/* Answer Content */}
-              <div className="text-xs text-linear-text-secondary font-mono whitespace-pre-wrap leading-relaxed">
+              <div className="text-xs text-theme-text font-mono whitespace-pre-wrap leading-relaxed">
                 {item.answer}
               </div>
 
               {/* Special Action Bar for Mermaid Diagrams */}
               {hasMermaid && (
-                <div className="p-3.5 rounded-lg bg-[#0F1011] border border-[#23252A] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-                  <div className="flex items-center gap-2 text-[#828FFF]">
+                <div className="p-3.5 rounded-lg bg-theme-surface-alt border border-theme-border flex flex-wrap items-center justify-between gap-3 text-xs font-mono shadow-xs">
+                  <div className="flex items-center gap-2 text-theme-blue">
                     <GitBranch className="w-4 h-4 shrink-0" />
-                    <span className="font-semibold text-white">GitHub Mermaid Diagram Ready</span>
+                    <span className="font-semibold text-theme-text">GitHub Mermaid Diagram Ready</span>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleCopyMermaidOnly(item.id, item.answer)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#1E1B4B] hover:bg-[#2A2663] border border-[#5E6AD2]/40 text-[#828FFF] hover:text-white text-xs font-medium transition-all"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-theme-surface hover:bg-theme-surface-alt border border-theme-blue/40 text-theme-blue hover:text-theme-blue-hover text-xs font-medium transition-all cursor-pointer shadow-xs"
                     >
                       {copiedMermaidId === item.id ? (
-                        <Check className="w-3.5 h-3.5 text-[#27A644]" />
+                        <Check className="w-3.5 h-3.5 text-theme-green" />
                       ) : (
                         <Copy className="w-3.5 h-3.5" />
                       )}
@@ -706,8 +706,8 @@ export default function AssistantPage() {
 
               {/* Citations Box */}
               {item.citations.length > 0 && (
-                <div className="pt-3 border-t border-linear-border-1 space-y-2">
-                  <span className="text-[11px] font-mono text-linear-text-subtle uppercase tracking-wider block font-semibold">
+                <div className="pt-3 border-t border-theme-border space-y-2">
+                  <span className="text-[11px] font-mono text-theme-text-muted uppercase tracking-wider block font-semibold">
                     Grounding Source References:
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -722,23 +722,23 @@ export default function AssistantPage() {
                         <Link
                           key={idx}
                           href={`/explore?file=${encodeURIComponent(cit.filePath)}&line=${cit.startLine}`}
-                          className={`p-2.5 rounded bg-linear-surface-2 hover:bg-linear-surface-3 border ${
+                          className={`p-2.5 rounded-lg bg-theme-surface-alt hover:bg-theme-surface border ${
                             isUnverified
-                              ? "border-red-500/40 hover:border-red-500/60"
+                              ? "border-theme-danger/40 hover:border-theme-danger/60"
                               : isWeak
-                              ? "border-amber-500/40 hover:border-amber-500/60"
-                              : "border-linear-border-1 hover:border-linear-accent/40"
-                          } transition-colors group font-mono text-xs block`}
+                              ? "border-theme-warning/40 hover:border-theme-warning/60"
+                              : "border-theme-border hover:border-theme-blue/40"
+                          } transition-colors group font-mono text-xs block shadow-xs`}
                         >
                           <div className="flex items-center justify-between gap-1.5">
                             <div className="flex items-center gap-1.5 truncate">
-                              <FileCode className="w-3.5 h-3.5 text-linear-accent shrink-0" />
-                              <span className="text-linear-text-main font-medium truncate group-hover:text-linear-accent">
+                              <FileCode className="w-3.5 h-3.5 text-theme-blue shrink-0" />
+                              <span className="text-theme-text font-medium truncate group-hover:text-theme-blue">
                                 {cit.filePath}
                               </span>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="text-[11px] text-linear-text-subtle">
+                              <span className="text-[11px] text-theme-text-muted">
                                 L{cit.startLine}-{cit.endLine}
                               </span>
                               {isUnverified ? (
@@ -757,12 +757,12 @@ export default function AssistantPage() {
                             </div>
                           </div>
                           {cit.codeSnippet && (
-                            <div className="mt-1.5 text-[10px] text-linear-text-muted truncate bg-linear-surface-3 p-1 rounded border border-linear-border-1">
+                            <div className="mt-1.5 text-[10px] text-theme-text-muted truncate bg-theme-surface p-1 rounded border border-theme-border">
                               {cit.codeSnippet.split("\n")[0]}
                             </div>
                           )}
                           {isWeak && (
-                            <div className="mt-1 text-[10px] text-amber-400 font-mono">
+                            <div className="mt-1 text-[10px] text-theme-warning-text font-mono">
                               ⚠ Weak support: cited span has low relevance to claim
                             </div>
                           )}
@@ -775,15 +775,15 @@ export default function AssistantPage() {
 
               {/* Uncited Claims Banner */}
               {item.uncitedClaims && item.uncitedClaims.length > 0 && (
-                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono space-y-1.5">
-                  <div className="flex items-center gap-1.5 font-semibold text-amber-400">
+                <div className="p-3 rounded-lg bg-theme-warning-surface border border-theme-warning/30 text-theme-warning-text text-xs font-mono space-y-1.5 shadow-xs">
+                  <div className="flex items-center gap-1.5 font-semibold text-theme-warning-text">
                     <AlertTriangle className="w-4 h-4 shrink-0" />
                     <span>Uncited claims detected ({item.uncitedClaims.length}):</span>
                   </div>
-                  <ul className="space-y-1 list-disc list-inside text-[11px] text-amber-200/90">
+                  <ul className="space-y-1 list-disc list-inside text-[11px] text-theme-warning-text">
                     {item.uncitedClaims.map((claim, idx) => (
                       <li key={idx} className="leading-relaxed">
-                        &ldquo;{claim.sentence}&rdquo; — <span className="text-amber-400 font-semibold">{claim.reason}</span>
+                        &ldquo;{claim.sentence}&rdquo; — <span className="font-semibold underline">{claim.reason}</span>
                       </li>
                     ))}
                   </ul>

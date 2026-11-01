@@ -17,7 +17,12 @@ import {
   FileText,
   Sparkles,
   ArrowUpRight,
-  File
+  File,
+  Download,
+  ShieldCheck,
+  Zap,
+  Share2,
+  Check
 } from "lucide-react";
 import { useRepository } from "@/context/RepositoryContext";
 import { FileTree } from "@/components/explorer/FileTree";
@@ -30,7 +35,6 @@ import { extractSymbols, preloadGrammarForLanguage, onWasmStatusChange, type Was
 import { ArchitectureAnalyzer } from "@repopilot/analysis";
 import { clientFetch } from "@/lib/api";
 import { generateMarkdownReport, downloadMarkdownReport } from "@/lib/reportGenerator";
-import { Download, ShieldCheck, Zap, Share2, Check } from "lucide-react";
 import { getIndexFromIndexedDB, saveIndexToIndexedDB } from "@/lib/browserIndexCache";
 
 function formatFileSize(bytes: number): string {
@@ -151,251 +155,171 @@ function ExploreContent() {
       };
 
       if (effectiveSha) {
-        getIndexFromIndexedDB(currentRepo.owner, currentRepo.repo, effectiveSha)
-          .then((cached) => {
-            if (cached && cached.tree && cached.tree.length > 0) {
-              setFiles(cached.tree);
-              if (cached.repository) {
-                setCurrentRepo(cached.repository);
-              }
-              if (cached.skippedReport) {
-                setSkippedReport(cached.skippedReport);
-              }
-              setCacheHit("indexeddb");
-              setLoadingTree(false);
-            } else {
-              fetchFromApi(effectiveSha);
-            }
-          })
-          .catch(() => {
+        getIndexFromIndexedDB(currentRepo.owner, currentRepo.repo, effectiveSha).then((cached) => {
+          if (cached && cached.tree && cached.tree.length > 0) {
+            setFiles(cached.tree);
+            if (cached.repository) setCurrentRepo(cached.repository);
+            if (cached.skippedReport) setSkippedReport(cached.skippedReport);
+            setCacheHit("indexeddb");
+            setLoadingTree(false);
+          } else {
             fetchFromApi(effectiveSha);
-          });
+          }
+        });
       } else {
         fetchFromApi();
       }
     }
-  }, [currentRepo, files.length, setFiles, shaParam]);
+  }, [currentRepo, files.length, shaParam, setCurrentRepo, setFiles]);
 
-  // Listen to WASM warming status
+  // Track WASM parser preloading status
   useEffect(() => {
-    const unsubscribe = onWasmStatusChange((state) => {
+    return onWasmStatusChange((state) => {
       setWasmState(state);
     });
-    return unsubscribe;
   }, []);
 
-  // Preload primary language grammar when files are loaded
+  // Preload grammar when files arrive
   useEffect(() => {
-    if (files.length === 0) return;
-    const summary = ArchitectureAnalyzer.analyze(files);
-    if (summary.primaryLanguage && summary.primaryLanguage !== "Unknown") {
-      preloadGrammarForLanguage(summary.primaryLanguage);
+    if (files.length > 0) {
+      const languageCounts: Record<string, number> = {};
+      for (const file of files) {
+        if (file.language) {
+          languageCounts[file.language] = (languageCounts[file.language] || 0) + 1;
+        }
+      }
+      let topLang: string | null = null;
+      let maxCount = 0;
+      for (const [lang, count] of Object.entries(languageCounts)) {
+        if (count > maxCount) {
+          maxCount = count;
+          topLang = lang;
+        }
+      }
+      if (topLang) {
+        preloadGrammarForLanguage(topLang).catch(() => {});
+      }
     }
   }, [files]);
 
-  // Resolve target file or directory whenever files or search params change
+  // Handle file selection from URL query param
   useEffect(() => {
-    if (files.length === 0) return;
-
-    const rawTarget = fileParam || dirParam;
-
-    if (rawTarget) {
-      const target = rawTarget.replace(/^\/+|\/+$/g, "");
-      if (!target) return;
-
-      // 1. Direct file match
-      const exactFile = files.find((f) => (f.path === target || f.path === rawTarget) && f.type === "blob");
-      if (exactFile) {
-        setSelectedFile(exactFile);
-        setSelectedDirectory(getParentDirectory(exactFile.path));
-        setViewMode("code");
-        return;
-      }
-
-      // 2. Directory match (either explicit dirParam or fileParam was actually a folder path)
-      const childFiles = files.filter(
-        (f) =>
-          f.path.startsWith(`${target}/`) ||
-          f.path.toLowerCase().startsWith(`${target.toLowerCase()}/`)
-      );
-
-      if (childFiles.length > 0) {
-        setSelectedDirectory(target);
-        // Find best primary file in directory
-        const entryFile =
-          childFiles.find(
-            (f) =>
-              f.path === `${target}/index.ts` ||
-              f.path === `${target}/index.tsx` ||
-              f.path === `${target}/index.js` ||
-              f.path === `${target}/page.tsx` ||
-              f.path === `${target}/main.py` ||
-              f.path.endsWith("/index.ts") ||
-              f.path.endsWith("/index.tsx") ||
-              f.path.endsWith("/index.js") ||
-              f.path.endsWith("/page.tsx")
-          ) || childFiles[0];
-
-        if (entryFile) {
-          setSelectedFile(entryFile);
+    if (fileParam && files.length > 0) {
+      const targetFile = files.find((f) => f.path === fileParam);
+      if (targetFile) {
+        handleFileSelect(targetFile);
+        if (initialLine) {
+          setHighlightRange([initialLine, initialLine]);
         }
-
-        // If dir was explicitly requested, show directory overview, otherwise code
-        if (dirParam && !fileParam) {
-          setViewMode("directory");
-        } else {
-          setViewMode("code");
-        }
-        return;
       }
-
-      // 3. Fallback: target not found exactly, check case-insensitive match
-      const looseMatch = files.find((f) => f.path.toLowerCase() === target.toLowerCase());
-      if (looseMatch) {
-        setSelectedFile(looseMatch);
-        setSelectedDirectory(getParentDirectory(looseMatch.path));
-        setViewMode("code");
-        return;
-      }
-    }
-
-    // 4. Default landing when no target is specified
-    if (!selectedFile && !selectedDirectory) {
+    } else if (dirParam && files.length > 0 && !selectedFile) {
+      setSelectedDirectory(dirParam);
+      setViewMode("directory");
+    } else if (files.length > 0 && !selectedFile && !selectedDirectory) {
       const readme = files.find((f) => f.path.toLowerCase().startsWith("readme"));
-      const fallbackFile = readme || files.find((f) => f.type === "blob") || null;
-      if (fallbackFile) {
-        setSelectedFile(fallbackFile);
-        setSelectedDirectory(getParentDirectory(fallbackFile.path));
-        setViewMode("code");
+      if (readme) {
+        handleFileSelect(readme);
+      } else {
+        const firstCode = files.find((f) => !f.isBinary && f.type === "blob");
+        if (firstCode) handleFileSelect(firstCode);
       }
     }
-  }, [files, fileParam, dirParam]);
+  }, [fileParam, dirParam, files]);
 
-  // Fetch file content whenever selectedFile changes
-  useEffect(() => {
-    if (!currentRepo || !selectedFile || selectedFile.type !== "blob") {
-      setFileContent("");
-      setSymbols([]);
-      return;
+  const handleFileSelect = async (file: RepositoryFile) => {
+    setSelectedFile(file);
+    const parentDir = getParentDirectory(file.path);
+    if (parentDir) {
+      setSelectedDirectory(parentDir);
     }
-
-    if (selectedFile.isBinary) {
-      setFileContent("(Binary file content cannot be displayed)");
-      setSymbols([]);
-      return;
-    }
-
-    // Direct in-memory content from local folder ingestion or cached file
-    if (selectedFile.content !== undefined || currentRepo.isLocal) {
-      const content = selectedFile.content ?? "";
-      setFileContent(content);
-      setLoadingContent(false);
-      extractSymbols(selectedFile.path, content, selectedFile.language)
-        .then((extracted) => {
-          setSymbols(extracted);
-        })
-        .catch(() => {
-          setSymbols([]);
-        });
-      return;
-    }
-
-    setLoadingContent(true);
+    setViewMode("code");
+    setActiveMobileTab("code");
+    setHighlightRange(undefined);
     setError(null);
 
-    const sha = currentRepo.selectedRevision || currentRepo.defaultBranch || "HEAD";
-    const url = `/api/github/file?owner=${encodeURIComponent(
-      currentRepo.owner
-    )}&repo=${encodeURIComponent(currentRepo.repo)}&sha=${encodeURIComponent(
-      sha
-    )}&path=${encodeURIComponent(selectedFile.path)}`;
-
-    clientFetch(url)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.content !== undefined) {
-          setFileContent(data.content);
-          extractSymbols(selectedFile.path, data.content, selectedFile.language)
-            .then((extracted) => {
-              setSymbols(extracted);
-            })
-            .catch(() => {
-              setSymbols([]);
-            });
-        } else {
-          setError(data.error || "Failed to load content.");
-        }
-      })
-      .catch(() => setError("Error loading file content."))
-      .finally(() => setLoadingContent(false));
-  }, [currentRepo, selectedFile]);
-
-  const handleSymbolClick = (sym: IndexedSymbol) => {
-    setHighlightRange([sym.startLine, sym.endLine]);
-    setViewMode("code");
-    const el = document.getElementById(`L${sym.startLine}`);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  };
-
-  const handleFileSelect = (file: RepositoryFile) => {
-    if (file.type === "tree") {
-      handleDirectorySelect(file.path);
+    if (file.content) {
+      setFileContent(file.content);
+      extractSymbolsForFile(file.path, file.content, file.language);
       return;
     }
-    setSelectedFile(file);
-    setSelectedDirectory(getParentDirectory(file.path));
-    setViewMode("code");
-    setHighlightRange(undefined);
-    setActiveMobileTab("code");
+
+    if (currentRepo?.isLocal) {
+      setFileContent("// Local file content is stored directly in memory.");
+      return;
+    }
+
+    if (!currentRepo) return;
+
+    setLoadingContent(true);
+    try {
+      const res = await clientFetch(
+        `/api/github/file?owner=${encodeURIComponent(currentRepo.owner)}&repo=${encodeURIComponent(
+          currentRepo.repo
+        )}&path=${encodeURIComponent(file.path)}&sha=${encodeURIComponent(file.sha || "")}`
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load file content");
+
+      setFileContent(data.content);
+      file.content = data.content;
+      extractSymbolsForFile(file.path, data.content, file.language);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch file content");
+    } finally {
+      setLoadingContent(false);
+    }
   };
 
   const handleDirectorySelect = (dirPath: string) => {
     setSelectedDirectory(dirPath);
     setViewMode("directory");
-    setActiveMobileTab("code");
-    const cleanDir = dirPath.replace(/^\/+|\/+$/g, "");
-    const cleanDirLower = cleanDir.toLowerCase();
-    const children = files.filter(
-      (f) =>
-        f.path.startsWith(`${cleanDir}/`) ||
-        f.path.toLowerCase().startsWith(`${cleanDirLower}/`)
-    );
-    if (children.length > 0 && (!selectedFile || !selectedFile.path.toLowerCase().startsWith(`${cleanDirLower}/`))) {
-      const entry =
-        children.find(
-          (f) =>
-            f.path.endsWith("/index.ts") ||
-            f.path.endsWith("/index.tsx") ||
-            f.path.endsWith("/page.tsx") ||
-            f.path.endsWith("/main.py") ||
-            f.path.endsWith("/main.go")
-        ) || children[0];
-      if (entry) setSelectedFile(entry);
+    setDirSearchQuery("");
+  };
+
+  const extractSymbolsForFile = (filePath: string, content: string, language?: string) => {
+    try {
+      Promise.resolve(extractSymbols(filePath, content, language))
+        .then((syms) => setSymbols(syms))
+        .catch(() => setSymbols([]));
+    } catch {
+      setSymbols([]);
     }
   };
 
-  // Files in current directory
+  const handleSymbolClick = (sym: IndexedSymbol) => {
+    setHighlightRange([sym.startLine, sym.endLine]);
+  };
+
+  const handleShareAnalysis = () => {
+    if (!currentRepo) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("owner", currentRepo.owner);
+    url.searchParams.set("repo", currentRepo.repo);
+    if (currentRepo.selectedRevision) {
+      url.searchParams.set("sha", currentRepo.selectedRevision);
+    }
+    if (selectedFile) {
+      url.searchParams.set("file", selectedFile.path);
+    }
+    navigator.clipboard.writeText(url.toString()).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    });
+  };
+
   const currentDirFiles = useMemo(() => {
     if (!selectedDirectory) return [];
-    const cleanDir = selectedDirectory.replace(/^\/+|\/+$/g, "");
-    const cleanDirLower = cleanDir.toLowerCase();
     return files.filter(
-      (f) =>
-        f.path.startsWith(`${cleanDir}/`) ||
-        f.path.toLowerCase().startsWith(`${cleanDirLower}/`)
+      (f) => f.path === selectedDirectory || f.path.startsWith(selectedDirectory + "/")
     );
   }, [files, selectedDirectory]);
 
-  // Filtered files in current directory
   const filteredDirFiles = useMemo(() => {
-    if (!dirSearchQuery) return currentDirFiles;
+    if (!dirSearchQuery.trim()) return currentDirFiles;
     const q = dirSearchQuery.toLowerCase();
     return currentDirFiles.filter((f) => f.path.toLowerCase().includes(q));
   }, [currentDirFiles, dirSearchQuery]);
 
-  // Languages present in current directory
   const dirLanguages = useMemo(() => {
     const counts = new Map<string, number>();
     for (const f of currentDirFiles) {
@@ -406,7 +330,6 @@ function ExploreContent() {
     return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
   }, [currentDirFiles]);
 
-  // Breadcrumbs builder
   const breadcrumbSegments = useMemo(() => {
     const segments: { label: string; fullPath: string; isFolder: boolean }[] = [];
     const activePath = selectedFile?.path || selectedDirectory;
@@ -427,13 +350,13 @@ function ExploreContent() {
 
   if (!currentRepo) {
     return (
-      <Card className="p-8 text-center max-w-xl mx-auto my-12 space-y-4">
-        <div className="w-12 h-12 rounded-xl bg-[#5E6AD2]/15 border border-[#5E6AD2]/30 flex items-center justify-center text-[#828FFF] mx-auto shadow-[0_0_16px_rgba(94,106,210,0.25)]">
+      <Card className="p-8 text-center max-w-xl mx-auto my-12 space-y-4 bg-theme-surface border-theme-border">
+        <div className="w-12 h-12 rounded-xl bg-theme-blue/10 border border-theme-blue/30 flex items-center justify-center text-theme-blue mx-auto shadow-xs">
           <FolderTree className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-base font-semibold text-[#F7F8F8]">No Repository Active</h2>
-          <p className="text-xs text-[#8A8F98] mt-1.5 leading-relaxed max-w-md mx-auto">
+          <h2 className="text-base font-semibold text-theme-text">No Repository Active</h2>
+          <p className="text-xs text-theme-text-muted mt-1.5 leading-relaxed max-w-md mx-auto">
             Import a public GitHub repository to browse its file structure, inspect code line-by-line, and extract AST symbols with heuristic fallback.
           </p>
         </div>
@@ -454,10 +377,10 @@ function ExploreContent() {
   return (
     <div className="space-y-3">
       {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2.5 border-b border-[#23252A] gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2.5 border-b border-theme-border gap-2">
         <div className="flex items-center gap-2">
-          <FolderTree className="w-4 h-4 text-[#5E6AD2]" />
-          <h1 className="text-sm font-semibold text-[#F7F8F8] font-mono">
+          <FolderTree className="w-4 h-4 text-theme-blue" />
+          <h1 className="text-sm font-semibold text-theme-text font-mono">
             {currentRepo.owner}/{currentRepo.repo}
           </h1>
           {currentRepo.isLocal && (
@@ -465,14 +388,14 @@ function ExploreContent() {
               Local
             </Badge>
           )}
-          <span className="text-xs text-[#62666D]">·</span>
-          <span className="text-xs font-mono text-[#8A8F98]">
+          <span className="text-xs text-theme-text-muted">·</span>
+          <span className="text-xs font-mono text-theme-text-muted">
             {files.length} indexed files
           </span>
-          <span className="text-xs text-[#62666D]">·</span>
+          <span className="text-xs text-theme-text-muted">·</span>
           <Link
             href="/architecture"
-            className="text-xs font-mono text-[#828FFF] hover:underline flex items-center gap-1"
+            className="text-xs font-mono text-theme-blue hover:underline flex items-center gap-1"
           >
             <span>3D Architecture Map</span>
             <ArrowUpRight className="w-3 h-3" />
@@ -483,7 +406,7 @@ function ExploreContent() {
           <Button
             variant="ghost"
             size="sm"
-            icon={<Download className="w-3.5 h-3.5 text-[#5E6AD2]" />}
+            icon={<Download className="w-3.5 h-3.5 text-theme-blue" />}
             onClick={() => {
               const manifestFile = files.find(
                 (f) =>
@@ -503,12 +426,22 @@ function ExploreContent() {
             Export Audit (.md)
           </Button>
 
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={shareCopied ? <Check className="w-3.5 h-3.5 text-theme-green" /> : <Share2 className="w-3.5 h-3.5 text-theme-blue" />}
+            onClick={handleShareAnalysis}
+            title="Share pinned link to this analysis"
+          >
+            {shareCopied ? "Copied Link!" : "Share Analysis"}
+          </Button>
+
           {selectedFile && !currentRepo.isLocal && (
             <a
               href={`${currentRepo.url}/blob/${currentRepo.selectedRevision || currentRepo.defaultBranch}/${selectedFile.path}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs font-mono text-[#8A8F98] hover:text-[#828FFF] flex items-center gap-1 transition-colors"
+              className="text-xs font-mono text-theme-text-muted hover:text-theme-blue flex items-center gap-1 transition-colors"
             >
               <span>View on GitHub</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -516,7 +449,7 @@ function ExploreContent() {
           )}
 
           {currentRepo.isLocal && (
-            <span className="text-xs font-mono text-[#27A644] flex items-center gap-1 px-2 py-0.5 rounded bg-[#27A644]/10 border border-[#27A644]/20">
+            <span className="text-xs font-mono text-theme-green flex items-center gap-1 px-2 py-0.5 rounded bg-theme-green/10 border border-theme-green/20">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Local Memory</span>
             </span>
@@ -525,15 +458,15 @@ function ExploreContent() {
       </div>
 
       {/* Skipped-Files Ingestion Report & Subfolder Picker */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2 bg-[#121316] border border-[#23252A] rounded-lg text-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2 bg-theme-surface border border-theme-border rounded-lg text-xs shadow-xs">
         <div className="flex items-center gap-2 flex-wrap text-xs font-mono">
-          <span className="font-semibold text-[#F7F8F8]">Ingestion Report:</span>
-          <span className="text-[#27A644] font-medium">{files.length} indexed</span>
-          <span className="text-[#62666D]">·</span>
-          <span className="text-[#E5A000]">
+          <span className="font-semibold text-theme-text">Ingestion Report:</span>
+          <span className="text-theme-green font-medium">{files.length} indexed</span>
+          <span className="text-theme-text-muted">·</span>
+          <span className="text-theme-warning-text font-medium">
             {skippedReport ? skippedReport.totalSkipped : 0} skipped
           </span>
-          <span className="text-[#8A8F98]">
+          <span className="text-theme-text-muted">
             ({skippedReport ? skippedReport.ignoredDirectory : 0} ignored dirs,{" "}
             {skippedReport ? skippedReport.binary : 0} binary,{" "}
             {skippedReport ? skippedReport.tooLarge : 0} &gt;100KB,{" "}
@@ -547,7 +480,7 @@ function ExploreContent() {
               placeholder="Pick sub-folder (e.g. packages/core)..."
               value={subfolderInput}
               onChange={(e) => setSubfolderInput(e.target.value)}
-              className="bg-[#0B0C0E] border border-[#23252A] rounded px-2.5 py-1 text-xs text-[#F7F8F8] placeholder-[#62666D] focus:outline-none focus:border-[#5E6AD2] font-mono min-w-[200px]"
+              className="bg-theme-surface-alt border border-theme-border rounded px-2.5 py-1 text-xs text-theme-text placeholder:text-theme-text-muted focus:outline-none focus:border-theme-blue font-mono min-w-[200px]"
             />
             <Button
               variant="secondary"
@@ -576,13 +509,13 @@ function ExploreContent() {
       </div>
 
       {/* Mobile Tab Switcher */}
-      <div className="flex md:hidden items-center p-1 rounded-lg bg-[#0F1011] border border-[#23252A] gap-1 mb-2">
+      <div className="flex md:hidden items-center p-1 rounded-lg bg-theme-surface-alt border border-theme-border gap-1 mb-2">
         <button
           onClick={() => setActiveMobileTab("tree")}
           className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-mono rounded-md transition-all ${
             activeMobileTab === "tree"
-              ? "bg-[#5E6AD2] text-white font-semibold shadow-xs"
-              : "text-[#8A8F98] hover:text-white"
+              ? "bg-theme-blue text-white font-semibold shadow-xs"
+              : "text-theme-text-muted hover:text-theme-text"
           }`}
         >
           <FolderTree className="w-3.5 h-3.5" />
@@ -592,8 +525,8 @@ function ExploreContent() {
           onClick={() => setActiveMobileTab("code")}
           className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-mono rounded-md transition-all ${
             activeMobileTab === "code"
-              ? "bg-[#5E6AD2] text-white font-semibold shadow-xs"
-              : "text-[#8A8F98] hover:text-white"
+              ? "bg-theme-blue text-white font-semibold shadow-xs"
+              : "text-theme-text-muted hover:text-theme-text"
           }`}
         >
           <Code2 className="w-3.5 h-3.5" />
@@ -606,8 +539,8 @@ function ExploreContent() {
         {/* Left Pane: File Tree */}
         <div className={`md:col-span-4 lg:col-span-3 h-full ${activeMobileTab === "tree" ? "block" : "hidden md:block"}`}>
           {loadingTree ? (
-            <div className="h-full flex items-center justify-center border border-[#23252A] rounded-xl bg-[#0F1011] text-xs font-mono text-[#8A8F98] gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-[#5E6AD2]" />
+            <div className="h-full flex items-center justify-center border border-theme-border rounded-xl bg-theme-surface text-xs font-mono text-theme-text-muted gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-theme-blue" />
               <span>Fetching repository tree...</span>
             </div>
           ) : (
@@ -624,9 +557,9 @@ function ExploreContent() {
         {/* Right Pane: Breadcrumbs + Mode Switcher + Content */}
         <div className={`md:col-span-8 lg:col-span-9 h-full flex flex-col space-y-2 overflow-hidden ${activeMobileTab === "code" ? "flex" : "hidden md:flex"}`}>
           {/* Breadcrumb Navigation Bar & Mode Switcher */}
-          <div className="flex items-center justify-between px-3 py-2 bg-[#0F1011] border border-[#23252A] rounded-lg text-xs font-mono shrink-0 shadow-xs">
+          <div className="flex items-center justify-between px-3 py-2 bg-theme-surface border border-theme-border rounded-lg text-xs font-mono shrink-0 shadow-xs">
             {/* Clickable Breadcrumbs */}
-            <div className="flex items-center gap-1.5 overflow-x-auto text-[#8A8F98] truncate">
+            <div className="flex items-center gap-1.5 overflow-x-auto text-theme-text-muted truncate">
               <button
                 onClick={() => {
                   setSelectedDirectory(null);
@@ -636,7 +569,7 @@ function ExploreContent() {
                   }
                   setViewMode("code");
                 }}
-                className="hover:text-[#F7F8F8] transition-colors shrink-0"
+                className="hover:text-theme-text transition-colors shrink-0"
               >
                 {currentRepo.repo}
               </button>
@@ -645,7 +578,7 @@ function ExploreContent() {
                 const isLast = idx === breadcrumbSegments.length - 1;
                 return (
                   <React.Fragment key={seg.fullPath}>
-                    <ChevronRight className="w-3 h-3 text-[#52525A] shrink-0" />
+                    <ChevronRight className="w-3 h-3 text-theme-border shrink-0" />
                     <button
                       onClick={() => {
                         if (seg.isFolder) {
@@ -657,8 +590,8 @@ function ExploreContent() {
                       }}
                       className={`truncate transition-colors ${
                         isLast
-                          ? "text-[#F7F8F8] font-semibold"
-                          : "text-[#8A8F98] hover:text-[#828FFF]"
+                          ? "text-theme-text font-semibold"
+                          : "text-theme-text-muted hover:text-theme-blue"
                       }`}
                       title={seg.fullPath}
                     >
@@ -676,8 +609,8 @@ function ExploreContent() {
                   onClick={() => setViewMode("directory")}
                   className={`px-2 py-1 rounded text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
                     viewMode === "directory"
-                      ? "bg-[#5E6AD2] text-white"
-                      : "bg-[#141516] text-[#8A8F98] hover:text-[#F7F8F8] border border-[#23252A]"
+                      ? "bg-theme-blue text-white"
+                      : "bg-theme-surface-alt text-theme-text-muted hover:text-theme-text border border-theme-border"
                   }`}
                   title="View all files in this directory"
                 >
@@ -689,8 +622,8 @@ function ExploreContent() {
                     onClick={() => setViewMode("code")}
                     className={`px-2 py-1 rounded text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
                       viewMode === "code"
-                        ? "bg-[#5E6AD2] text-white"
-                        : "bg-[#141516] text-[#8A8F98] hover:text-[#F7F8F8] border border-[#23252A]"
+                        ? "bg-theme-blue text-white"
+                        : "bg-theme-surface-alt text-theme-text-muted hover:text-theme-text border border-theme-border"
                     }`}
                     title="View file source code"
                   >
@@ -704,18 +637,18 @@ function ExploreContent() {
 
           {/* Mode 1: Directory Overview View */}
           {viewMode === "directory" && selectedDirectory ? (
-            <div className="flex-1 flex flex-col space-y-3 overflow-hidden bg-[#0F1011] border border-[#23252A] rounded-xl p-4">
+            <div className="flex-1 flex flex-col space-y-3 overflow-hidden bg-theme-surface border border-theme-border rounded-xl p-4 shadow-xs">
               {/* Directory Header Banner */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#23252A] gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-theme-border gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#5E6AD2]/15 border border-[#5E6AD2]/30 flex items-center justify-center text-[#828FFF] shadow-[0_0_12px_rgba(94,106,210,0.25)]">
+                  <div className="w-8 h-8 rounded-lg bg-theme-blue/10 border border-theme-blue/30 flex items-center justify-center text-theme-blue shadow-xs">
                     <Folder className="w-4 h-4" />
                   </div>
                   <div>
-                    <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono">
+                    <h2 className="text-sm font-semibold text-theme-text font-mono">
                       {selectedDirectory}
                     </h2>
-                    <div className="flex items-center gap-2 text-xs font-mono text-[#8A8F98] mt-0.5">
+                    <div className="flex items-center gap-2 text-xs font-mono text-theme-text-muted mt-0.5">
                       <span>{currentDirFiles.length} files in this module</span>
                       <span>·</span>
                       <span>
@@ -742,7 +675,7 @@ function ExploreContent() {
               {/* Language Tags in this directory */}
               {dirLanguages.length > 0 && (
                 <div className="flex items-center gap-1.5 overflow-x-auto text-xs font-mono pb-1">
-                  <span className="text-[11px] text-[#62666D] uppercase font-semibold shrink-0">
+                  <span className="text-[11px] text-theme-text-muted uppercase font-semibold shrink-0">
                     Languages:
                   </span>
                   {dirLanguages.map(([lang, count]) => (
@@ -755,25 +688,25 @@ function ExploreContent() {
 
               {/* In-folder Search Filter */}
               <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#62666D]" />
+                <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-theme-text-muted" />
                 <input
                   type="text"
                   placeholder={`Search files in ${selectedDirectory}...`}
                   value={dirSearchQuery}
                   onChange={(e) => setDirSearchQuery(e.target.value)}
-                  className="w-full bg-[#141516] border border-[#23252A] rounded-lg pl-9 pr-3 py-1.5 text-xs font-mono text-[#D0D6E0] placeholder:text-[#62666D] focus:outline-none focus:border-[#5E6AD2]"
+                  className="w-full bg-theme-surface-alt border border-theme-border rounded-lg pl-9 pr-3 py-1.5 text-xs font-mono text-theme-text placeholder:text-theme-text-muted focus:outline-none focus:border-theme-blue"
                 />
               </div>
 
               {/* Directory Files Table */}
-              <div className="flex-1 overflow-y-auto border border-[#23252A] rounded-lg bg-[#010102]">
+              <div className="flex-1 overflow-y-auto border border-theme-border rounded-lg bg-theme-surface">
                 {filteredDirFiles.length === 0 ? (
-                  <div className="p-8 text-center text-xs font-mono text-[#8A8F98]">
+                  <div className="p-8 text-center text-xs font-mono text-theme-text-muted">
                     No files found matching &quot;{dirSearchQuery}&quot; in this directory.
                   </div>
                 ) : (
                   <table className="w-full text-left font-mono text-xs">
-                    <thead className="bg-[#141516] text-[#8A8F98] text-[11px] border-b border-[#23252A] sticky top-0">
+                    <thead className="bg-theme-surface-alt text-theme-text-muted text-[11px] border-b border-theme-border sticky top-0">
                       <tr>
                         <th className="py-2 px-3 font-medium">File Name</th>
                         <th className="py-2 px-3 font-medium hidden sm:table-cell">Language</th>
@@ -781,7 +714,7 @@ function ExploreContent() {
                         <th className="py-2 px-3 font-medium text-right">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#23252A]">
+                    <tbody className="divide-y divide-theme-border">
                       {filteredDirFiles.map((file) => {
                         const fileName = file.path.split("/").pop() || file.path;
                         const isCurrent = selectedFile?.path === file.path;
@@ -789,26 +722,26 @@ function ExploreContent() {
                           <tr
                             key={file.path}
                             onClick={() => handleFileSelect(file)}
-                            className={`hover:bg-[#141516] cursor-pointer transition-colors ${
-                              isCurrent ? "bg-[#5E6AD2]/10" : ""
+                            className={`hover:bg-theme-surface-alt cursor-pointer transition-colors ${
+                              isCurrent ? "bg-theme-blue/10" : ""
                             }`}
                           >
                             <td className="py-2.5 px-3">
                               <div className="flex items-center gap-2">
-                                <FileCode className="w-3.5 h-3.5 text-[#5E6AD2] shrink-0" />
+                                <FileCode className="w-3.5 h-3.5 text-theme-blue shrink-0" />
                                 <span
                                   className={`font-medium ${
-                                    isCurrent ? "text-[#828FFF]" : "text-[#F7F8F8]"
+                                    isCurrent ? "text-theme-blue" : "text-theme-text"
                                   }`}
                                 >
                                   {fileName}
                                 </span>
                               </div>
                             </td>
-                            <td className="py-2.5 px-3 text-[#8A8F98] hidden sm:table-cell">
+                            <td className="py-2.5 px-3 text-theme-text-muted hidden sm:table-cell">
                               {file.language || "Plain Text"}
                             </td>
-                            <td className="py-2.5 px-3 text-[#8A8F98] text-right hidden sm:table-cell">
+                            <td className="py-2.5 px-3 text-theme-text-muted text-right hidden sm:table-cell">
                               {formatFileSize(file.size || 0)}
                             </td>
                             <td className="py-2.5 px-3 text-right">
@@ -818,7 +751,7 @@ function ExploreContent() {
                                   e.stopPropagation();
                                   handleFileSelect(file);
                                 }}
-                                className="text-[11px] text-[#828FFF] hover:text-white hover:underline font-medium cursor-pointer"
+                                className="text-[11px] text-theme-blue hover:underline font-medium cursor-pointer"
                               >
                                 Inspect →
                               </button>
@@ -836,25 +769,25 @@ function ExploreContent() {
             <div className="flex-1 flex flex-col space-y-2 overflow-hidden">
               {/* Symbols Definitions Quick Bar */}
               {symbols.length > 0 && (
-                <div className="flex items-center gap-1.5 overflow-x-auto py-1 px-3 bg-[#0F1011] border border-[#23252A] rounded-lg text-xs shrink-0 select-none shadow-xs">
-                  <span className="text-[10px] font-mono text-[#62666D] uppercase shrink-0 flex items-center gap-1 font-semibold">
-                    <Code2 className="w-3 h-3 text-[#5E6AD2]" />
+                <div className="flex items-center gap-1.5 overflow-x-auto py-1 px-3 bg-theme-surface border border-theme-border rounded-lg text-xs shrink-0 select-none shadow-xs">
+                  <span className="text-[10px] font-mono text-theme-text-muted uppercase shrink-0 flex items-center gap-1 font-semibold">
+                    <Code2 className="w-3 h-3 text-theme-blue" />
                     Symbols:
                   </span>
                   {symbols.slice(0, 15).map((sym) => (
                     <button
                       key={sym.id}
                       onClick={() => handleSymbolClick(sym)}
-                      className="px-2 py-0.5 rounded-[4px] bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#34343A] text-[11px] font-mono text-[#8A8F98] hover:text-[#828FFF] shrink-0 transition-colors inline-flex items-center gap-1.5"
+                      className="px-2 py-0.5 rounded-[4px] bg-theme-surface-alt hover:bg-theme-surface border border-theme-border hover:border-theme-blue/40 text-[11px] font-mono text-theme-text-muted hover:text-theme-blue shrink-0 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                       title={`${sym.signature || sym.name} (lines ${sym.startLine}-${sym.endLine}) [${sym.confidence || "heuristic"}]`}
                     >
-                      <span className="text-[#62666D]">{sym.kind[0]}</span>
+                      <span className="text-theme-text-muted">{sym.kind[0]}</span>
                       <span>{sym.name}</span>
                       <span
                         className={`text-[9px] px-1 py-0.2 rounded font-sans uppercase font-medium ${
                           sym.confidence === "ast"
-                            ? "bg-[#5E6AD2]/20 text-[#828FFF] border border-[#5E6AD2]/30"
-                            : "bg-[#23252A] text-[#8A8F98]"
+                            ? "bg-theme-blue/10 text-theme-blue border border-theme-blue/20"
+                            : "bg-theme-surface border border-theme-border text-theme-text-muted"
                         }`}
                       >
                         {sym.confidence === "ast" ? "AST" : "heuristic"}
@@ -862,7 +795,7 @@ function ExploreContent() {
                     </button>
                   ))}
                   {symbols.length > 15 && (
-                    <span className="text-[10px] text-[#62666D] shrink-0">
+                    <span className="text-[10px] text-theme-text-muted shrink-0">
                       +{symbols.length - 15} more
                     </span>
                   )}
@@ -872,12 +805,12 @@ function ExploreContent() {
               {/* Main Code View Box */}
               <div className="flex-1 overflow-hidden">
                 {loadingContent ? (
-                  <div className="h-full flex items-center justify-center border border-[#23252A] rounded-xl bg-[#0F1011] text-xs font-mono text-[#8A8F98] gap-2 shadow-xs">
-                    <Loader2 className="w-4 h-4 animate-spin text-[#5E6AD2]" />
+                  <div className="h-full flex items-center justify-center border border-theme-border rounded-xl bg-theme-surface text-xs font-mono text-theme-text-muted gap-2 shadow-xs">
+                    <Loader2 className="w-4 h-4 animate-spin text-theme-blue" />
                     <span>Loading file content...</span>
                   </div>
                 ) : error ? (
-                  <div className="h-full flex items-center justify-center border border-red-900/40 rounded-xl bg-red-950/20 p-6 text-center text-xs font-mono text-[#EF4444] shadow-xs">
+                  <div className="h-full flex items-center justify-center border border-theme-danger/20 rounded-xl bg-theme-danger/10 p-6 text-center text-xs font-mono text-theme-danger shadow-xs">
                     <AlertCircle className="w-4 h-4 mr-2" />
                     <span>{error}</span>
                   </div>
@@ -891,15 +824,15 @@ function ExploreContent() {
                   />
                 ) : (
                   /* Welcoming Empty State */
-                  <div className="h-full flex flex-col items-center justify-center border border-[#23252A] rounded-xl bg-[#0F1011] p-8 text-center space-y-4 shadow-xs">
-                    <div className="w-12 h-12 rounded-xl bg-[#5E6AD2]/15 border border-[#5E6AD2]/30 flex items-center justify-center text-[#828FFF] shadow-[0_0_16px_rgba(94,106,210,0.25)]">
+                  <div className="h-full flex flex-col items-center justify-center border border-theme-border rounded-xl bg-theme-surface p-8 text-center space-y-4 shadow-xs">
+                    <div className="w-12 h-12 rounded-xl bg-theme-blue/10 border border-theme-blue/30 flex items-center justify-center text-theme-blue shadow-xs">
                       <FileCode className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-[#F7F8F8] font-mono">
+                      <h3 className="text-sm font-semibold text-theme-text font-mono">
                         Select a file or module
                       </h3>
-                      <p className="text-xs text-[#8A8F98] max-w-sm mt-1 leading-relaxed font-mono">
+                      <p className="text-xs text-theme-text-muted max-w-sm mt-1 leading-relaxed font-mono">
                         Browse the folder tree on the left, inspect code with AST symbol navigation, or open modules from the 3D architecture graph.
                       </p>
                     </div>
@@ -939,7 +872,7 @@ export default function ExplorePage() {
   return (
     <Suspense
       fallback={
-        <div className="p-8 text-center text-xs font-mono text-[#8A8F98]">
+        <div className="p-8 text-center text-xs font-mono text-theme-text-muted">
           Loading Code Explorer...
         </div>
       }

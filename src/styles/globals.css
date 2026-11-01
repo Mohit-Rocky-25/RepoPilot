@@ -4,74 +4,213 @@
 
 @layer base {
   :root {
-    --linear-canvas: #010102;
-    --linear-surface-1: #0F1011;
-    --linear-surface-2: #141516;
-    --linear-surface-3: #18191A;
-    --linear-surface-4: #191A1B;
-    --linear-accent: #5E6AD2;
-    --linear-accent-hover: #828FFF;
-    --linear-text-main: #F7F8F8;
-    --linear-text-secondary: #D0D6E0;
-    --linear-text-muted: #8A8F98;
-    --linear-text-tertiary: #62666D;
-    --linear-border-subtle: #23252A;
-    --linear-border-default: #34343A;
-    --linear-border-strong: #3E3E44;
-    --linear-success: #27A644;
-    --linear-warning: #F59E0B;
-    --linear-danger: #EF4444;
+    color-scheme: light;
 
-    /* Mappings for console-* compatibility */
-    --console-bg: #010102;
-    --console-surface: #0F1011;
-    --console-subtle: #141516;
-    --console-elevated: #18191A;
-    --console-border: #23252A;
-    --console-border-hover: #34343A;
-    --console-text: #F7F8F8;
-    --console-muted: #8A8F98;
-    --console-dim: #62666D;
-    --console-accent: #5E6AD2;
-    --console-accent-hover: #828FFF;
-    --console-violet: #5E6AD2;
-    --console-success: #27A644;
-    --console-warning: #F59E0B;
-    --console-danger: #EF4444;
+    /* RepoPilot Google/GDG-Style Semantic Color Tokens (Light Default) */
+    --color-bg: #F8F9FA;
+    --color-surface: #FFFFFF;
+    --color-surface-alt: #F1F3F4;
+    --color-border: #DADCE0;
+    --color-border-subtle: #E8EAED;
+    --color-text: #202124;
+    --color-text-muted: #5F6368;
+    --color-text-subtle: #80868B;
+
+    /* Google Brand Accents */
+    --color-blue: #1A73E8;
+    --color-blue-hover: #174EA6;
+    --color-blue-surface: #E8F0FE;
+
+    --color-red: #EA4335;
+    --color-danger-text: #D93025;
+    --color-danger-surface: #FCE8E6;
+
+    --color-yellow: #FBBC04;
+    --color-warning-surface: #FEF7E0;
+    --color-warning-text: #B06000;
+
+    --color-green: #34A853;
+    --color-green-text: #137333;
+    --color-green-surface: #E6F4EA;
+
+    --color-purple: #9334E6;
+    --color-purple-surface: #F3E8FD;
+
+    /* Code Viewport Tokens (Dark code container for syntax contrast) */
+    --color-code-bg: #202124;
+    --color-code-text: #8AB4F8;
+    --color-code-comment: #9AA0A6;
+
+    /* Elevation & Shadows */
+    --color-shadow: rgba(60, 64, 67, 0.08);
+    --color-shadow-elevated: rgba(60, 64, 67, 0.16);
+
+    /* Node Taxonomy for Architecture Map (Light) */
+    --node-entry: #1A73E8;
+    --node-core: #34A853;
+    --node-ui: #EA4335;
+    --node-config: #B06000;
+    --node-test: #9334E6;
+    --node-root: #5F6368;
+    --node-source: #5F6368;
+    --canvas-bg: #FFFFFF;
+
+    /* Full Compatibility Bridge for linear-* and console-* tokens */
+    --linear-canvas: var(--color-bg);
+    --linear-surface-1: var(--color-surface);
+    --linear-surface-2: var(--color-surface-alt);
+    --linear-surface-3: #E8EAED;
+    --linear-surface-4: #DADCE0;
+    --linear-accent: var(--color-blue);
+    --linear-accent-hover: var(--color-blue-hover);
+    --linear-text-main: var(--color-text);
+    --linear-text-secondary: #3C4043;
+    --linear-text-muted: var(--color-text-muted);
+    --linear-text-tertiary: var(--color-text-subtle);
+    --linear-border-subtle: var(--color-border-subtle);
+    --linear-border-default: var(--color-border);
+    --linear-border-strong: #BDC1C6;
+    --linear-success: var(--color-green);
+    --linear-warning: var(--color-yellow);
+    --linear-danger: var(--color-red);
+
+    --console-bg: var(--color-bg);
+    --console-surface: var(--color-surface);
+    --console-subtle: var(--color-surface-alt);
+    --console-elevated: var(--color-surface);
+    --console-border: var(--color-border);
+    --console-border-hover: #BDC1C6;
+    --console-text: var(--color-text);
+    --console-muted: var(--color-text-muted);
+    --console-dim: var(--color-text-subtle);
+    --console-accent: var(--color-blue);
+    --console-accent-hover: var(--color-blue-hover);
+    --console-violet: var(--color-purple);
+    --console-success: var(--color-green);
+    --console-warning: var(--color-yellow);
+    --console-danger: var(--color-red);
+  }
+
+  [data-theme="dark"] {
+    color-scheme: dark;
+
+    /* RepoPilot Studio Dark Semantic Color Tokens */
+    --color-bg: #202124;
+    --color-surface: #292A2D;
+    --color-surface-alt: #303134;
+    --color-border: #3C4043;
+    --color-border-subtle: #4A4D51;
+    --color-text: #E8EAED;
+    --color-text-muted: #9AA0A6;
+    --color-text-subtle: #5F6368;
+
+    /* Google Brand Accents in Dark Mode */
+    --color-blue: #8AB4F8;
+    --color-blue-hover: #AECBFA;
+    --color-blue-surface: #174EA6;
+
+    --color-red: #F28B82;
+    --color-danger-text: #F28B82;
+    --color-danger-surface: rgba(242, 139, 130, 0.15);
+
+    --color-yellow: #FDD663;
+    --color-warning-surface: rgba(253, 214, 99, 0.15);
+    --color-warning-text: #FDD663;
+
+    --color-green: #81C995;
+    --color-green-text: #81C995;
+    --color-green-surface: rgba(129, 201, 149, 0.15);
+
+    --color-purple: #C58AF9;
+    --color-purple-surface: rgba(197, 138, 249, 0.15);
+
+    /* Code Viewport Tokens */
+    --color-code-bg: #171717;
+    --color-code-text: #8AB4F8;
+    --color-code-comment: #9AA0A6;
+
+    /* Elevation & Shadows */
+    --color-shadow: rgba(0, 0, 0, 0.4);
+    --color-shadow-elevated: rgba(0, 0, 0, 0.6);
+
+    /* Node Taxonomy for Architecture Map (Dark) */
+    --node-entry: #8AB4F8;
+    --node-core: #81C995;
+    --node-ui: #F28B82;
+    --node-config: #FDD663;
+    --node-test: #C58AF9;
+    --node-root: #E8EAED;
+    --node-source: #9AA0A6;
+    --canvas-bg: #202124;
+
+    /* Full Compatibility Bridge for linear-* and console-* tokens in Dark */
+    --linear-canvas: var(--color-bg);
+    --linear-surface-1: var(--color-surface);
+    --linear-surface-2: var(--color-surface-alt);
+    --linear-surface-3: #35363A;
+    --linear-surface-4: #3C4043;
+    --linear-accent: var(--color-blue);
+    --linear-accent-hover: var(--color-blue-hover);
+    --linear-text-main: var(--color-text);
+    --linear-text-secondary: #BDC1C6;
+    --linear-text-muted: var(--color-text-muted);
+    --linear-text-tertiary: var(--color-text-subtle);
+    --linear-border-subtle: var(--color-border-subtle);
+    --linear-border-default: var(--color-border);
+    --linear-border-strong: #5F6368;
+    --linear-success: var(--color-green);
+    --linear-warning: var(--color-yellow);
+    --linear-danger: var(--color-red);
+
+    --console-bg: var(--color-bg);
+    --console-surface: var(--color-surface);
+    --console-subtle: var(--color-surface-alt);
+    --console-elevated: #35363A;
+    --console-border: var(--color-border);
+    --console-border-hover: #5F6368;
+    --console-text: var(--color-text);
+    --console-muted: var(--color-text-muted);
+    --console-dim: var(--color-text-subtle);
+    --console-accent: var(--color-blue);
+    --console-accent-hover: var(--color-blue-hover);
+    --console-violet: var(--color-purple);
+    --console-success: var(--color-green);
+    --console-warning: var(--color-yellow);
+    --console-danger: var(--color-red);
   }
 
   body {
-    background-color: #010102;
-    color: #F7F8F8;
-    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans), Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.01em;
   }
 
-  /* Linear precision scrollbars */
+  /* Accessible precision scrollbars */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: #010102;
+    background: var(--color-bg);
   }
   ::-webkit-scrollbar-thumb {
-    background: #23252A;
-    border-radius: 3px;
+    background: var(--color-border);
+    border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #34343A;
+    background: var(--color-text-subtle);
   }
 }
 
 /* Monospace code styling */
 pre, code, kbd, samp {
-  font-family: "JetBrains Mono", "Geist Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono), "Roboto Mono", "JetBrains Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* Picture-Perfect High-Contrast Mermaid Diagram Styling */
+/* Mermaid Diagram Styling with Theme Adaptation */
 .mermaid-viewport {
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -80,62 +219,16 @@ pre, code, kbd, samp {
   max-width: 100%;
   height: auto;
   overflow: visible;
-  filter: drop-shadow(0 8px 32px rgba(0, 0, 0, 0.65));
 }
 
-.mermaid-viewport svg text,
-.mermaid-viewport svg text tspan {
+[data-theme="dark"] .mermaid-viewport svg text,
+[data-theme="dark"] .mermaid-viewport svg text tspan {
   fill: #FFFFFF !important;
-  font-family: var(--font-geist-sans), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  font-weight: 500 !important;
-  font-size: 12.5px !important;
-  letter-spacing: -0.01em;
-  -webkit-font-smoothing: antialiased;
 }
 
-.mermaid-viewport svg .cluster rect {
-  fill: #0B0E14 !important;
-  stroke: #1E293B !important;
-  stroke-width: 1.5px !important;
-  rx: 14px !important;
-  ry: 14px !important;
-}
-
-.mermaid-viewport svg .cluster text,
-.mermaid-viewport svg .cluster text tspan {
-  fill: #94A3B8 !important;
-  font-weight: 700 !important;
-  font-size: 11px !important;
-  letter-spacing: 0.08em !important;
-  text-transform: uppercase !important;
-}
-
-.mermaid-viewport svg .edgePath path {
-  stroke: #64748B !important;
-  stroke-width: 1.75px !important;
-  transition: stroke 0.2s ease, stroke-width 0.2s ease;
-}
-
-.mermaid-viewport svg .edgePath:hover path {
-  stroke: #818CF8 !important;
-  stroke-width: 2.5px !important;
-}
-
-.mermaid-viewport svg .marker,
-.mermaid-viewport svg marker path,
-.mermaid-viewport svg .arrowheadPath {
-  fill: #818CF8 !important;
-  stroke: #818CF8 !important;
-}
-
-.mermaid-viewport svg .edgeLabel {
-  background-color: #0F172A !important;
-  color: #CBD5E1 !important;
-  border-radius: 6px;
-  padding: 3px 6px;
-  border: 1px solid #1E293B;
-  font-size: 11px !important;
-  font-weight: 500;
+:root:not([data-theme="dark"]) .mermaid-viewport svg text,
+:root:not([data-theme="dark"]) .mermaid-viewport svg text tspan {
+  fill: #202124 !important;
 }
 
 .mermaid-viewport svg .node rect,
@@ -145,17 +238,5 @@ pre, code, kbd, samp {
 .mermaid-viewport svg .node path {
   rx: 8px !important;
   ry: 8px !important;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
-  transition: filter 0.2s ease, stroke-width 0.2s ease, transform 0.2s ease;
+  transition: filter 0.2s ease, stroke-width 0.2s ease;
 }
-
-.mermaid-viewport svg .node:hover rect,
-.mermaid-viewport svg .node:hover circle,
-.mermaid-viewport svg .node:hover polygon,
-.mermaid-viewport svg .node:hover ellipse,
-.mermaid-viewport svg .node:hover path {
-  filter: drop-shadow(0 0 16px rgba(129, 140, 248, 0.6)) brightness(1.2);
-  stroke-width: 2.5px !important;
-  cursor: pointer;
-}
-

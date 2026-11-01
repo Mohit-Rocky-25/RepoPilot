@@ -190,23 +190,23 @@ export default function AISettingsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-linear-border-1 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-theme-border pb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Link
               href="/settings"
-              className="text-xs font-mono text-linear-text-muted hover:text-linear-text-main flex items-center gap-1 transition-colors"
+              className="text-xs font-mono text-theme-text-muted hover:text-theme-text flex items-center gap-1 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               Settings
             </Link>
-            <span className="text-linear-text-subtle">/</span>
-            <span className="text-xs font-mono text-linear-text-secondary">AI Provider</span>
+            <span className="text-theme-text-muted">/</span>
+            <span className="text-xs font-mono text-theme-text">AI Provider</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-linear-text-main">
+          <h1 className="text-2xl font-bold tracking-tight text-theme-text">
             AI Provider & Neural Reasoning Configuration
           </h1>
-          <p className="text-xs text-linear-text-muted mt-1 max-w-xl">
+          <p className="text-xs text-theme-text-muted mt-1 max-w-xl">
             Choose how RepoPilot runs grounded AI investigations: completely free via local Ollama,
             bring your own OpenAI-compatible API key, or offline deterministic mode.
           </p>
@@ -214,7 +214,7 @@ export default function AISettingsPage() {
 
         {/* Global Active Badge */}
         <div className="flex flex-col sm:items-end gap-1">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-linear-text-subtle">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-theme-text-muted">
             Active Provider Mode
           </span>
           {activeMode === "openai-compatible" ? (
@@ -234,15 +234,15 @@ export default function AISettingsPage() {
       </div>
 
       {/* Mode Explanation Banner */}
-      <div className="p-4 rounded-xl bg-linear-surface-1 border border-linear-border-1 flex items-start gap-3">
-        <ShieldCheck className="w-5 h-5 text-linear-accent shrink-0 mt-0.5" />
+      <div className="p-4 rounded-xl bg-theme-surface border border-theme-border flex items-start gap-3">
+        <ShieldCheck className="w-5 h-5 text-theme-blue shrink-0 mt-0.5" />
         <div className="text-xs space-y-1">
-          <p className="font-semibold text-linear-text-main">
+          <p className="font-semibold text-theme-text">
             {activeMode === "openai-compatible" && "Mode: Hosted API (BYO Key) — Neural synthesis via your configured endpoint."}
             {activeMode === "ollama" && "Mode: Local Ollama (₹0 / $0) — Zero API costs; inference runs entirely on your local machine."}
             {activeMode === "offline" && "Mode: Offline Deterministic — AST symbol parsing, keyword search, and Mermaid diagram generation with verified citations."}
           </p>
-          <p className="text-linear-text-muted">
+          <p className="text-theme-text-muted">
             All repository exploration, search, and architecture analysis work with no AI required.
             Your API keys are stored <strong>strictly in sessionStorage</strong> and never touch any database or server storage.
           </p>
@@ -253,11 +253,11 @@ export default function AISettingsPage() {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h2 className="text-base font-bold text-linear-text-main flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-linear-accent" />
+            <h2 className="text-base font-bold text-theme-text flex items-center gap-2">
+              <Cpu className="w-4 h-4 text-theme-blue" />
               Choose Your AI Setup
             </h2>
-            <p className="text-xs text-linear-text-muted mt-0.5">
+            <p className="text-xs text-theme-text-muted mt-0.5">
               Select how RepoPilot runs grounded reasoning. Match your hardware capacity, privacy requirements, or zero-AI preference.
             </p>
           </div>
@@ -275,30 +275,30 @@ export default function AISettingsPage() {
             onClick={() => setActiveMode("ollama")}
             className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
               activeMode === "ollama"
-                ? "bg-linear-surface-2 border-linear-accent ring-2 ring-linear-accent/40 shadow-sm"
-                : "bg-linear-surface-1 border-linear-border-1 hover:border-linear-border-2"
+                ? "bg-theme-surface-alt border-theme-blue ring-2 ring-theme-blue/30 shadow-sm"
+                : "bg-theme-surface border-theme-border hover:border-theme-border"
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-xs font-bold text-linear-text-main flex items-center gap-1.5">
-                  <Laptop className="w-4 h-4 text-linear-accent" />
+                <span className="font-mono text-xs font-bold text-theme-text flex items-center gap-1.5">
+                  <Laptop className="w-4 h-4 text-theme-blue" />
                   Local Ollama
                 </span>
                 <Badge variant="primary" className="text-[10px] font-mono">Private · Free</Badge>
               </div>
-              <p className="text-xs text-linear-text-muted mb-3 leading-relaxed">
+              <p className="text-xs text-theme-text-muted mb-3 leading-relaxed">
                 Runs open-weights models directly on your hardware. Complete privacy with zero cloud fees.
               </p>
-              <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 space-y-1.5 text-[11px] font-mono">
-                <div className="text-linear-accent font-semibold flex items-center gap-1">
+              <div className="p-2.5 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1.5 text-[11px] font-mono">
+                <div className="text-theme-blue font-semibold flex items-center gap-1">
                   <Activity className="w-3 h-3" />
                   Hardware Guidance:
                 </div>
-                <div className="text-linear-text-secondary">
+                <div className="text-theme-text">
                   • <strong>16 GB RAM</strong>: Recommend <strong>7B model</strong> (e.g. <code>qwen2.5-coder:7b</code>)
                 </div>
-                <div className="text-linear-text-secondary">
+                <div className="text-theme-text">
                   • <strong>8 GB RAM</strong>: Recommend <strong>1.5B model</strong> (e.g. <code>qwen2.5-coder:1.5b</code>)
                 </div>
                 <div className="text-[10px] text-amber-400/90 pt-0.5">
@@ -306,9 +306,9 @@ export default function AISettingsPage() {
                 </div>
               </div>
             </div>
-            <div className="pt-3 mt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono">
-              <span className="text-linear-text-subtle">Provider Cost:</span>
-              <span className="text-linear-success font-semibold">₹0 / $0 (Always Free)</span>
+            <div className="pt-3 mt-3 border-t border-theme-border flex items-center justify-between text-xs font-mono">
+              <span className="text-theme-text-muted">Provider Cost:</span>
+              <span className="text-theme-green font-semibold">₹0 / $0 (Always Free)</span>
             </div>
           </div>
 
@@ -317,30 +317,30 @@ export default function AISettingsPage() {
             onClick={() => setActiveMode("openai-compatible")}
             className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
               activeMode === "openai-compatible"
-                ? "bg-linear-surface-2 border-linear-accent ring-2 ring-linear-accent/40 shadow-sm"
-                : "bg-linear-surface-1 border-linear-border-1 hover:border-linear-border-2"
+                ? "bg-theme-surface-alt border-theme-blue ring-2 ring-theme-blue/30 shadow-sm"
+                : "bg-theme-surface border-theme-border hover:border-theme-border"
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-xs font-bold text-linear-text-main flex items-center gap-1.5">
-                  <Key className="w-4 h-4 text-linear-accent" />
+                <span className="font-mono text-xs font-bold text-theme-text flex items-center gap-1.5">
+                  <Key className="w-4 h-4 text-theme-blue" />
                   Bring-Your-Own Key
                 </span>
                 <Badge variant="success" className="text-[10px] font-mono">Best Quality</Badge>
               </div>
-              <p className="text-xs text-linear-text-muted mb-3 leading-relaxed">
+              <p className="text-xs text-theme-text-muted mb-3 leading-relaxed">
                 Connect OpenAI, Groq, OpenRouter, or DeepSeek. Best quality and multi-file context synthesis.
               </p>
-              <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 space-y-1.5 text-[11px] font-mono">
+              <div className="p-2.5 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1.5 text-[11px] font-mono">
                 <div className="text-emerald-400 font-semibold flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3" />
                   Provider Limits & Security:
                 </div>
-                <div className="text-linear-text-secondary">
+                <div className="text-theme-text">
                   • Keys kept <strong>strictly in browser sessionStorage</strong>
                 </div>
-                <div className="text-linear-text-secondary">
+                <div className="text-theme-text">
                   • Never saved to disk, server logs, or databases
                 </div>
                 <div className="text-[10px] text-amber-400/90 pt-0.5">
@@ -348,9 +348,9 @@ export default function AISettingsPage() {
                 </div>
               </div>
             </div>
-            <div className="pt-3 mt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono">
-              <span className="text-linear-text-subtle">Provider Cost:</span>
-              <span className="text-linear-text-muted font-semibold">Provider Rates</span>
+            <div className="pt-3 mt-3 border-t border-theme-border flex items-center justify-between text-xs font-mono">
+              <span className="text-theme-text-muted">Provider Cost:</span>
+              <span className="text-theme-text-muted font-semibold">Provider Rates</span>
             </div>
           </div>
 
@@ -359,40 +359,40 @@ export default function AISettingsPage() {
             onClick={setOfflineMode}
             className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
               activeMode === "offline"
-                ? "bg-linear-surface-2 border-linear-accent ring-2 ring-linear-accent/40 shadow-sm"
-                : "bg-linear-surface-1 border-linear-border-1 hover:border-linear-border-2"
+                ? "bg-theme-surface-alt border-theme-blue ring-2 ring-theme-blue/30 shadow-sm"
+                : "bg-theme-surface border-theme-border hover:border-theme-border"
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-xs font-bold text-linear-text-main flex items-center gap-1.5">
-                  <Sliders className="w-4 h-4 text-linear-accent" />
+                <span className="font-mono text-xs font-bold text-theme-text flex items-center gap-1.5">
+                  <Sliders className="w-4 h-4 text-theme-blue" />
                   Offline Mode
                 </span>
                 <Badge variant="neutral" className="text-[10px] font-mono">Always Works</Badge>
               </div>
-              <p className="text-xs text-linear-text-muted mb-3 leading-relaxed">
+              <p className="text-xs text-theme-text-muted mb-3 leading-relaxed">
                 Deterministic keyword and AST symbol search. Zero AI models, zero cloud APIs, zero setup needed.
               </p>
-              <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 space-y-1.5 text-[11px] font-mono">
-                <div className="text-linear-text-main font-semibold flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3 text-linear-success" />
+              <div className="p-2.5 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1.5 text-[11px] font-mono">
+                <div className="text-theme-text font-semibold flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3 text-theme-green" />
                   Operational Guarantee:
                 </div>
-                <div className="text-linear-text-secondary">
+                <div className="text-theme-text">
                   • Instant query latency (&lt; 5 ms)
                 </div>
-                <div className="text-linear-text-secondary">
+                <div className="text-theme-text">
                   • Tree-sitter AST symbol extraction & lexical ranking
                 </div>
-                <div className="text-[10px] text-linear-text-subtle pt-0.5">
+                <div className="text-[10px] text-theme-text-muted pt-0.5">
                   ✓ Always works, even in air-gapped environments.
                 </div>
               </div>
             </div>
-            <div className="pt-3 mt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono">
-              <span className="text-linear-text-subtle">Provider Cost:</span>
-              <span className="text-linear-success font-semibold">₹0 / $0 (Always Free)</span>
+            <div className="pt-3 mt-3 border-t border-theme-border flex items-center justify-between text-xs font-mono">
+              <span className="text-theme-text-muted">Provider Cost:</span>
+              <span className="text-theme-green font-semibold">₹0 / $0 (Always Free)</span>
             </div>
           </div>
         </div>
@@ -400,20 +400,20 @@ export default function AISettingsPage() {
 
       {/* Mode Details Section */}
       {activeMode === "openai-compatible" && (
-        <Card className="p-6 space-y-6 bg-linear-surface-1 border-linear-border-1">
+        <Card className="p-6 space-y-6 bg-theme-surface border-theme-border">
           <div>
-            <h2 className="text-base font-semibold text-linear-text-main flex items-center gap-2">
-              <Globe className="w-4 h-4 text-linear-accent" />
+            <h2 className="text-base font-semibold text-theme-text flex items-center gap-2">
+              <Globe className="w-4 h-4 text-theme-blue" />
               OpenAI-Compatible Provider (Bring Your Own Key)
             </h2>
-            <p className="text-xs text-linear-text-muted mt-1">
+            <p className="text-xs text-theme-text-muted mt-1">
               Enables neural synthesis on the public Vercel deployment. Enter your credentials below.
             </p>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-mono text-linear-text-secondary block mb-1.5">
+              <label className="text-xs font-mono text-theme-text block mb-1.5">
                 Endpoint Base URL
               </label>
               <Input
@@ -422,13 +422,13 @@ export default function AISettingsPage() {
                 placeholder="https://api.openai.com/v1"
                 className="font-mono text-xs"
               />
-              <p className="text-[11px] text-linear-text-subtle mt-1">
+              <p className="text-[11px] text-theme-text-muted mt-1">
                 Examples: <code>https://api.openai.com/v1</code>, <code>https://api.groq.com/openai/v1</code>, <code>https://openrouter.ai/api/v1</code>
               </p>
             </div>
 
             <div>
-              <label className="text-xs font-mono text-linear-text-secondary block mb-1.5">
+              <label className="text-xs font-mono text-theme-text block mb-1.5">
                 API Key (Stored in sessionStorage ONLY)
               </label>
               <Input
@@ -438,13 +438,13 @@ export default function AISettingsPage() {
                 placeholder="sk-..."
                 className="font-mono text-xs"
               />
-              <p className="text-[11px] text-linear-text-subtle mt-1">
+              <p className="text-[11px] text-theme-text-muted mt-1">
                 🔒 Security guarantee: Stored strictly in browser <code>sessionStorage</code>. Never persisted to databases, disk, or server logs.
               </p>
             </div>
 
             <div>
-              <label className="text-xs font-mono text-linear-text-secondary block mb-1.5">
+              <label className="text-xs font-mono text-theme-text block mb-1.5">
                 Model Identifier
               </label>
               <Input
@@ -453,7 +453,7 @@ export default function AISettingsPage() {
                 placeholder="gpt-4o-mini"
                 className="font-mono text-xs"
               />
-              <p className="text-[11px] text-linear-text-subtle mt-1">
+              <p className="text-[11px] text-theme-text-muted mt-1">
                 Examples: <code>gpt-4o-mini</code>, <code>llama-3.1-70b-versatile</code>, <code>deepseek-chat</code>
               </p>
             </div>
@@ -475,7 +475,7 @@ export default function AISettingsPage() {
                   onClick={clearByoKey}
                   variant="outline"
                   size="sm"
-                  className="gap-1.5 text-linear-danger hover:bg-linear-danger/10"
+                  className="gap-1.5 text-theme-danger hover:bg-linear-danger/10"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   Clear Key
@@ -488,8 +488,8 @@ export default function AISettingsPage() {
               <div
                 className={`p-3.5 rounded-lg border text-xs font-mono ${
                   byoStatus.isAvailable
-                    ? "bg-linear-success/10 border-linear-success/30 text-linear-success"
-                    : "bg-linear-danger/10 border-linear-danger/30 text-linear-danger"
+                    ? "bg-linear-success/10 border-linear-success/30 text-theme-green"
+                    : "bg-linear-danger/10 border-linear-danger/30 text-theme-danger"
                 }`}
               >
                 {byoStatus.isAvailable ? (
@@ -510,20 +510,20 @@ export default function AISettingsPage() {
       )}
 
       {activeMode === "ollama" && (
-        <Card className="p-6 space-y-6 bg-linear-surface-1 border-linear-border-1">
+        <Card className="p-6 space-y-6 bg-theme-surface border-theme-border">
           <div>
-            <h2 className="text-base font-semibold text-linear-text-main flex items-center gap-2">
-              <Laptop className="w-4 h-4 text-linear-accent" />
+            <h2 className="text-base font-semibold text-theme-text flex items-center gap-2">
+              <Laptop className="w-4 h-4 text-theme-blue" />
               Local Ollama Daemon Configuration
             </h2>
-            <p className="text-xs text-linear-text-muted mt-1">
+            <p className="text-xs text-theme-text-muted mt-1">
               Connect to your local workstation daemon. Completely free with zero cloud fees.
             </p>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-mono text-linear-text-secondary block mb-1.5">
+              <label className="text-xs font-mono text-theme-text block mb-1.5">
                 Local Ollama URL
               </label>
               <Input
@@ -535,7 +535,7 @@ export default function AISettingsPage() {
             </div>
 
             <div>
-              <label className="text-xs font-mono text-linear-text-secondary block mb-1.5">
+              <label className="text-xs font-mono text-theme-text block mb-1.5">
                 Model Name
               </label>
               <div className="flex gap-2 mb-2">
@@ -544,8 +544,8 @@ export default function AISettingsPage() {
                   onClick={() => setOllamaModel("qwen2.5-coder:7b")}
                   className={`px-2.5 py-1 rounded text-[11px] font-mono border transition-colors ${
                     ollamaModel === "qwen2.5-coder:7b"
-                      ? "bg-linear-accent/20 border-linear-accent text-linear-accent"
-                      : "bg-linear-surface-2 border-linear-border-1 text-linear-text-muted hover:text-white"
+                      ? "bg-theme-blue/20 border-theme-blue text-theme-blue"
+                      : "bg-theme-surface-alt border-theme-border text-theme-text-muted hover:text-white"
                   }`}
                 >
                   qwen2.5-coder:7b (Recommended)
@@ -555,8 +555,8 @@ export default function AISettingsPage() {
                   onClick={() => setOllamaModel("qwen2.5-coder:1.5b")}
                   className={`px-2.5 py-1 rounded text-[11px] font-mono border transition-colors ${
                     ollamaModel === "qwen2.5-coder:1.5b"
-                      ? "bg-linear-accent/20 border-linear-accent text-linear-accent"
-                      : "bg-linear-surface-2 border-linear-border-1 text-linear-text-muted hover:text-white"
+                      ? "bg-theme-blue/20 border-theme-blue text-theme-blue"
+                      : "bg-theme-surface-alt border-theme-border text-theme-text-muted hover:text-white"
                   }`}
                 >
                   qwen2.5-coder:1.5b (Fast / Low RAM)
@@ -597,20 +597,20 @@ export default function AISettingsPage() {
               <div
                 className={`p-3.5 rounded-lg border text-xs font-mono ${
                   ollamaStatus.isAvailable
-                    ? "bg-linear-success/10 border-linear-success/30 text-linear-success"
-                    : "bg-linear-surface-2 border-linear-border-2 text-linear-text-muted"
+                    ? "bg-linear-success/10 border-linear-success/30 text-theme-green"
+                    : "bg-theme-surface-alt border-theme-border text-theme-text-muted"
                 }`}
               >
                 {ollamaStatus.isAvailable ? (
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 font-bold text-linear-success">
+                    <div className="flex items-center gap-2 font-bold text-theme-green">
                       <CheckCircle className="w-4 h-4 shrink-0" />
                       <span>Connected to Ollama. Detected {ollamaStatus.models.length} local model(s).</span>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2 text-linear-text-muted">
-                    <div className="flex items-center gap-2 text-linear-warning font-semibold">
+                  <div className="space-y-2 text-theme-text-muted">
+                    <div className="flex items-center gap-2 text-theme-warning-text font-semibold">
                       <AlertCircle className="w-4 h-4 shrink-0" />
                       <span>Ollama not detected at {ollamaUrl}</span>
                     </div>
@@ -618,14 +618,14 @@ export default function AISettingsPage() {
                       On the public Vercel deployment, local Ollama is only reachable if you run the app locally.
                       To run local inference on your computer, start Ollama:
                     </p>
-                    <div className="flex items-center justify-between p-2 rounded bg-black/40 border border-white/5 font-mono text-xs">
+                    <div className="flex items-center justify-between p-2 rounded bg-theme-surface-alt border border-theme-border font-mono text-xs">
                       <code>ollama run {ollamaModel}</code>
                       <button
                         type="button"
                         onClick={() => copyCommand(`ollama run ${ollamaModel}`)}
-                        className="text-linear-text-subtle hover:text-white"
+                        className="text-theme-text-muted hover:text-white"
                       >
-                        {copiedCmd ? <Check className="w-3.5 h-3.5 text-linear-success" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedCmd ? <Check className="w-3.5 h-3.5 text-theme-green" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   </div>

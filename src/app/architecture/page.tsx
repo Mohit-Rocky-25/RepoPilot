@@ -138,14 +138,14 @@ export default function ArchitecturePage() {
   if (!currentRepo) {
     return (
       <Card className="p-8 text-center max-w-xl mx-auto my-12 space-y-4">
-        <div className="w-12 h-12 rounded-xl bg-[#5E6AD2]/15 border border-[#5E6AD2]/30 flex items-center justify-center text-[#828FFF] mx-auto shadow-[0_0_16px_rgba(94,106,210,0.25)]">
+        <div className="w-12 h-12 rounded-xl bg-theme-blue/10 border border-theme-blue/30 flex items-center justify-center text-theme-blue mx-auto shadow-xs">
           <Cpu className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-base font-semibold text-[#F7F8F8]">
+          <h2 className="text-base font-semibold text-theme-text">
             No Active Repository
           </h2>
-          <p className="text-xs text-[#8A8F98] mt-1.5 leading-relaxed max-w-md mx-auto">
+          <p className="text-xs text-theme-text-muted mt-1.5 leading-relaxed max-w-md mx-auto">
             Import a public GitHub repository or open a local folder to explore its interactive 3D spatial architecture graph, detect frameworks, and generate an evidence-backed architectural brief.
           </p>
         </div>
@@ -172,10 +172,10 @@ export default function ArchitecturePage() {
   return (
     <div className="space-y-6">
       {/* Title Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#23252A] gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-theme-border gap-3">
         <div>
-          <h1 className="text-lg font-semibold text-[#F7F8F8] font-sans flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-[#5E6AD2]" />
+          <h1 className="text-lg font-semibold text-theme-text font-sans flex items-center gap-2">
+            <Cpu className="w-5 h-5 text-theme-blue" />
             <span>Architecture Intelligence & Spatial Map</span>
             {currentRepo.isLocal && (
               <Badge variant="success" size="sm" className="ml-1">
@@ -183,7 +183,7 @@ export default function ArchitecturePage() {
               </Badge>
             )}
           </h1>
-          <p className="text-xs text-[#8A8F98] mt-0.5 font-mono">
+          <p className="text-xs text-theme-text-muted mt-0.5 font-mono">
             Deterministic AST analysis and spatial hierarchy for {currentRepo.fullName}.
           </p>
         </div>
@@ -202,7 +202,7 @@ export default function ArchitecturePage() {
           <Button
             variant="secondary"
             size="sm"
-            icon={copiedBrief ? <Check className="w-3.5 h-3.5 text-[#27A644]" /> : <Copy className="w-3.5 h-3.5" />}
+            icon={copiedBrief ? <Check className="w-3.5 h-3.5 text-theme-green" /> : <Copy className="w-3.5 h-3.5" />}
             onClick={copyMarkdownBrief}
             disabled={!summary}
             title="Copy Markdown Brief to clipboard"
@@ -213,7 +213,7 @@ export default function ArchitecturePage() {
           <Button
             variant="secondary"
             size="sm"
-            icon={<Download className="w-3.5 h-3.5 text-[#5E6AD2]" />}
+            icon={<Download className="w-3.5 h-3.5 text-theme-blue" />}
             onClick={handleDownloadReport}
             disabled={!summary}
             title="Download complete Markdown audit report (.md)"
@@ -224,7 +224,7 @@ export default function ArchitecturePage() {
           <Button
             variant="secondary"
             size="sm"
-            icon={<Printer className="w-3.5 h-3.5 text-[#828FFF]" />}
+            icon={<Printer className="w-3.5 h-3.5 text-theme-blue" />}
             onClick={handlePrintPdf}
             disabled={!summary}
             title="Print or Save as PDF"
@@ -233,20 +233,20 @@ export default function ArchitecturePage() {
           </Button>
 
           <Badge variant="neutral" size="sm">
-            <GitCommit className="w-3 h-3 mr-1 inline text-[#8A8F98]" />
+            <GitCommit className="w-3 h-3 mr-1 inline text-theme-text-muted" />
             {currentRepo.selectedRevision ? currentRepo.selectedRevision.slice(0, 7) : currentRepo.defaultBranch || "HEAD"}
           </Badge>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-[#23252A] pb-3 font-mono text-xs">
+      <div className="flex flex-wrap items-center gap-2 border-b border-theme-border pb-3 font-mono text-xs">
         <button
           onClick={() => setActiveTab("map")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
             activeTab === "map"
-              ? "bg-[#5E6AD2] text-white"
-              : "bg-[#141516] text-[#8A8F98] hover:text-[#F7F8F8] border border-[#23252A]"
+              ? "bg-theme-blue text-white"
+              : "bg-theme-surface-alt text-theme-text-muted hover:text-theme-text border border-theme-border"
           }`}
         >
           <Network className="w-3.5 h-3.5" />
@@ -257,8 +257,8 @@ export default function ArchitecturePage() {
           onClick={() => setActiveTab("mermaid")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
             activeTab === "mermaid"
-              ? "bg-[#5E6AD2] text-white"
-              : "bg-[#141516] text-[#8A8F98] hover:text-[#F7F8F8] border border-[#23252A]"
+              ? "bg-theme-blue text-white"
+              : "bg-theme-surface-alt text-theme-text-muted hover:text-theme-text border border-theme-border"
           }`}
         >
           <GitBranch className="w-3.5 h-3.5" />
@@ -269,8 +269,8 @@ export default function ArchitecturePage() {
           onClick={() => setActiveTab("brief")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
             activeTab === "brief"
-              ? "bg-[#5E6AD2] text-white"
-              : "bg-[#141516] text-[#8A8F98] hover:text-[#F7F8F8] border border-[#23252A]"
+              ? "bg-theme-blue text-white"
+              : "bg-theme-surface-alt text-theme-text-muted hover:text-theme-text border border-theme-border"
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
@@ -281,11 +281,11 @@ export default function ArchitecturePage() {
           onClick={() => setActiveTab("health")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
             activeTab === "health"
-              ? "bg-[#5E6AD2] text-white"
-              : "bg-[#141516] text-[#8A8F98] hover:text-[#F7F8F8] border border-[#23252A]"
+              ? "bg-theme-blue text-white"
+              : "bg-theme-surface-alt text-theme-text-muted hover:text-theme-text border border-theme-border"
           }`}
         >
-          <ShieldCheck className="w-3.5 h-3.5 text-[#27A644]" />
+          <ShieldCheck className="w-3.5 h-3.5 text-theme-green" />
           <span>Code Health & Scorecard</span>
           {healthScore && (
             <Badge variant="primary" size="sm" className="ml-1 py-0 px-1 text-[10px]">
@@ -296,13 +296,13 @@ export default function ArchitecturePage() {
       </div>
 
       {loading ? (
-        <div className="h-72 flex flex-col items-center justify-center border border-[#23252A] rounded-xl bg-[#0F1011] text-xs font-mono text-[#8A8F98] gap-3">
-          <Loader2 className="w-6 h-6 animate-spin text-[#5E6AD2]" />
+        <div className="h-72 flex flex-col items-center justify-center border border-theme-border rounded-xl bg-theme-surface text-xs font-mono text-theme-text-muted gap-3">
+          <Loader2 className="w-6 h-6 animate-spin text-theme-blue" />
           <span>Analyzing repository AST, manifests, and spatial hierarchy...</span>
         </div>
       ) : error ? (
-        <div className="p-5 rounded-xl bg-red-950/20 border border-red-900/40 text-[#EF4444] text-xs font-mono flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0 text-[#EF4444]" />
+        <div className="p-5 rounded-xl bg-theme-danger/10 border border-theme-danger/20 text-theme-danger text-xs font-mono flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0 text-theme-danger" />
           <span>{error}</span>
         </div>
       ) : summary ? (
@@ -310,17 +310,17 @@ export default function ArchitecturePage() {
           {/* Top Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <Card className="p-4 space-y-1">
-              <span className="text-[11px] font-mono text-[#62666D] uppercase">
+              <span className="text-[11px] font-mono text-theme-text-muted uppercase">
                 Primary Language
               </span>
-              <div className="text-base font-semibold text-[#F7F8F8] font-mono flex items-center gap-2">
-                <Code className="w-4 h-4 text-[#5E6AD2]" />
+              <div className="text-base font-semibold text-theme-text font-mono flex items-center gap-2">
+                <Code className="w-4 h-4 text-theme-blue" />
                 <span>{summary.primaryLanguage || "Multi-language"}</span>
               </div>
             </Card>
 
             <Card className="p-4 space-y-1">
-              <span className="text-[11px] font-mono text-[#62666D] uppercase">
+              <span className="text-[11px] font-mono text-theme-text-muted uppercase">
                 Detected Frameworks
               </span>
               <div className="flex flex-wrap gap-1.5 pt-1">
@@ -331,7 +331,7 @@ export default function ArchitecturePage() {
                     </Badge>
                   ))
                 ) : (
-                  <span className="text-xs text-[#8A8F98] font-mono">
+                  <span className="text-xs text-theme-text-muted font-mono">
                     Standard Library
                   </span>
                 )}
@@ -339,33 +339,33 @@ export default function ArchitecturePage() {
             </Card>
 
             <Card
-              className="p-4 space-y-1 cursor-pointer hover:border-[#5E6AD2]/50 hover:bg-[#141516] transition-all group"
+              className="p-4 space-y-1 cursor-pointer hover:border-theme-blue/40 hover:bg-theme-surface-alt transition-all group"
               onClick={() => setActiveTab("brief")}
               title="Click to view identified application entry points in brief"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-mono text-[#62666D] group-hover:text-[#8A8F98] uppercase">
+                <span className="text-[11px] font-mono text-theme-text-muted group-hover:text-theme-text-muted uppercase">
                   Identified Entry Points
                 </span>
-                <ArrowUpRight className="w-3.5 h-3.5 text-[#52525A] group-hover:text-[#828FFF] transition-colors" />
+                <ArrowUpRight className="w-3.5 h-3.5 text-theme-text-muted group-hover:text-theme-blue transition-colors" />
               </div>
-              <div className="text-base font-semibold text-[#F7F8F8] font-mono group-hover:text-[#828FFF] transition-colors">
+              <div className="text-base font-semibold text-theme-text font-mono group-hover:text-theme-blue transition-colors">
                 {summary.entryPoints.length} Files
               </div>
             </Card>
 
             <Card
-              className="p-4 space-y-1 cursor-pointer hover:border-[#5E6AD2]/50 hover:bg-[#141516] transition-all group"
+              className="p-4 space-y-1 cursor-pointer hover:border-theme-blue/40 hover:bg-theme-surface-alt transition-all group"
               onClick={() => setActiveTab("brief")}
               title="Click to view modular directory roles in brief"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-mono text-[#62666D] group-hover:text-[#8A8F98] uppercase">
+                <span className="text-[11px] font-mono text-theme-text-muted group-hover:text-theme-text-muted uppercase">
                   Modular Hierarchy
                 </span>
-                <ArrowUpRight className="w-3.5 h-3.5 text-[#52525A] group-hover:text-[#828FFF] transition-colors" />
+                <ArrowUpRight className="w-3.5 h-3.5 text-theme-text-muted group-hover:text-theme-blue transition-colors" />
               </div>
-              <div className="text-base font-semibold text-[#F7F8F8] font-mono group-hover:text-[#828FFF] transition-colors">
+              <div className="text-base font-semibold text-theme-text font-mono group-hover:text-theme-blue transition-colors">
                 {summary.keyModules.length} Modules
               </div>
             </Card>
@@ -398,12 +398,12 @@ export default function ArchitecturePage() {
               <Card className="p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <FileCode className="w-4 h-4 text-[#5E6AD2]" />
-                    <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono uppercase">
+                    <FileCode className="w-4 h-4 text-theme-blue" />
+                    <h2 className="text-sm font-semibold text-theme-text font-mono uppercase">
                       Application Entry Points ({summary.entryPoints.length})
                     </h2>
                   </div>
-                  <span className="text-[11px] font-mono text-[#8A8F98]">
+                  <span className="text-[11px] font-mono text-theme-text-muted">
                     Click any entrypoint to inspect in Code Explorer
                   </span>
                 </div>
@@ -419,7 +419,7 @@ export default function ArchitecturePage() {
                         <Link
                           key={ep}
                           href={epUrl}
-                          className="p-2.5 rounded-lg bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#5E6AD2]/50 text-[#828FFF] flex items-center justify-between group transition-all cursor-pointer"
+                          className="p-2.5 rounded-lg bg-theme-surface-alt hover:bg-theme-surface-alt border border-theme-border hover:border-theme-blue/40 text-theme-blue flex items-center justify-between group transition-all cursor-pointer"
                           title={`Open ${cleanEp} in Code Explorer`}
                         >
                           <span className="truncate group-hover:text-white transition-colors">{cleanEp}</span>
@@ -427,14 +427,14 @@ export default function ArchitecturePage() {
                             <Badge variant="primary" size="sm">
                               Entry
                             </Badge>
-                            <ArrowUpRight className="w-3.5 h-3.5 text-[#52525A] group-hover:text-[#828FFF] transition-colors" />
+                            <ArrowUpRight className="w-3.5 h-3.5 text-theme-text-muted group-hover:text-theme-blue transition-colors" />
                           </div>
                         </Link>
                       );
                     })}
                   </div>
                 ) : (
-                  <div className="p-4 text-center text-xs text-[#62666D] font-mono">
+                  <div className="p-4 text-center text-xs text-theme-text-muted font-mono">
                     No conventional entry point files detected.
                   </div>
                 )}
@@ -444,17 +444,17 @@ export default function ArchitecturePage() {
               <Card className="p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <FolderTree className="w-4 h-4 text-[#5E6AD2]" />
-                    <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono uppercase">
+                    <FolderTree className="w-4 h-4 text-theme-blue" />
+                    <h2 className="text-sm font-semibold text-theme-text font-mono uppercase">
                       Module Roles & Responsibilities (Inferred)
                     </h2>
                   </div>
-                  <span className="text-[11px] font-mono text-[#8A8F98]">
+                  <span className="text-[11px] font-mono text-theme-text-muted">
                     Click any directory or files badge to open in Code Explorer
                   </span>
                 </div>
 
-                <div className="divide-y divide-[#23252A] border border-[#23252A] rounded-xl overflow-hidden font-mono text-xs">
+                <div className="divide-y divide-theme-border border border-theme-border rounded-xl overflow-hidden font-mono text-xs">
                   {summary.keyModules.map((mod) => {
                     const cleanDir = mod.directory.replace(/^\/+|\/+$/g, "");
                     const exploreUrl = currentRepo && !currentRepo.isLocal
@@ -465,15 +465,15 @@ export default function ArchitecturePage() {
                       <Link
                         key={mod.directory}
                         href={exploreUrl}
-                        className="flex items-center justify-between p-3.5 bg-[#0F1011] hover:bg-[#18191A] transition-all group cursor-pointer border-b border-[#23252A] last:border-b-0"
+                        className="flex items-center justify-between p-3.5 bg-theme-surface hover:bg-theme-surface-alt transition-all group cursor-pointer border-b border-theme-border last:border-b-0"
                         title={`Explore ${cleanDir}/ (${mod.fileCount} files) in Code Explorer`}
                       >
                         <div className="flex items-center gap-2.5 truncate">
-                          <Folder className="w-4 h-4 text-[#5E6AD2] shrink-0 group-hover:text-[#828FFF] transition-colors" />
-                          <span className="font-semibold text-[#F7F8F8] group-hover:text-[#828FFF] transition-colors">
+                          <Folder className="w-4 h-4 text-theme-blue shrink-0 group-hover:text-theme-blue transition-colors" />
+                          <span className="font-semibold text-theme-text group-hover:text-theme-blue transition-colors">
                             {cleanDir}/
                           </span>
-                          <span className="text-[#8A8F98] text-[11px] group-hover:text-[#CBD5E1] transition-colors">
+                          <span className="text-theme-text-muted text-[11px] group-hover:text-theme-text transition-colors">
                             ({mod.description})
                           </span>
                         </div>
@@ -481,11 +481,11 @@ export default function ArchitecturePage() {
                           <Badge
                             variant="neutral"
                             size="sm"
-                            className="group-hover:border-[#5E6AD2]/50 group-hover:text-white transition-colors"
+                            className="group-hover:border-theme-blue/40 group-hover:text-white transition-colors"
                           >
                             {mod.fileCount} files
                           </Badge>
-                          <ArrowUpRight className="w-3.5 h-3.5 text-[#52525A] group-hover:text-[#828FFF] transition-colors" />
+                          <ArrowUpRight className="w-3.5 h-3.5 text-theme-text-muted group-hover:text-theme-blue transition-colors" />
                         </div>
                       </Link>
                     );
@@ -498,12 +498,12 @@ export default function ArchitecturePage() {
                 <Card className="p-5 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-[#5E6AD2]" />
-                      <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono uppercase">
+                      <FileText className="w-4 h-4 text-theme-blue" />
+                      <h2 className="text-sm font-semibold text-theme-text font-mono uppercase">
                         Configuration & Manifest Files ({summary.manifestFiles.length})
                       </h2>
                     </div>
-                    <span className="text-[11px] font-mono text-[#8A8F98]">
+                    <span className="text-[11px] font-mono text-theme-text-muted">
                       Click to open file in Code Explorer
                     </span>
                   </div>
@@ -518,14 +518,14 @@ export default function ArchitecturePage() {
                         <Link
                           key={mf}
                           href={mfUrl}
-                          className="p-2.5 rounded-lg bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#5E6AD2]/50 text-[#F7F8F8] flex items-center justify-between group transition-all cursor-pointer"
+                          className="p-2.5 rounded-lg bg-theme-surface-alt hover:bg-theme-surface-alt border border-theme-border hover:border-theme-blue/40 text-theme-text flex items-center justify-between group transition-all cursor-pointer"
                           title={`Open ${cleanMf} in Code Explorer`}
                         >
                           <div className="flex items-center gap-2 truncate">
-                            <FileCode className="w-3.5 h-3.5 text-[#5E6AD2] shrink-0" />
-                            <span className="truncate group-hover:text-[#828FFF] transition-colors font-medium">{cleanMf}</span>
+                            <FileCode className="w-3.5 h-3.5 text-theme-blue shrink-0" />
+                            <span className="truncate group-hover:text-theme-blue transition-colors font-medium">{cleanMf}</span>
                           </div>
-                          <ArrowUpRight className="w-3.5 h-3.5 text-[#52525A] group-hover:text-[#828FFF] transition-colors" />
+                          <ArrowUpRight className="w-3.5 h-3.5 text-theme-text-muted group-hover:text-theme-blue transition-colors" />
                         </Link>
                       );
                     })}
@@ -538,12 +538,12 @@ export default function ArchitecturePage() {
                 <Card className="p-5 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Box className="w-4 h-4 text-[#5E6AD2]" />
-                      <h2 className="text-sm font-semibold text-[#F7F8F8] font-mono uppercase">
+                      <Box className="w-4 h-4 text-theme-blue" />
+                      <h2 className="text-sm font-semibold text-theme-text font-mono uppercase">
                         Declared Dependencies ({summary.dependencies.length})
                       </h2>
                     </div>
-                    <span className="text-[11px] font-mono text-[#8A8F98]">
+                    <span className="text-[11px] font-mono text-theme-text-muted">
                       Click to search package registry
                     </span>
                   </div>
@@ -555,17 +555,17 @@ export default function ArchitecturePage() {
                         href={`https://www.google.com/search?q=${encodeURIComponent(dep.name + " " + (summary.primaryLanguage || "") + " package")}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="p-2.5 rounded-lg bg-[#141516] hover:bg-[#18191A] border border-[#23252A] hover:border-[#38BDF8]/50 flex items-center justify-between group transition-all cursor-pointer"
+                        className="p-2.5 rounded-lg bg-theme-surface-alt hover:bg-theme-surface-alt border border-theme-border hover:border-theme-blue/40 flex items-center justify-between group transition-all cursor-pointer"
                         title={`Search package documentation for ${dep.name}`}
                       >
-                        <span className="text-[#F7F8F8] group-hover:text-[#38BDF8] truncate font-medium transition-colors">
+                        <span className="text-theme-text group-hover:text-theme-blue truncate font-medium transition-colors">
                           {dep.name}
                         </span>
                         <div className="flex items-center gap-1.5 shrink-0">
                           <Badge variant={dep.isDev ? "neutral" : "primary"} size="sm">
                             {dep.isDev ? "dev" : "prod"}
                           </Badge>
-                          <ExternalLink className="w-3 h-3 text-[#52525A] group-hover:text-[#38BDF8] transition-colors" />
+                          <ExternalLink className="w-3 h-3 text-theme-text-muted group-hover:text-theme-blue transition-colors" />
                         </div>
                       </a>
                     ))}
@@ -579,19 +579,19 @@ export default function ArchitecturePage() {
           {activeTab === "health" && healthScore && (
             <div className="space-y-6">
               {/* Grade Hero Card */}
-              <Card className="p-6 bg-gradient-to-br from-[#141516] to-[#0F1011] border border-[#23252A] flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <Card className="p-6 bg-theme-surface border border-theme-border flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                 <div className="flex items-center gap-5">
-                  <div className="w-16 h-16 rounded-2xl bg-[#5E6AD2]/15 border border-[#5E6AD2]/30 flex items-center justify-center text-2xl font-bold font-mono text-[#828FFF] shadow-[0_0_24px_rgba(94,106,210,0.3)]">
+                  <div className="w-16 h-16 rounded-2xl bg-theme-blue/10 border border-theme-blue/30 flex items-center justify-center text-2xl font-bold font-mono text-theme-blue shadow-xs">
                     {healthScore.grade}
                   </div>
                   <div>
-                    <h2 className="text-base font-semibold text-[#F7F8F8] flex items-center gap-2">
+                    <h2 className="text-base font-semibold text-theme-text flex items-center gap-2">
                       <span>Codebase Health & Hygiene Rating</span>
                       <Badge variant="primary" size="sm">
                         {healthScore.score} / {healthScore.maxScore} Checks Passing
                       </Badge>
                     </h2>
-                    <p className="text-xs text-[#8A8F98] mt-1 font-mono">
+                    <p className="text-xs text-theme-text-muted mt-1 font-mono">
                       Deterministic verification of test coverage, licensing, version hygiene, and continuous integration.
                     </p>
                   </div>
@@ -619,27 +619,27 @@ export default function ArchitecturePage() {
 
               {/* Inspection Checks Breakdown */}
               <Card className="p-5 space-y-4">
-                <h3 className="text-xs font-mono font-semibold text-[#D0D6E0] uppercase tracking-wider">
+                <h3 className="text-xs font-mono font-semibold text-theme-text uppercase tracking-wider">
                   Deterministic Audit Checks Breakdown
                 </h3>
 
-                <div className="divide-y divide-[#23252A] border border-[#23252A] rounded-xl overflow-hidden font-mono text-xs">
+                <div className="divide-y divide-theme-border border border-theme-border rounded-xl overflow-hidden font-mono text-xs">
                   {healthScore.checks.map((check) => (
                     <div
                       key={check.name}
-                      className="p-4 flex items-start justify-between gap-4 bg-[#0F1011] hover:bg-[#141516]/60 transition-colors"
+                      className="p-4 flex items-start justify-between gap-4 bg-theme-surface hover:bg-theme-surface-alt/60 transition-colors"
                     >
                       <div className="flex items-start gap-3">
                         {check.passed ? (
-                          <CheckCircle2 className="w-4 h-4 text-[#27A644] shrink-0 mt-0.5" />
+                          <CheckCircle2 className="w-4 h-4 text-theme-green shrink-0 mt-0.5" />
                         ) : (
-                          <XCircle className="w-4 h-4 text-[#EF4444] shrink-0 mt-0.5" />
+                          <XCircle className="w-4 h-4 text-theme-danger shrink-0 mt-0.5" />
                         )}
                         <div>
-                          <span className="font-semibold text-[#F7F8F8] block">
+                          <span className="font-semibold text-theme-text block">
                             {check.name}
                           </span>
-                          <span className="text-[11px] text-[#8A8F98] mt-0.5 block leading-relaxed">
+                          <span className="text-[11px] text-theme-text-muted mt-0.5 block leading-relaxed">
                             {check.reason}
                           </span>
                         </div>

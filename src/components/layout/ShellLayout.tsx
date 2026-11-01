@@ -4,6 +4,7 @@ import React from "react";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { ImportModal } from "@/components/modals/ImportModal";
+import { TopColorBar } from "@/components/ui/signature/TopColorBar";
 import { useRepository } from "@/context/RepositoryContext";
 import { usePathname } from "next/navigation";
 
@@ -20,7 +21,8 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
 
   if (isLandingPage) {
     return (
-      <div className="min-h-screen w-full bg-[#010102] text-[#F7F8F8] font-sans antialiased selection:bg-[#5E6AD2]/30 selection:text-[#F7F8F8]">
+      <div className="min-h-screen w-full bg-theme-bg text-theme-text font-sans antialiased selection:bg-theme-blue/20 selection:text-theme-blue">
+        <TopColorBar />
         {children}
         <ImportModal />
       </div>
@@ -28,25 +30,30 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#010102] text-[#F7F8F8] font-sans antialiased selection:bg-[#5E6AD2]/30 selection:text-[#F7F8F8]">
-      {/* Pinned Left Sidebar */}
-      <Sidebar />
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-theme-bg text-theme-text font-sans antialiased selection:bg-theme-blue/20 selection:text-theme-blue">
+      {/* Signature Top 4-Color Bar */}
+      <TopColorBar />
 
-      {/* Main Content Area */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-[#010102]">
-        {/* Top Header */}
-        <Header
-          currentRepo={currentRepo}
-          onOpenImport={() => setIsImportModalOpen(true)}
-          rateLimit={rateLimit}
-          aiStatus={aiConfig.isAvailable ? "ready" : "offline"}
-          authStatus={authStatus}
-        />
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Pinned Left Sidebar */}
+        <Sidebar />
 
-        {/* Dynamic Page Content */}
-        <main className="flex-1 overflow-y-auto bg-[#010102] p-6 lg:p-8">
-          <div className="max-w-[1340px] mx-auto">{children}</div>
-        </main>
+        {/* Main Content Area */}
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-theme-bg">
+          {/* Top Header */}
+          <Header
+            currentRepo={currentRepo}
+            onOpenImport={() => setIsImportModalOpen(true)}
+            rateLimit={rateLimit}
+            aiStatus={aiConfig.isAvailable ? "ready" : "offline"}
+            authStatus={authStatus}
+          />
+
+          {/* Dynamic Page Content */}
+          <main className="flex-1 overflow-y-auto bg-theme-bg p-6 lg:p-8">
+            <div className="max-w-[1340px] mx-auto">{children}</div>
+          </main>
+        </div>
       </div>
 
       {/* Modals */}

@@ -191,7 +191,7 @@ export default function ExamplesPage() {
               router.push("/");
             }
           }}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F1011] hover:bg-[#141516] border border-[#23252A] hover:border-[#34343A] text-xs font-mono text-[#8A8F98] hover:text-[#F7F8F8] transition-all cursor-pointer shadow-xs"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-surface hover:bg-theme-surface-alt border border-theme-border text-xs font-mono text-theme-text-muted hover:text-theme-text transition-all cursor-pointer shadow-xs"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Go Back</span>
@@ -200,14 +200,14 @@ export default function ExamplesPage() {
         <div className="flex items-center gap-2">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F1011] hover:bg-[#141516] border border-[#23252A] hover:border-[#34343A] text-xs font-mono text-[#8A8F98] hover:text-[#F7F8F8] transition-all shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-surface hover:bg-theme-surface-alt border border-theme-border text-xs font-mono text-theme-text-muted hover:text-theme-text transition-all shadow-xs"
           >
-            <Home className="w-3.5 h-3.5 text-[#828FFF]" />
+            <Home className="w-3.5 h-3.5 text-theme-blue" />
             <span>Home</span>
           </Link>
           <Link
             href="/explore"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#5E6AD2] hover:bg-[#6875E5] text-xs font-mono text-white transition-all shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-blue hover:bg-theme-blue-hover text-xs font-mono text-white transition-all shadow-xs"
           >
             <Compass className="w-3.5 h-3.5" />
             <span>Explorer</span>
@@ -216,24 +216,24 @@ export default function ExamplesPage() {
       </div>
 
       {/* Header Banner */}
-      <div className="p-6 rounded-xl bg-linear-surface-1 border border-linear-border-1 space-y-3">
-        <div className="flex items-center gap-2 text-linear-accent font-mono text-xs uppercase font-semibold">
+      <div className="p-6 rounded-xl bg-theme-surface border border-theme-border space-y-3 shadow-xs">
+        <div className="flex items-center gap-2 text-theme-blue font-mono text-xs uppercase font-semibold">
           <Sparkles className="w-4 h-4" />
           <span>Deterministic Benchmark & Demo Gallery</span>
         </div>
-        <h1 className="text-xl font-semibold text-linear-text-main font-mono">
+        <h1 className="text-xl font-semibold text-theme-text font-mono">
           Precomputed Repository Intelligence Examples
         </h1>
-        <p className="text-xs text-linear-text-muted leading-relaxed">
+        <p className="text-xs text-theme-text-muted leading-relaxed">
           Explore complete codebase architectures, AST-extracted symbols, and evidence-grounded Q&A benchmarks across 3 major open-source ecosystems. <strong>Zero API keys and zero GitHub rate limits required.</strong>
         </p>
 
         <div className="flex flex-wrap items-center gap-3 pt-2">
-          <Badge variant="neutral" className="bg-[#141516] border-emerald-500/30 text-emerald-400 gap-1.5">
+          <Badge variant="success" size="sm" className="gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Offline / BYO-Key Compatible</span>
           </Badge>
-          <Badge variant="neutral" className="bg-[#141516] border-indigo-500/30 text-indigo-400 gap-1.5">
+          <Badge variant="neutral" size="sm" className="gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>Pinned Immutable Commit SHAs</span>
           </Badge>
@@ -250,17 +250,17 @@ export default function ExamplesPage() {
               onClick={() => setSelectedRepoId(repo.id)}
               className={`p-4 rounded-xl text-left border transition-all cursor-pointer ${
                 isSelected
-                  ? "bg-linear-surface-2 border-linear-accent shadow-xs"
-                  : "bg-linear-surface-1 border-linear-border-1 hover:border-linear-border-2"
+                  ? "bg-theme-surface-alt border-theme-blue shadow-xs"
+                  : "bg-theme-surface border-theme-border hover:border-theme-border"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-semibold text-linear-text-main">{repo.name}</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141516] text-[#8A8F98] border border-[#23252A]">
+                <span className="text-xs font-mono font-semibold text-theme-text">{repo.name}</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-theme-surface-alt text-theme-text-muted border border-theme-border">
                   {repo.language}
                 </span>
               </div>
-              <p className="text-[11px] text-linear-text-muted mt-2 line-clamp-2">
+              <p className="text-[11px] text-theme-text-muted mt-2 line-clamp-2">
                 {repo.description}
               </p>
             </button>
@@ -271,21 +271,21 @@ export default function ExamplesPage() {
       {/* Selected Repository Detail Card */}
       <div className="space-y-6">
         {/* Repo Header & Quick Explore */}
-        <Card className="p-6 bg-linear-surface-1 border-linear-border-1 space-y-4">
+        <Card className="p-6 bg-theme-surface border-theme-border space-y-4 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-linear-text-main font-mono">{currentRepo.name}</h2>
-                <Badge variant="neutral" className="font-mono text-[10px]">
+                <h2 className="text-lg font-semibold text-theme-text font-mono">{currentRepo.name}</h2>
+                <Badge variant="neutral" size="sm" className="font-mono text-[10px]">
                   SHA: {currentRepo.commitSha.slice(0, 8)}
                 </Badge>
               </div>
-              <p className="text-xs text-linear-text-muted mt-1">{currentRepo.description}</p>
+              <p className="text-xs text-theme-text-muted mt-1">{currentRepo.description}</p>
             </div>
 
             <Link
               href={`/explore?owner=${currentRepo.owner}&repo=${currentRepo.repo}`}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-linear-accent hover:bg-linear-accent/90 text-white font-mono text-xs font-semibold shadow-xs transition-all"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-theme-blue hover:bg-theme-blue-hover text-white font-mono text-xs font-semibold shadow-xs transition-all"
             >
               <Compass className="w-4 h-4" />
               <span>Explore {currentRepo.repo}</span>
@@ -294,40 +294,40 @@ export default function ExamplesPage() {
         </Card>
 
         {/* Section 1: Architecture Evidence Brief */}
-        <Card className="p-6 bg-linear-surface-1 border-linear-border-1 space-y-4">
-          <div className="flex items-center gap-2 text-linear-accent font-mono text-xs font-semibold uppercase">
+        <Card className="p-6 bg-theme-surface border-theme-border space-y-4 shadow-xs">
+          <div className="flex items-center gap-2 text-theme-blue font-mono text-xs font-semibold uppercase">
             <Layers className="w-4 h-4" />
             <span>Architecture Evidence Brief</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
-            <div className="p-3 rounded-lg bg-linear-surface-2 border border-linear-border-1 space-y-1">
-              <span className="text-[10px] text-linear-text-muted uppercase">Framework</span>
-              <p className="font-semibold text-linear-text-main">{currentRepo.architecture.primaryFramework}</p>
+            <div className="p-3 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1">
+              <span className="text-[10px] text-theme-text-muted uppercase">Framework</span>
+              <p className="font-semibold text-theme-text">{currentRepo.architecture.primaryFramework}</p>
             </div>
-            <div className="p-3 rounded-lg bg-linear-surface-2 border border-linear-border-1 space-y-1">
-              <span className="text-[10px] text-linear-text-muted uppercase">Manifest</span>
-              <p className="font-semibold text-linear-text-main">{currentRepo.architecture.manifest}</p>
+            <div className="p-3 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1">
+              <span className="text-[10px] text-theme-text-muted uppercase">Manifest</span>
+              <p className="font-semibold text-theme-text">{currentRepo.architecture.manifest}</p>
             </div>
-            <div className="p-3 rounded-lg bg-linear-surface-2 border border-linear-border-1 space-y-1">
-              <span className="text-[10px] text-linear-text-muted uppercase">Primary Language</span>
-              <p className="font-semibold text-linear-text-main">{currentRepo.language}</p>
+            <div className="p-3 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1">
+              <span className="text-[10px] text-theme-text-muted uppercase">Primary Language</span>
+              <p className="font-semibold text-theme-text">{currentRepo.language}</p>
             </div>
           </div>
 
           <div className="space-y-2 pt-2">
-            <span className="text-xs font-mono font-semibold text-linear-text-main flex items-center gap-1.5">
-              <FolderTree className="w-3.5 h-3.5 text-linear-accent" />
+            <span className="text-xs font-mono font-semibold text-theme-text flex items-center gap-1.5">
+              <FolderTree className="w-3.5 h-3.5 text-theme-blue" />
               <span>Classified Directory Roles</span>
             </span>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {currentRepo.architecture.moduleRoles.map((m, idx) => (
-                <div key={idx} className="p-3 rounded-lg bg-linear-surface-2/60 border border-linear-border-1 space-y-1">
+                <div key={idx} className="p-3 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-semibold text-indigo-400">{m.dir}</span>
-                    <Badge variant="neutral" className="text-[9px] px-1.5 py-0">{m.role}</Badge>
+                    <span className="font-mono text-xs font-semibold text-theme-blue">{m.dir}</span>
+                    <Badge variant="neutral" size="sm" className="text-[9px] px-1.5 py-0">{m.role}</Badge>
                   </div>
-                  <p className="text-[11px] text-linear-text-muted leading-tight">{m.desc}</p>
+                  <p className="text-[11px] text-theme-text-muted leading-tight">{m.desc}</p>
                 </div>
               ))}
             </div>
@@ -335,23 +335,23 @@ export default function ExamplesPage() {
         </Card>
 
         {/* Section 2: Key Extracted AST Symbols */}
-        <Card className="p-6 bg-linear-surface-1 border-linear-border-1 space-y-4">
-          <div className="flex items-center gap-2 text-linear-accent font-mono text-xs font-semibold uppercase">
+        <Card className="p-6 bg-theme-surface border-theme-border space-y-4 shadow-xs">
+          <div className="flex items-center gap-2 text-theme-blue font-mono text-xs font-semibold uppercase">
             <Code2 className="w-4 h-4" />
             <span>AST-Extracted Core Symbols (Pinned Verification)</span>
           </div>
 
           <div className="space-y-2.5">
             {currentRepo.keySymbols.map((sym, idx) => (
-              <div key={idx} className="p-3 rounded-lg bg-linear-surface-2 border border-linear-border-1 space-y-1.5 font-mono">
+              <div key={idx} className="p-3 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1.5 font-mono">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-linear-text-main">{sym.name}</span>
-                    <Badge variant="neutral" className="text-[9px] uppercase px-1.5">{sym.kind}</Badge>
+                    <span className="text-xs font-bold text-theme-text">{sym.name}</span>
+                    <Badge variant="neutral" size="sm" className="text-[9px] uppercase px-1.5">{sym.kind}</Badge>
                   </div>
-                  <span className="text-[11px] text-linear-text-muted">{sym.file}:{sym.line}</span>
+                  <span className="text-[11px] text-theme-text-muted">{sym.file}:{sym.line}</span>
                 </div>
-                <div className="p-2 rounded bg-[#0F1011] border border-[#23252A] text-[11px] text-emerald-400 overflow-x-auto">
+                <div className="p-2 rounded bg-theme-surface border border-theme-border text-[11px] text-theme-green overflow-x-auto">
                   <code>{sym.signature}</code>
                 </div>
               </div>
@@ -360,32 +360,32 @@ export default function ExamplesPage() {
         </Card>
 
         {/* Section 3: Grounded Q&A with Strict Citations */}
-        <Card className="p-6 bg-linear-surface-1 border-linear-border-1 space-y-4">
-          <div className="flex items-center gap-2 text-linear-accent font-mono text-xs font-semibold uppercase">
+        <Card className="p-6 bg-theme-surface border-theme-border space-y-4 shadow-xs">
+          <div className="flex items-center gap-2 text-theme-blue font-mono text-xs font-semibold uppercase">
             <HelpCircle className="w-4 h-4" />
             <span>Grounded Q&A Benchmarks with Verified Citations</span>
           </div>
 
           <div className="space-y-4">
             {currentRepo.sampleQA.map((qa, idx) => (
-              <div key={idx} className="p-4 rounded-xl bg-linear-surface-2 border border-linear-border-1 space-y-2.5">
+              <div key={idx} className="p-4 rounded-xl bg-theme-surface-alt border border-theme-border space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-xs font-mono font-semibold text-linear-text-main flex items-center gap-2">
-                    <span className="text-linear-accent">Q:</span>
+                  <h3 className="text-xs font-mono font-semibold text-theme-text flex items-center gap-2">
+                    <span className="text-theme-blue">Q:</span>
                     <span>{qa.question}</span>
                   </h3>
-                  <Badge variant="neutral" className="bg-amber-500/10 text-amber-300 border-amber-500/30 text-[10px] font-mono shrink-0">
+                  <Badge variant="warning" size="sm" className="text-[10px] font-mono shrink-0">
                     Pre-recorded example
                   </Badge>
                 </div>
-                <p className="text-xs text-linear-text-muted leading-relaxed pl-5 border-l-2 border-linear-border-2">
+                <p className="text-xs text-theme-text-muted leading-relaxed pl-5 border-l-2 border-theme-border">
                   {qa.answer}
                 </p>
 
                 <div className="pt-2 pl-5 flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-mono text-linear-text-muted">Verified Citations:</span>
+                  <span className="text-[10px] font-mono text-theme-text-muted">Verified Citations:</span>
                   {qa.citations.map((c, cIdx) => (
-                    <Badge key={cIdx} variant="neutral" className="font-mono text-[10px] bg-[#141516] text-[#828FFF] border-[#23252A]">
+                    <Badge key={cIdx} variant="neutral" size="sm" className="font-mono text-[10px] bg-theme-surface text-theme-blue border-theme-border">
                       [{c.file}:{c.lines}{c.symbol ? `#${c.symbol}` : ""}]
                     </Badge>
                   ))}

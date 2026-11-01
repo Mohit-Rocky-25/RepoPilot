@@ -41,15 +41,15 @@ export default function PatchesPage() {
 
   if (!currentRepo) {
     return (
-      <Card className="p-8 text-center max-w-xl mx-auto my-12 space-y-4 bg-linear-surface-1 border border-linear-border-1">
-        <div className="w-12 h-12 rounded-full bg-linear-accent/15 border border-linear-accent/30 flex items-center justify-center text-linear-accent mx-auto">
+      <Card className="p-8 text-center max-w-xl mx-auto my-12 space-y-4 bg-theme-surface border border-theme-border">
+        <div className="w-12 h-12 rounded-full bg-theme-blue/15 border border-theme-blue/30 flex items-center justify-center text-theme-blue mx-auto">
           <GitPullRequest className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-base font-semibold text-linear-text-main">
+          <h2 className="text-base font-semibold text-theme-text">
             No Active Repository
           </h2>
-          <p className="text-xs text-linear-text-muted mt-1 leading-relaxed">
+          <p className="text-xs text-theme-text-muted mt-1 leading-relaxed">
             Import a public GitHub repository to review proposed candidate diffs, regression test recommendations, and export reproducible PR drafts.
           </p>
         </div>
@@ -99,13 +99,13 @@ ${activeInvestigation.suggestedTests?.map(t => `- [ ] ${t}`).join("\n") || "- [ 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-linear-border-1 gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-theme-border gap-2">
         <div>
-          <h1 className="text-lg font-semibold text-linear-text-main font-mono flex items-center gap-2">
-            <GitPullRequest className="w-5 h-5 text-linear-accent" />
+          <h1 className="text-lg font-semibold text-theme-text font-mono flex items-center gap-2">
+            <GitPullRequest className="w-5 h-5 text-theme-blue" />
             <span>Patch Review & Pull Request Export</span>
           </h1>
-          <p className="text-xs text-linear-text-muted mt-0.5">
+          <p className="text-xs text-theme-text-muted mt-0.5">
             Review candidate minimal unified diffs and prepare reproducible PR drafts for {currentRepo.owner}/{currentRepo.repo}.
           </p>
         </div>
@@ -115,7 +115,7 @@ ${activeInvestigation.suggestedTests?.map(t => `- [ ] ${t}`).join("\n") || "- [ 
             <Button
               variant="ghost"
               size="sm"
-              icon={<Trash2 className="w-3.5 h-3.5 text-linear-text-muted" />}
+              icon={<Trash2 className="w-3.5 h-3.5 text-theme-text-muted" />}
               onClick={() => setActiveInvestigation(null)}
             >
               Clear Candidate
@@ -128,13 +128,13 @@ ${activeInvestigation.suggestedTests?.map(t => `- [ ] ${t}`).join("\n") || "- [ 
       </div>
 
       {/* Safety Notice */}
-      <div className="p-4 rounded-lg bg-linear-surface-1 border border-linear-border-1 flex items-start gap-3">
-        <AlertTriangle className="w-4 h-4 text-linear-warning shrink-0 mt-0.5" />
+      <div className="p-4 rounded-lg bg-theme-surface border border-theme-border flex items-start gap-3">
+        <AlertTriangle className="w-4 h-4 text-theme-warning-text shrink-0 mt-0.5" />
         <div className="text-xs font-mono space-y-1">
-          <span className="text-linear-text-main font-semibold block">
+          <span className="text-theme-text font-semibold block">
             Zero-Budget Security Policy: No Arbitrary Auto-Patch Execution
           </span>
-          <p className="text-linear-text-muted leading-relaxed">
+          <p className="text-theme-text-muted leading-relaxed">
             In adherence to strict open-source developer safety standards, RepoPilot does not execute or apply patches directly to arbitrary repositories without explicit human approval. Review the proposed diff, run the suggested regression tests locally, and submit via GitHub PR.
           </p>
         </div>
@@ -144,35 +144,35 @@ ${activeInvestigation.suggestedTests?.map(t => `- [ ] ${t}`).join("\n") || "- [ 
       {activeInvestigation && candidate ? (
         <div className="space-y-6">
           {/* Metadata Card */}
-          <Card className="p-5 space-y-3 bg-linear-surface-1 border-linear-border-1">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-linear-border-1 pb-3">
+          <Card className="p-5 space-y-3 bg-theme-surface border-theme-border">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-theme-border pb-3">
               <div>
                 <div className="flex items-center gap-2">
                   <Badge variant="primary" size="sm">
                     Active Candidate Patch
                   </Badge>
-                  <span className="text-xs font-mono text-linear-text-subtle flex items-center gap-1">
+                  <span className="text-xs font-mono text-theme-text-muted flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {new Date(activeInvestigation.createdAt).toLocaleTimeString()}
                   </span>
                 </div>
-                <h2 className="text-sm font-semibold text-linear-text-main font-mono mt-1">
+                <h2 className="text-sm font-semibold text-theme-text font-mono mt-1">
                   {activeInvestigation.title}
                 </h2>
               </div>
 
-              <div className="flex items-center gap-2 font-mono text-xs text-linear-text-subtle">
-                <GitCommit className="w-3.5 h-3.5 text-linear-text-subtle" />
+              <div className="flex items-center gap-2 font-mono text-xs text-theme-text-muted">
+                <GitCommit className="w-3.5 h-3.5 text-theme-text-muted" />
                 <span>Commit: {activeInvestigation.commitSha.slice(0, 7)}</span>
               </div>
             </div>
 
             {activeInvestigation.hypotheses?.[0] && (
-              <div className="p-3 bg-linear-surface-2 border border-linear-border-1 rounded-lg space-y-1 font-mono text-xs">
-                <span className="text-linear-text-main font-semibold block">
+              <div className="p-3 bg-theme-surface-alt border border-theme-border rounded-lg space-y-1 font-mono text-xs">
+                <span className="text-theme-text font-semibold block">
                   Root Cause Rationale:
                 </span>
-                <p className="text-linear-text-muted leading-relaxed">
+                <p className="text-theme-text-muted leading-relaxed">
                   {activeInvestigation.hypotheses[0].explanation}
                 </p>
               </div>
@@ -180,11 +180,11 @@ ${activeInvestigation.suggestedTests?.map(t => `- [ ] ${t}`).join("\n") || "- [ 
           </Card>
 
           {/* Unified Diff View */}
-          <Card className="p-5 space-y-4 bg-linear-surface-1 border-linear-border-1">
+          <Card className="p-5 space-y-4 bg-theme-surface border-theme-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileCode className="w-4 h-4 text-linear-accent" />
-                <span className="text-sm font-semibold text-linear-text-main font-mono">
+                <FileCode className="w-4 h-4 text-theme-blue" />
+                <span className="text-sm font-semibold text-theme-text font-mono">
                   {candidate.filePath}
                 </span>
               </div>
@@ -192,7 +192,7 @@ ${activeInvestigation.suggestedTests?.map(t => `- [ ] ${t}`).join("\n") || "- [ 
               <div className="flex items-center gap-2">
                 <Link
                   href={`/explore?file=${encodeURIComponent(candidate.filePath)}`}
-                  className="text-xs font-mono text-linear-accent hover:text-linear-accent-hover hover:underline flex items-center gap-1"
+                  className="text-xs font-mono text-theme-blue hover:text-theme-blue-hover hover:underline flex items-center gap-1"
                 >
                   <span>Open Source File</span>
                   <ExternalLink className="w-3 h-3" />
@@ -203,12 +203,12 @@ ${activeInvestigation.suggestedTests?.map(t => `- [ ] ${t}`).join("\n") || "- [ 
               </div>
             </div>
 
-            <p className="text-xs text-linear-text-muted">
+            <p className="text-xs text-theme-text-muted">
               {candidate.rationale}
             </p>
 
-            <div className="bg-linear-canvas border border-linear-border-1 rounded-lg p-3 overflow-x-auto font-mono text-xs">
-              <pre className="text-linear-text-main leading-relaxed">
+            <div className="bg-theme-bg border border-theme-border rounded-lg p-3 overflow-x-auto font-mono text-xs">
+              <pre className="text-theme-text leading-relaxed">
                 {candidate.diff.split("\n").map((line, idx) => {
                   const isAdd = line.startsWith("+");
                   const isDel = line.startsWith("-");
@@ -220,7 +220,7 @@ ${activeInvestigation.suggestedTests?.map(t => `- [ ] ${t}`).join("\n") || "- [ 
                           ? "bg-emerald-950/40 text-emerald-300 font-medium px-1.5 py-0.5 rounded-xs"
                           : isDel
                           ? "bg-rose-950/40 text-rose-300 font-medium px-1.5 py-0.5 rounded-xs"
-                          : "text-linear-text-muted px-1.5 py-0.5"
+                          : "text-theme-text-muted px-1.5 py-0.5"
                       }
                     >
                       {line || " "}
@@ -234,7 +234,7 @@ ${activeInvestigation.suggestedTests?.map(t => `- [ ] ${t}`).join("\n") || "- [ 
               <Button
                 variant="secondary"
                 size="sm"
-                icon={copiedDiff ? <Check className="w-3.5 h-3.5 text-linear-success" /> : <Copy className="w-3.5 h-3.5" />}
+                icon={copiedDiff ? <Check className="w-3.5 h-3.5 text-theme-green" /> : <Copy className="w-3.5 h-3.5" />}
                 onClick={() => copyDiff(candidate.diff)}
               >
                 {copiedDiff ? "Copied Diff!" : "Copy Unified Diff"}
@@ -244,17 +244,17 @@ ${activeInvestigation.suggestedTests?.map(t => `- [ ] ${t}`).join("\n") || "- [ 
 
           {/* Suggested Regression Tests */}
           {activeInvestigation.suggestedTests && activeInvestigation.suggestedTests.length > 0 && (
-            <Card className="p-5 space-y-3 bg-linear-surface-1 border-linear-border-1">
+            <Card className="p-5 space-y-3 bg-theme-surface border-theme-border">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-linear-accent" />
-                <h2 className="text-sm font-semibold text-linear-text-main font-mono uppercase">
+                <CheckCircle2 className="w-4 h-4 text-theme-blue" />
+                <h2 className="text-sm font-semibold text-theme-text font-mono uppercase">
                   Required Regression Verification
                 </h2>
               </div>
-              <ul className="space-y-1.5 font-mono text-xs text-linear-text-muted">
+              <ul className="space-y-1.5 font-mono text-xs text-theme-text-muted">
                 {activeInvestigation.suggestedTests.map((test, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="text-linear-accent font-bold">✓</span>
+                    <span className="text-theme-blue font-bold">✓</span>
                     <span>{test}</span>
                   </li>
                 ))}
@@ -263,11 +263,11 @@ ${activeInvestigation.suggestedTests?.map(t => `- [ ] ${t}`).join("\n") || "- [ 
           )}
 
           {/* Pull Request Draft Markdown Export */}
-          <Card className="p-5 space-y-3 bg-linear-surface-1 border-linear-border-1">
+          <Card className="p-5 space-y-3 bg-theme-surface border-theme-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <GitPullRequest className="w-4 h-4 text-linear-accent" />
-                <h2 className="text-sm font-semibold text-linear-text-main font-mono uppercase">
+                <GitPullRequest className="w-4 h-4 text-theme-blue" />
+                <h2 className="text-sm font-semibold text-theme-text font-mono uppercase">
                   Reproducible Pull Request Draft
                 </h2>
               </div>
@@ -281,22 +281,22 @@ ${activeInvestigation.suggestedTests?.map(t => `- [ ] ${t}`).join("\n") || "- [ 
               </Button>
             </div>
 
-            <div className="bg-linear-canvas border border-linear-border-1 rounded-lg p-3 font-mono text-xs text-linear-text-secondary whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
+            <div className="bg-theme-bg border border-theme-border rounded-lg p-3 font-mono text-xs text-theme-text whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
               {prDraft}
             </div>
           </Card>
         </div>
       ) : (
         <div className="space-y-4">
-          <Card className="p-8 text-center max-w-2xl mx-auto space-y-4 bg-linear-surface-1 border-linear-border-1">
-            <div className="w-12 h-12 rounded-full bg-linear-surface-2 border border-linear-border-1 flex items-center justify-center text-linear-text-muted mx-auto">
+          <Card className="p-8 text-center max-w-2xl mx-auto space-y-4 bg-theme-surface border-theme-border">
+            <div className="w-12 h-12 rounded-full bg-theme-surface-alt border border-theme-border flex items-center justify-center text-theme-text-muted mx-auto">
               <GitPullRequest className="w-6 h-6" />
             </div>
             <div className="space-y-1.5">
-              <h2 className="text-base font-semibold text-linear-text-main font-mono">
+              <h2 className="text-base font-semibold text-theme-text font-mono">
                 No Candidate Patches Formulated Yet
               </h2>
-              <p className="text-xs text-linear-text-muted leading-relaxed max-w-lg mx-auto">
+              <p className="text-xs text-theme-text-muted leading-relaxed max-w-lg mx-auto">
                 Candidate patches are generated dynamically during bug investigation. Paste an exception log or stack trace from {currentRepo.owner}/{currentRepo.repo} into the Bug Investigation workspace to correlate source lines, formulate root causes, and propose a minimal unified diff.
               </p>
             </div>

@@ -103,15 +103,15 @@ export default function DebuggingPage() {
 
   if (!currentRepo) {
     return (
-      <Card className="p-8 text-center max-w-xl mx-auto my-12 space-y-4 bg-linear-surface-1 border border-linear-border-1">
-        <div className="w-12 h-12 rounded-full bg-linear-accent/15 border border-linear-accent/30 flex items-center justify-center text-linear-accent mx-auto">
+      <Card className="p-8 text-center max-w-xl mx-auto my-12 space-y-4 bg-theme-surface border border-theme-border">
+        <div className="w-12 h-12 rounded-full bg-theme-blue/15 border border-theme-blue/30 flex items-center justify-center text-theme-blue mx-auto">
           <Bug className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-base font-semibold text-linear-text-main">
+          <h2 className="text-base font-semibold text-theme-text">
             No Active Repository
           </h2>
-          <p className="text-xs text-linear-text-muted mt-1 leading-relaxed">
+          <p className="text-xs text-theme-text-muted mt-1 leading-relaxed">
             Import a public GitHub repository to map error stack traces directly to source code lines and formulate candidate bug fixes.
           </p>
         </div>
@@ -136,21 +136,21 @@ export default function DebuggingPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="pb-3 border-b border-linear-border-1">
-        <h1 className="text-lg font-semibold text-linear-text-main font-mono flex items-center gap-2">
-          <Bug className="w-5 h-5 text-linear-danger" />
+      <div className="pb-3 border-b border-theme-border">
+        <h1 className="text-lg font-semibold text-theme-text font-mono flex items-center gap-2">
+          <Bug className="w-5 h-5 text-theme-danger" />
           <span>Bug Investigation & Stack Trace Analyzer</span>
         </h1>
-        <p className="text-xs text-linear-text-muted mt-0.5">
+        <p className="text-xs text-theme-text-muted mt-0.5">
           Correlate runtime exceptions with repository source lines, formulate root causes, and propose testable patches.
         </p>
       </div>
 
       {/* Input Form */}
-      <Card className="p-5 space-y-4 bg-linear-surface-1 border-linear-border-1">
+      <Card className="p-5 space-y-4 bg-theme-surface border-theme-border">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-mono text-linear-text-muted mb-1 font-medium">
+            <label className="block text-xs font-mono text-theme-text-muted mb-1 font-medium">
               Issue Title / Summary
             </label>
             <Input
@@ -162,7 +162,7 @@ export default function DebuggingPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-mono text-linear-text-muted mb-1 font-medium">
+            <label className="block text-xs font-mono text-theme-text-muted mb-1 font-medium">
               Issue Context / Description
             </label>
             <Input
@@ -176,10 +176,10 @@ export default function DebuggingPage() {
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs font-mono text-linear-text-secondary font-medium">
+            <label className="text-xs font-mono text-theme-text font-medium">
               Stack Trace / Error Log
             </label>
-            <span className="text-[11px] font-mono text-linear-text-subtle">
+            <span className="text-[11px] font-mono text-theme-text-muted">
               Format: Node/V8, Python tracebacks, Go panics, Rust backtraces
             </span>
           </div>
@@ -187,13 +187,13 @@ export default function DebuggingPage() {
             rows={5}
             value={stackTrace}
             onChange={(e) => setStackTrace(e.target.value)}
-            className="w-full bg-linear-surface-1 border border-linear-border-2 text-linear-text-main font-mono text-xs p-3 rounded-lg focus:outline-none focus:border-linear-accent focus:ring-1 focus:ring-linear-accent placeholder:text-linear-text-subtle transition-colors"
+            className="w-full bg-theme-surface border border-theme-border text-theme-text font-mono text-xs p-3 rounded-lg focus:outline-none focus:border-theme-blue focus:ring-1 focus:ring-linear-accent placeholder:text-theme-text-muted transition-colors"
             placeholder="Paste your actual runtime error log or stack trace here (e.g. TypeError: Cannot read properties of undefined...)"
           />
         </div>
 
         {error && (
-          <p className="text-xs text-linear-danger font-mono">{error}</p>
+          <p className="text-xs text-theme-danger font-mono">{error}</p>
         )}
 
         <div className="flex justify-end">
@@ -213,11 +213,11 @@ export default function DebuggingPage() {
       {analysisResult && (
         <div className="space-y-6">
           {/* Parsed Frames */}
-          <Card className="p-5 space-y-3 bg-linear-surface-1 border-linear-border-1">
+          <Card className="p-5 space-y-3 bg-theme-surface border-theme-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <AlertOctagon className="w-4 h-4 text-linear-danger" />
-                <h2 className="text-sm font-semibold text-linear-text-main font-mono uppercase">
+                <AlertOctagon className="w-4 h-4 text-theme-danger" />
+                <h2 className="text-sm font-semibold text-theme-text font-mono uppercase">
                   Parsed Stack Frames ({analysisResult.parsedTrace.frames.length})
                 </h2>
               </div>
@@ -228,25 +228,25 @@ export default function DebuggingPage() {
               )}
             </div>
 
-            <div className="divide-y divide-linear-border-1 border border-linear-border-1 rounded-lg overflow-hidden font-mono text-xs">
+            <div className="divide-y divide-linear-border-1 border border-theme-border rounded-lg overflow-hidden font-mono text-xs">
               {analysisResult.parsedTrace.frames.map((frame: StackFrame, idx: number) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-2.5 bg-linear-surface-2 hover:bg-linear-surface-3 transition-colors"
+                  className="flex items-center justify-between p-2.5 bg-theme-surface-alt hover:bg-theme-surface-alt transition-colors"
                 >
                   <div className="flex items-center gap-2 truncate">
-                    <span className="text-linear-text-subtle w-6 text-right">
+                    <span className="text-theme-text-muted w-6 text-right">
                       #{idx + 1}
                     </span>
-                    <FileCode className="w-3.5 h-3.5 text-linear-accent shrink-0" />
-                    <span className="text-linear-text-main font-medium truncate">
+                    <FileCode className="w-3.5 h-3.5 text-theme-blue shrink-0" />
+                    <span className="text-theme-text font-medium truncate">
                       {frame.filePath}
                     </span>
-                    <span className="text-linear-text-subtle">
+                    <span className="text-theme-text-muted">
                       :line {frame.lineNumber}
                     </span>
                     {frame.functionName && (
-                      <span className="text-[11px] text-linear-text-muted">
+                      <span className="text-[11px] text-theme-text-muted">
                         in {frame.functionName}()
                       </span>
                     )}
@@ -254,7 +254,7 @@ export default function DebuggingPage() {
 
                   <Link
                     href={`/explore?file=${encodeURIComponent(frame.filePath)}&line=${frame.lineNumber}`}
-                    className="text-[11px] text-linear-accent hover:text-linear-accent-hover hover:underline flex items-center gap-1 shrink-0 ml-2"
+                    className="text-[11px] text-theme-blue hover:text-theme-blue-hover hover:underline flex items-center gap-1 shrink-0 ml-2"
                   >
                     <span>View in Code</span>
                     <ArrowRight className="w-3 h-3" />
@@ -266,19 +266,19 @@ export default function DebuggingPage() {
 
           {/* Hypotheses */}
           <div className="space-y-3">
-            <h2 className="text-xs font-mono uppercase tracking-wider text-linear-text-subtle font-semibold">
+            <h2 className="text-xs font-mono uppercase tracking-wider text-theme-text-muted font-semibold">
               Ranked Root-Cause Hypotheses
             </h2>
 
             <div className="grid grid-cols-1 gap-3">
               {analysisResult.hypotheses.map((hypo) => (
-                <Card key={hypo.id} className="p-4 space-y-2 bg-linear-surface-1 border-linear-border-1">
+                <Card key={hypo.id} className="p-4 space-y-2 bg-theme-surface border-theme-border">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Badge variant="primary" size="sm">
                         Rank #{hypo.rank}
                       </Badge>
-                      <span className="text-xs font-mono font-semibold text-linear-text-main">
+                      <span className="text-xs font-mono font-semibold text-theme-text">
                         {hypo.culpritFile}
                         {hypo.startLine ? `:line ${hypo.startLine}` : ""}
                       </span>
@@ -298,7 +298,7 @@ export default function DebuggingPage() {
                     </Badge>
                   </div>
 
-                  <p className="text-xs font-mono text-linear-text-muted leading-relaxed">
+                  <p className="text-xs font-mono text-theme-text-muted leading-relaxed">
                     {hypo.explanation}
                   </p>
                 </Card>
@@ -308,11 +308,11 @@ export default function DebuggingPage() {
 
           {/* Candidate Patch Proposal or Suggestion Scaffold */}
           {analysisResult.candidatePatch ? (
-            <Card className="p-5 space-y-3 bg-linear-surface-1 border-linear-border-1">
+            <Card className="p-5 space-y-3 bg-theme-surface border-theme-border">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <GitPullRequest className="w-4 h-4 text-linear-success" />
-                  <h2 className="text-sm font-semibold text-linear-text-main font-mono uppercase">
+                  <GitPullRequest className="w-4 h-4 text-theme-green" />
+                  <h2 className="text-sm font-semibold text-theme-text font-mono uppercase">
                     Proposed Minimal Candidate Patch
                   </h2>
                 </div>
@@ -342,7 +342,7 @@ export default function DebuggingPage() {
                           ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                           : analysisResult.candidatePatch.typeCheckStatus === "failed"
                           ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                          : "bg-linear-surface-2 text-linear-text-muted border-linear-border-1"
+                          : "bg-theme-surface-alt text-theme-text-muted border-theme-border"
                       }`}
                     >
                       Type check {analysisResult.candidatePatch.typeCheckStatus === "not_run" ? "not run" : analysisResult.candidatePatch.typeCheckStatus}
@@ -352,33 +352,33 @@ export default function DebuggingPage() {
               </div>
 
               {analysisResult.candidatePatch.confidenceReason && (
-                <p className="text-xs font-mono text-linear-text-muted bg-linear-surface-2/60 p-2 rounded border border-linear-border-1">
+                <p className="text-xs font-mono text-theme-text-muted bg-theme-surface-alt/60 p-2 rounded border border-theme-border">
                   <strong>Confidence Rationale:</strong> {analysisResult.candidatePatch.confidenceReason}
                 </p>
               )}
 
               {/* Matched Stack Frame and Changed Lines (Never present diff without these) */}
               {analysisResult.candidatePatch.matchedStackFrame && analysisResult.candidatePatch.changedLines && (
-                <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-linear-text-muted bg-linear-surface-2 p-2.5 rounded-lg border border-linear-border-1">
+                <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-theme-text-muted bg-theme-surface-alt p-2.5 rounded-lg border border-theme-border">
                   <span>
-                    <strong className="text-linear-text-main">Matched Frame:</strong>{" "}
+                    <strong className="text-theme-text">Matched Frame:</strong>{" "}
                     {analysisResult.candidatePatch.matchedStackFrame.filePath}:{analysisResult.candidatePatch.matchedStackFrame.lineNumber}
                     {analysisResult.candidatePatch.matchedStackFrame.functionName ? ` (${analysisResult.candidatePatch.matchedStackFrame.functionName})` : ""}
                   </span>
                   <span>
-                    <strong className="text-linear-text-main">Changed Lines:</strong>{" "}
+                    <strong className="text-theme-text">Changed Lines:</strong>{" "}
                     Lines {analysisResult.candidatePatch.changedLines.startLine}–{analysisResult.candidatePatch.changedLines.endLine} (+{analysisResult.candidatePatch.changedLines.linesAdded}, -{analysisResult.candidatePatch.changedLines.linesRemoved})
                   </span>
                 </div>
               )}
 
-              <p className="text-xs text-linear-text-muted">
+              <p className="text-xs text-theme-text-muted">
                 {analysisResult.candidatePatch.rationale}
               </p>
 
               {/* Unified Diff View */}
-              <div className="bg-linear-canvas border border-linear-border-1 rounded-lg p-3 overflow-x-auto font-mono text-xs">
-                <pre className="text-linear-text-main leading-relaxed">
+              <div className="bg-theme-bg border border-theme-border rounded-lg p-3 overflow-x-auto font-mono text-xs">
+                <pre className="text-theme-text leading-relaxed">
                   {analysisResult.candidatePatch.diff.split("\n").map((line, idx) => {
                     const isAdd = line.startsWith("+");
                     const isDel = line.startsWith("-");
@@ -390,7 +390,7 @@ export default function DebuggingPage() {
                             ? "bg-emerald-950/40 text-emerald-300 font-medium px-1.5 py-0.5 rounded-xs"
                             : isDel
                             ? "bg-rose-950/40 text-rose-300 font-medium px-1.5 py-0.5 rounded-xs"
-                            : "text-linear-text-muted px-1.5 py-0.5"
+                            : "text-theme-text-muted px-1.5 py-0.5"
                         }
                       >
                         {line || " "}
@@ -401,11 +401,11 @@ export default function DebuggingPage() {
               </div>
             </Card>
           ) : (
-            <Card className="p-5 space-y-3 bg-linear-surface-1 border-linear-border-1">
+            <Card className="p-5 space-y-3 bg-theme-surface border-theme-border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <GitPullRequest className="w-4 h-4 text-linear-text-muted" />
-                  <h2 className="text-sm font-semibold text-linear-text-main font-mono uppercase">
+                  <GitPullRequest className="w-4 h-4 text-theme-text-muted" />
+                  <h2 className="text-sm font-semibold text-theme-text font-mono uppercase">
                     Suggestion Scaffold (No Diff Generated)
                   </h2>
                 </div>
@@ -413,7 +413,7 @@ export default function DebuggingPage() {
                   Unverified: review before applying
                 </Badge>
               </div>
-              <p className="text-xs text-linear-text-muted">
+              <p className="text-xs text-theme-text-muted">
                 No AI model was configured or automated patch validation did not produce an applicable diff. Review the ranked hypotheses above and verify the stack frames.
               </p>
             </Card>
@@ -421,17 +421,17 @@ export default function DebuggingPage() {
 
           {/* Regression Test Suggestions */}
           {analysisResult.suggestedTests.length > 0 && (
-            <Card className="p-5 space-y-3 bg-linear-surface-1 border-linear-border-1">
+            <Card className="p-5 space-y-3 bg-theme-surface border-theme-border">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-linear-accent" />
-                <h2 className="text-sm font-semibold text-linear-text-main font-mono uppercase">
+                <CheckCircle2 className="w-4 h-4 text-theme-blue" />
+                <h2 className="text-sm font-semibold text-theme-text font-mono uppercase">
                   Suggested Regression Tests
                 </h2>
               </div>
-              <ul className="space-y-1.5 font-mono text-xs text-linear-text-muted">
+              <ul className="space-y-1.5 font-mono text-xs text-theme-text-muted">
                 {analysisResult.suggestedTests.map((test, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="text-linear-accent">✓</span>
+                    <span className="text-theme-blue">✓</span>
                     <span>{test}</span>
                   </li>
                 ))}
@@ -444,7 +444,7 @@ export default function DebuggingPage() {
             <Button
               variant="secondary"
               size="sm"
-              icon={copied ? <Check className="w-3.5 h-3.5 text-linear-success" /> : <Copy className="w-3.5 h-3.5" />}
+              icon={copied ? <Check className="w-3.5 h-3.5 text-theme-green" /> : <Copy className="w-3.5 h-3.5" />}
               onClick={copyReport}
             >
               {copied ? "Copied Report!" : "Copy Markdown Report"}
