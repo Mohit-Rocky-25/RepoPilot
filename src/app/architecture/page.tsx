@@ -27,12 +27,38 @@ import {
   ArrowUpRight,
   ExternalLink
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRepository } from "@/context/RepositoryContext";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { ArchitectureMap3D } from "@/components/architecture/ArchitectureMap3D";
-import { MermaidViewer } from "@/components/architecture/MermaidViewer";
+
+const ArchitectureMap3D = dynamic(
+  () => import("@/components/architecture/ArchitectureMap3D").then((m) => m.ArchitectureMap3D),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[550px] flex items-center justify-center border border-theme-border rounded-xl bg-theme-surface text-xs font-mono text-theme-text-muted gap-2">
+        <Loader2 className="w-5 h-5 animate-spin text-theme-blue" />
+        <span>Initializing spatial architecture engine...</span>
+      </div>
+    )
+  }
+);
+
+const MermaidViewer = dynamic(
+  () => import("@/components/architecture/MermaidViewer").then((m) => m.MermaidViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[400px] flex items-center justify-center border border-theme-border rounded-xl bg-theme-surface text-xs font-mono text-theme-text-muted gap-2">
+        <Loader2 className="w-5 h-5 animate-spin text-theme-blue" />
+        <span>Rendering module diagram...</span>
+      </div>
+    )
+  }
+);
+
 import type { ArchitectureSummary, ArchitectureGraph } from "@repopilot/core";
 import { ArchitectureAnalyzer } from "@repopilot/analysis";
 import { clientFetch } from "@/lib/api";

@@ -24,9 +24,23 @@ import {
   Share2,
   Check
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRepository } from "@/context/RepositoryContext";
 import { FileTree } from "@/components/explorer/FileTree";
-import { CodeViewer } from "@/components/ui/CodeViewer";
+
+const CodeViewer = dynamic(
+  () => import("@/components/ui/CodeViewer").then((m) => m.CodeViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[400px] flex items-center justify-center border border-theme-border rounded-xl bg-theme-surface text-xs font-mono text-theme-text-muted gap-2">
+        <Loader2 className="w-4 h-4 animate-spin text-theme-blue" />
+        <span>Loading code viewer...</span>
+      </div>
+    )
+  }
+);
+
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
