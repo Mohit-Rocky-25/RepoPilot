@@ -33,14 +33,14 @@ export const FourDots: React.FC<FourDotsProps> = ({
     >
       {/* Light Theme: Google 4-dot brand motif */}
       <div className="inline-flex items-center gap-1.5 dark:hidden">
-        <span className={`${dotSize} rounded-full bg-[#1A73E8] ${animClass}`} />
-        <span className={`${dotSize} rounded-full bg-[#EA4335] ${animClass}`} />
-        <span className={`${dotSize} rounded-full bg-[#FBBC04] ${animClass}`} />
-        <span className={`${dotSize} rounded-full bg-[#34A853] ${animClass}`} />
+        <span className={`${dotSize} rounded-full bg-theme-blue ${animClass}`} />
+        <span className={`${dotSize} rounded-full bg-theme-red ${animClass}`} />
+        <span className={`${dotSize} rounded-full bg-theme-yellow ${animClass}`} />
+        <span className={`${dotSize} rounded-full bg-theme-green ${animClass}`} />
       </div>
 
       {/* Dark Theme: Original Linear single violet status pulse */}
-      <span className="hidden dark:inline-block w-2 h-2 rounded-full bg-[#5E6AD2] animate-pulse" />
+      <span className="hidden dark:inline-block w-2 h-2 rounded-full bg-theme-blue animate-pulse" />
     </div>
   );
 };

@@ -19,10 +19,10 @@ export const TopColorBar: React.FC<TopColorBarProps> = ({
       aria-hidden="true"
       className={`w-full ${height} flex shrink-0 select-none overflow-hidden dark:hidden ${className}`}
     >
-      <div className="w-1/4 h-full bg-[#1A73E8]" />
-      <div className="w-1/4 h-full bg-[#EA4335]" />
-      <div className="w-1/4 h-full bg-[#FBBC04]" />
-      <div className="w-1/4 h-full bg-[#34A853]" />
+      <div className="w-1/4 h-full bg-theme-blue" />
+      <div className="w-1/4 h-full bg-theme-red" />
+      <div className="w-1/4 h-full bg-theme-yellow" />
+      <div className="w-1/4 h-full bg-theme-green" />
     </div>
   );
 };

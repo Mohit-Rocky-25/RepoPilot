@@ -22,7 +22,8 @@
     "lint": "next lint",
     "docs:pdf": "node scripts/generate_readme_pdf.js",
     "eval": "npx tsx eval/run.ts",
-    "security:scan": "node scripts/secret_scan.js"
+    "security:scan": "node scripts/secret_scan.js",
+    "theme:check": "node scripts/theme_check.js"
   },
   "keywords": [
     "codebase-intelligence",

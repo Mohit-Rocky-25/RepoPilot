@@ -8,12 +8,12 @@ export interface AccentCardProps extends React.HTMLAttributes<HTMLDivElement> {
   interactive?: boolean;
 }
 
-const ACCENT_ROTATION = ["#1A73E8", "#EA4335", "#FBBC04", "#34A853"] as const;
-const ACCENT_COLOR_MAP: Record<"blue" | "red" | "yellow" | "green", string> = {
-  blue: "#1A73E8",
-  red: "#EA4335",
-  yellow: "#FBBC04",
-  green: "#34A853"
+const ACCENT_CLASS_ROTATION = ["bg-theme-blue", "bg-theme-red", "bg-theme-yellow", "bg-theme-green"] as const;
+const ACCENT_CLASS_MAP: Record<"blue" | "red" | "yellow" | "green", string> = {
+  blue: "bg-theme-blue",
+  red: "bg-theme-red",
+  yellow: "bg-theme-yellow",
+  green: "bg-theme-green"
 };
 
 let globalAutoIndex = 0;
@@ -32,14 +32,14 @@ export const AccentCard: React.FC<AccentCardProps> = ({
   style,
   ...props
 }) => {
-  let resolvedColor: string;
+  let resolvedClass: string;
 
-  if (accent !== "auto" && ACCENT_COLOR_MAP[accent]) {
-    resolvedColor = ACCENT_COLOR_MAP[accent];
+  if (accent !== "auto" && ACCENT_CLASS_MAP[accent]) {
+    resolvedClass = ACCENT_CLASS_MAP[accent];
   } else if (typeof index === "number") {
-    resolvedColor = ACCENT_ROTATION[Math.abs(index) % ACCENT_ROTATION.length];
+    resolvedClass = ACCENT_CLASS_ROTATION[Math.abs(index) % ACCENT_CLASS_ROTATION.length];
   } else {
-    resolvedColor = ACCENT_ROTATION[globalAutoIndex % ACCENT_ROTATION.length];
+    resolvedClass = ACCENT_CLASS_ROTATION[globalAutoIndex % ACCENT_CLASS_ROTATION.length];
     globalAutoIndex++;
   }
 
@@ -55,8 +55,7 @@ export const AccentCard: React.FC<AccentCardProps> = ({
     >
       {/* Light Theme: 4px Google colored left accent bar */}
       <div
-        className="dark:hidden absolute left-0 top-0 bottom-0 w-1 pointer-events-none"
-        style={{ backgroundColor: resolvedColor }}
+        className={`dark:hidden absolute left-0 top-0 bottom-0 w-1 pointer-events-none ${resolvedClass}`}
       />
       {children}
     </div>
