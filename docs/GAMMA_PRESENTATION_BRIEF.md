@@ -101,19 +101,19 @@
 
 ---
 
-## Slide 7: Core Feature 3 — Grounded AI Assistant with Zero Hallucinations
+## Slide 7: Core Feature 3 — Grounded AI Assistant with Commit-Pinned Citation Validation
 **Headline:** Answers You Can Verify Down to the Exact Line Coordinate  
-**Subhead:** Two-pass citation validation guarantees that the AI never makes up files, functions, or logic.
+**Subhead:** Multi-pass citation validation verifies that cited files exist in the pinned commit; relevance is flagged, not guaranteed.
 
 **How the Evidence Loop Works:**
 1. **User Prompt**: Developer asks a complex question about architecture or implementation.
 2. **Deterministic Context Retrieval**: Local BM25 engine retrieves relevant file chunks bounded to exact token budgets.
 3. **Prompt-Injection Sanitization**: Strict delimiters wrap untrusted repo content, preventing prompt injection attacks.
 4. **Local / Private LLM Processing**: Queries local Ollama (`qwen2.5-coder:1.5b` or `7b`) or user-supplied keys.
-5. **Two-Pass Citation Verification**: The engine verifies that every cited file, symbol, and line range exists in the active commit SHA before showing the response.
-6. **Clickable Chips**: Citations render as interactive badges that jump straight to highlighted code lines.
+5. **Three-Pass Citation Verification**: The engine verifies that every cited file, symbol, and line range exists in the active commit SHA and contains substantive code, flagging weak support when claims lack span keyword matches.
+6. **Clickable Chips**: Citations render as interactive badges (Verified=green, Weak support=amber, Unverified=red).
 
-*Metric Callout:* **0% Ghost Citations** — If a file or line doesn't exist in Git, the engine rejects the citation.
+*Metric Callout:* **Strict Git Verification** — Citations are verified to exist in the pinned commit; non-existent files are automatically stripped and weak relevance is flagged.
 
 ---
 
@@ -151,7 +151,7 @@
 ---
 
 ## Slide 10: Enterprise Security & Defensive Engineering
-**Headline:** Bank-Grade Defensive Controls for Untrusted Repositories  
+**Headline:** Multi-Layer Defensive Controls for Untrusted Repositories  
 **Subhead:** Multi-layer defense protecting users against malicious GitHub archives and hostile payloads.
 
 **Security Safeguards Implemented:**

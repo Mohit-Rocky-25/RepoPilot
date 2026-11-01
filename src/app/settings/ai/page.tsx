@@ -208,7 +208,7 @@ export default function AISettingsPage() {
           </h1>
           <p className="text-xs text-linear-text-muted mt-1 max-w-xl">
             Choose how RepoPilot runs grounded AI investigations: completely free via local Ollama,
-            bring your own OpenAI-compatible API key, or 100% offline deterministic mode.
+            bring your own OpenAI-compatible API key, or offline deterministic mode.
           </p>
         </div>
 
@@ -517,7 +517,7 @@ export default function AISettingsPage() {
               Local Ollama Daemon Configuration
             </h2>
             <p className="text-xs text-linear-text-muted mt-1">
-              Connect to your local workstation daemon. 100% free with zero cloud fees.
+              Connect to your local workstation daemon. Completely free with zero cloud fees.
             </p>
           </div>
 

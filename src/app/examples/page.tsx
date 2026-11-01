@@ -231,7 +231,7 @@ export default function ExamplesPage() {
         <div className="flex flex-wrap items-center gap-3 pt-2">
           <Badge variant="neutral" className="bg-[#141516] border-emerald-500/30 text-emerald-400 gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>100% Offline / BYO-Key Compatible</span>
+            <span>Offline / BYO-Key Compatible</span>
           </Badge>
           <Badge variant="neutral" className="bg-[#141516] border-indigo-500/30 text-indigo-400 gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5" />

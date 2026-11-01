@@ -154,4 +154,4 @@ Before opening your deployed RepoPilot instance to users:
    - RepoPilot strictly blocks non-GitHub URLs, localhost addresses, and internal network ranges.
    - Arbitrary code execution is strictly disabled. Untrusted repository scripts will never run on your server.
 3. **Local AI Resilience**:
-   - If the server has no local Ollama instance running, the platform operates in 100% offline deterministic mode without errors or downtime.
+   - If the server has no local Ollama instance running, the platform operates in offline deterministic mode without errors or downtime.

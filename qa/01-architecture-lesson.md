@@ -168,7 +168,7 @@ All 9 serverless API routes implement IP rate limiting, input validation, and sa
 - **AST (Abstract Syntax Tree):** A tree representation of source code structure created by a compiler or parser. Unlike regular expressions, an AST understands syntax rules, nested functions, and multi-line scope blocks.
 - **BM25 (Best Matching 25):** A probabilistic ranking function used in search engines to rank documents according to term frequency, document length, and inverse document frequency.
 - **BYO Key (Bring Your Own Key):** An architecture pattern where users supply their own cloud API credential (e.g., from OpenAI or Google Gemini). The server never stores the key in a database, keeping cloud costs at zero for the host.
-- **Commit SHA:** A 40-character hexadecimal cryptographic hash that uniquely identifies an immutable Git commit snapshot. Pinning to a SHA guarantees line numbers never drift.
+- **Commit SHA:** A 40-character hexadecimal SHA hash that uniquely identifies an immutable Git commit snapshot. Pinning to a SHA guarantees line numbers never drift.
 - **CORS (Cross-Origin Resource Sharing):** A browser security mechanism that restricts HTTP requests initiated from scripts outside the origin domain.
 - **CSP (Content Security Policy):** An HTTP response header that restricts the resources (scripts, styles, images) that the browser is allowed to load.
 - **LRU Cache (Least Recently Used):** An in-memory cache eviction policy that removes the least recently accessed items first when memory capacity is reached.

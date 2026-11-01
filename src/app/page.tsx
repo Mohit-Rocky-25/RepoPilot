@@ -891,7 +891,7 @@ export default function HomePage() {
                 No Mandatory Hosted AI API
               </h3>
               <p className="text-xs text-linear-text-muted leading-relaxed">
-                Core repository browsing, tree exploration, symbol discovery, and text searches work 100% without AI. You never pay OpenAI, Anthropic, or cloud providers to use the tool.
+                Core repository browsing, tree exploration, symbol discovery, and text searches work completely without AI. You never pay OpenAI, Anthropic, or cloud providers to use the tool.
               </p>
             </div>
 

@@ -114,11 +114,11 @@ This document tracks the audit status of all security controls across the RepoPi
 
 ---
 
-### L. Cryptography & Sensitive Operations
+### L. Encryption, Hashing & Sensitive Operations
 | Check | Status | Evidence & Details |
 | :--- | :---: | :--- |
-| **Cryptographic algorithms** | `PASS` | Modern TLS 1.3 in transit. SHA-1/SHA-256 validation for Git commit objects. |
-| **Custom cryptography** | `PASS` | Zero custom cryptography implemented. |
+| **Encryption & hash validation** | `PASS` | Modern TLS 1.3 in transit. SHA-1/SHA-256 validation for Git commit objects. |
+| **Custom encryption** | `PASS` | Standard TLS and SHA verification protocols used. |
 
 ---
 

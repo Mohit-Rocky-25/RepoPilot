@@ -42,7 +42,7 @@
     "repo": "itsdangerous",
     "commitSha": "77df98ab219dcb64be735ec090e54dcb3e956627",
     "language": "Python",
-    "description": "Cryptographic data signing and token serialization library"
+    "description": "Data signing and token serialization library for Python"
   },
   {
     "id": "ratelimit",

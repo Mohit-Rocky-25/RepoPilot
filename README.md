@@ -56,7 +56,7 @@ Entering an unfamiliar software codebase is one of the most time-consuming activ
 RepoPilot solves this through an **evidence-first engineering approach**:
 - **Deterministic core**: File navigation, AST symbol extraction, architecture detection, and ranked code search run entirely on local compute without requiring an AI model or cloud API.
 - **Traceable citations**: Every analysis, symbol jump, and assistant answer is tied to an immutable commit SHA, exact file path, and line coordinate.
-- **Optional private AI**: Supports local open-weights coding models via [Ollama](https://ollama.com) (e.g., `qwen2.5-coder:7b`) or user-supplied OpenAI-compatible API keys (`sessionStorage` only) with strict token bounds and automated citation verification. Operates 100% offline when AI is unavailable.
+- **Optional private AI**: Supports local open-weights coding models via [Ollama](https://ollama.com) (e.g., `qwen2.5-coder:7b`) or user-supplied OpenAI-compatible API keys (`sessionStorage` only) with strict token bounds and automated citation verification. Operates offline when AI is unavailable; citations are verified to exist in the pinned commit, and relevance is flagged, not guaranteed.
 - **Defensive sandboxing**: Untrusted repository code is never executed automatically. Bug fixes are proposed as unified diffs validated in memory against pinned file lines with reproducible regression tests for human review.
 
 ---
@@ -100,7 +100,7 @@ RepoPilot solves this through an **evidence-first engineering approach**:
 | Feature Area | Description | Status | Works on Public Demo Without Key? | Data Source |
 | :--- | :--- | :--- | :--- | :--- |
 | **Repository Ingestion** | Ingests public GitHub repositories via tarball streaming, validates URLs against SSRF, and pins default branch HEAD to an immutable commit SHA. | **Stable** | Yes (up to public rate limits) | Pinned GitHub Tarball / REST API |
-| **Local Workspace Ingestion** | Opens and indexes local directories directly in-browser with 100% privacy via FileSystem API / drag-and-drop. Zero network upload. | **Stable** | Yes (100% Client-Side) | Native Browser FileSystem API |
+| **Local Workspace Ingestion** | Opens and indexes local directories directly in-browser with private local processing via FileSystem API / drag-and-drop. Zero network upload. | **Stable** | Yes (Client-Side) | Native Browser FileSystem API |
 | **Code Explorer** | Resizable dual-pane directory tree and syntax-highlighted code viewer with line numbers and line highlights. | **Stable** | Yes | In-memory extracted source files (< 100KB) |
 | **Deterministic Code Search** | Multi-modal search engine combining BM25 lexical scoring, path matching, entry-point boosts, and symbol ranking with language filters. | **Stable** | Yes | In-memory index & client search engine |
 | **AST Symbol Extraction** | Real Tree-sitter WASM grammars (TS/TSX, JS, Python, Go, Rust) with heuristic regex fallback (`confidence: heuristic`). | **Beta** | Yes | Tree-sitter WASM / heuristic fallback parser |
@@ -255,23 +255,25 @@ RepoPilot uses a cohesive, high-density dark interface tailored for engineering 
 
 ## 6. Honest Comparison Against Real Alternatives
 
-RepoPilot is designed for fast, evidence-grounded public repository exploration without mandatory subscriptions. Here is how it compares directly against existing tools:
+RepoPilot is built for rapid, evidence-grounded public repository exploration, architectural visualization, and localized debugging without mandatory subscriptions. Here is how it honestly compares against closer developer tools (**DeepWiki**, **Aider repo map**, and **Sourcegraph Cody**), including areas where RepoPilot deliberately loses:
 
-| Dimension | RepoPilot | DeepWiki | Sourcegraph | Cursor / GitHub Copilot | Raw Chat Model (ChatGPT / Claude) |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Setup & Onboarding** | **Zero setup**: Open browser, paste public URL | Web-based; requires repository indexing | Enterprise self-host or cloud account | IDE installation & plugin configuration | Paste snippets into web chat |
-| **Source Privacy** | **Local / Private**: BYO key stored only in `sessionStorage`; local Ollama supported | Cloud-hosted index | Enterprise on-prem or cloud SOC2 | Cloud-hosted telemetry & prompts | Cloud provider data retention policies |
-| **Offline Operation** | **Full offline core**: Browsing, search, symbols, architecture work 100% offline | No (requires hosted platform) | No (requires server connectivity) | Partial (editor works, AI requires cloud) | No (cloud only) |
-| **Citation Rigor** | **Strict SHA verification**: Verifies commit SHA, file existence, line bounds, and symbol scope; rejects hallucinations | Page-level or document-level citations | Precise compiler-grade LSIF/SCIP code graph | In-editor inline completions; no formal citation verification | Frequent hallucination of non-existent files or APIs |
-| **Cost** | **$0 / Free**: Deterministic core free forever; BYO key or free local Ollama | Freemium / Paid subscription | Free tier; Enterprise license ($$$) | $10–$20/month per user | Free tier or $20/month |
-| **Scope Limits** | Public GitHub repos up to 25MB archive / 1,500 files | Public & private GitHub repos | Multi-repo, multi-million line enterprise codebases | Workspace-wide codebase indexing | Context window limit (128k–200k tokens per prompt) |
+| Dimension | RepoPilot | DeepWiki | Aider Repo Map | Sourcegraph Cody |
+| :--- | :--- | :--- | :--- | :--- |
+| **Primary Workflow** | **Browser exploration & Q&A**: Read-only AST symbol jumping, 2D/3D maps, verified citations | **Doc generation**: Web-based AI documentation wiki for codebases | **Terminal paired editing**: Autonomous multi-file code editing & git commits | **IDE code assistant**: In-editor code generation, autocomplete, enterprise chat |
+| **Setup & Onboarding** | **Zero setup**: Open browser, paste public URL (no git clone or install) | Web signup, cloud repo ingestion | Requires `pip install`, local git clone, and API key | IDE extension install, account signup, server connection |
+| **Offline Core Operation** | **Native offline core**: Browsing, AST symbols, 2D/3D maps, BM25 search work with zero AI | No (requires cloud platform & LLM) | Partial (repo map uses Tree-sitter locally; editing requires LLM) | No (requires cloud or self-hosted enterprise server) |
+| **Citation Verification** | **Strict 3-pass verification**: File in commit SHA, non-empty code span, and claim support check (weak support flagged) | Document-level wiki references; no line span checks | AST map in prompt; model output is not verified against line spans | Citations linked to SCIP graph; ungrounded text not automatically stripped |
+| **Code Modification & Editing** *(RepoPilot Loses)* | **LOSS (Read-Only)**: Unified diff proposals for manual review. **Does NOT edit files or execute changes.** | **LOSS**: Generates documentation; does not edit repository code. | **WIN**: Interactively edits files on disk, applies git commits, and runs test commands. | **WIN**: Direct in-editor code modifications, refactorings, and inline multi-line completions. |
+| **Multi-Repo & Enterprise Scope** *(RepoPilot Loses)* | **LOSS (Single-Repo Only)**: Capped at 25MB archive / 1,500 files. No cross-repo search. | Supports multi-repo documentation workspaces. | Operates on current local git repository only. | **WIN**: Enterprise cross-repository indexing across thousands of repos and monorepos. |
+| **Type-Aware Semantic Intelligence** *(RepoPilot Loses)* | **LOSS (AST & Heuristics)**: Tree-sitter WASM symbol extraction. **No compiler type-checker or cross-file inference.** | Static AST parsing without full compiler semantic analysis. | Tree-sitter AST definition/reference graph with PageRank ranking. | **WIN**: Compiler-grade SCIP/LSIF code graph with accurate cross-file go-to-definition and type hover. |
+| **Privacy & Credential Security** | **Browser Session Only**: BYO keys in `sessionStorage` (never server disk/logs); local Ollama | Cloud-hosted index; source synced to cloud | API keys stored locally in terminal environment | Enterprise on-prem / cloud SOC2 compliance |
+| **Cost** | **$0 / Free**: Deterministic core free forever; zero mandatory subscription | Freemium / Paid subscription for private repos | Free open-source CLI, but requires commercial LLM API costs | Free tier (500 chats/mo); Enterprise license ($$$) for full code graph |
 
-### Where RepoPilot is Weaker:
-- **No Private Repository OAuth**: RepoPilot currently targets public repositories. It does not provide private GitHub organization OAuth flows.
-- **Single-Repo Scope**: It does not perform cross-repository code graph linking or multi-repo enterprise search like Sourcegraph.
-- **Repository Size Bounds**: Monorepos exceeding 25MB compressed tarballs or 1,500 active source files are capped or truncated for browser performance.
-- **Model Reasoning Capacity**: Small local models (e.g. `qwen2.5-coder:1.5b` or `7b`) do not match the advanced multi-step reasoning capabilities of frontier cloud models (Claude 3.5 Sonnet, GPT-4o).
-- **Serverless Rate Limiting**: Without Upstash Redis configured via environment variables, rate limiting in serverless environments is best-effort and resets across cold starts.
+### Summary of Where RepoPilot Loses:
+1. **No Code Modification / Direct Editing**: RepoPilot is intentionally a read-only exploration and review tool. If you want an agent to autonomously write code, edit files on disk, and execute git commits, **Aider** or **Cody** is the right tool.
+2. **No Compiler-Grade Cross-File Type Checking**: RepoPilot uses WebAssembly Tree-sitter and heuristic extractors rather than a full TypeScript/Go compiler language server. For compiler-exact cross-file type references, **Sourcegraph Cody** (via SCIP) is superior.
+3. **Single-Repository Scope**: RepoPilot is designed for fast, focused single-repository inspection and cannot index an entire enterprise organization's multi-repository fleet like **Sourcegraph**.
+4. **Repository Size Ceiling**: Archives exceeding 25MB or 1,500 files are bounded to preserve browser performance.
 
 ---
 
@@ -433,7 +435,7 @@ npm start
 ### D. Grounded Code Assistant (`/assistant`)
 1. *(Optional)* Start Ollama locally (`ollama run qwen2.5-coder:7b`) or configure an OpenAI-compatible BYO key in `/settings/ai`.
 2. Type an architectural or functional question into the input form.
-3. The assistant returns a grounded response accompanied by clickable source citation cards (`file.ts:L12-L45`). Citations are strictly verified against the pinned commit SHA; invalid or hallucinated citations are automatically stripped.
+3. The assistant returns a grounded response accompanied by clickable source citation cards (`file.ts:L12-L45`). Citations are verified to exist in the pinned commit; invalid citations are stripped, and weak support is visibly flagged.
 4. If no AI provider is configured, the assistant operates in deterministic offline mode, presenting verified BM25 lexical and symbol matches.
 
 ### E. Bug Investigation & Patch Review (`/debugging` → `/patches`)
