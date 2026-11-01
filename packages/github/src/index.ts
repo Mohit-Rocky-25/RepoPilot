@@ -4,3 +4,4 @@ export * from "./cache";
 export * from "./tarballExtractor";
 export * from "./repoCache";
 export * from "./safeFetch";
+export * from "./tokenValidator";

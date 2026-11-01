@@ -2,14 +2,25 @@
  * Client-side fetch wrapper for RepoPilot API routes.
  * Automatically injects the user's stored GitHub Personal Access Token (if saved in Settings)
  * and optional Bring-Your-Own-Key AI credentials stored exclusively in sessionStorage.
+ *
+ * Enforces strict sessionStorage-only persistence (zero localStorage leakage).
  */
 export async function clientFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const headers = new Headers(init?.headers || {});
 
   if (typeof window !== "undefined") {
-    // 1. GitHub Token
+    // 1. GitHub Token (STRICTLY sessionStorage ONLY)
     try {
-      const storedGhToken = sessionStorage.getItem("REPOPILOT_GH_TOKEN") || localStorage.getItem("REPOPILOT_GH_TOKEN");
+      // Clear any legacy localStorage token to prevent persistence risk
+      if (localStorage.getItem("REPOPILOT_GH_TOKEN")) {
+        const legacyToken = localStorage.getItem("REPOPILOT_GH_TOKEN");
+        if (legacyToken && !sessionStorage.getItem("REPOPILOT_GH_TOKEN")) {
+          sessionStorage.setItem("REPOPILOT_GH_TOKEN", legacyToken);
+        }
+        localStorage.removeItem("REPOPILOT_GH_TOKEN");
+      }
+
+      const storedGhToken = sessionStorage.getItem("REPOPILOT_GH_TOKEN");
       if (storedGhToken && storedGhToken.trim() && !headers.has("x-github-token")) {
         headers.set("x-github-token", storedGhToken.trim());
       }
