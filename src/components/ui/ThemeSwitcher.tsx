@@ -133,11 +133,9 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
               className={
                 isSelected
                   ? opt.value === "light"
-                    ? "text-[#FBBC04]"
-                    : opt.value === "dark"
-                    ? "text-[#8AB4F8]"
+                    ? "text-theme-yellow"
                     : "text-theme-blue"
-                  : "text-theme-text-subtle"
+                  : "text-theme-text-muted"
               }
             >
               {opt.icon}
