@@ -41,7 +41,13 @@ export async function POST(req: NextRequest) {
     // Attempt to load package.json or requirements.txt if present
     let manifestContent: string | undefined;
     const manifestFile = tree.find(
-      (f) => f.path === "package.json" || f.path === "requirements.txt" || f.path === "go.mod"
+      (f) =>
+        f.path === "package.json" ||
+        f.path === "requirements.txt" ||
+        f.path === "go.mod" ||
+        f.path === "pom.xml" ||
+        f.path === "build.gradle" ||
+        f.path === "build.gradle.kts"
     );
 
     if (manifestFile) {

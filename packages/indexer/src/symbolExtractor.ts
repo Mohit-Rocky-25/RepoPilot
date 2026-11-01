@@ -79,6 +79,15 @@ async function getLanguageGrammar(langKey: string): Promise<any | null> {
       case "rust":
         wasmFileName = "tree-sitter-rust.wasm";
         break;
+      case "java":
+        wasmFileName = "tree-sitter-java.wasm";
+        break;
+      case "cpp":
+        wasmFileName = "tree-sitter-cpp.wasm";
+        break;
+      case "kotlin":
+        wasmFileName = "tree-sitter-kotlin.wasm";
+        break;
       default:
         return null;
     }
@@ -152,12 +161,18 @@ function resolveLanguageKey(ext?: string, language?: string): string | null {
   if (ext === "py") return "python";
   if (ext === "go") return "go";
   if (ext === "rs") return "rust";
+  if (ext === "java") return "java";
+  if (ext === "cpp" || ext === "cc" || ext === "cxx" || ext === "hpp" || ext === "h") return "cpp";
+  if (ext === "kt" || ext === "kts") return "kotlin";
 
   if (language === "TypeScript") return ext === "tsx" ? "tsx" : "typescript";
   if (language === "JavaScript") return "javascript";
   if (language === "Python") return "python";
   if (language === "Go") return "go";
   if (language === "Rust") return "rust";
+  if (language === "Java") return "java";
+  if (language === "C++" || language === "Cpp") return "cpp";
+  if (language === "Kotlin") return "kotlin";
 
   return null;
 }
@@ -516,6 +531,245 @@ function extractFromAst(
         }
         break;
       }
+
+      case "java": {
+        if (node.type === "class_declaration") {
+          const name = node.childForFieldName("name")?.text;
+          if (name) {
+            symbols.push({
+              id: `${filePath}:class:${name}:${startLine}`,
+              name,
+              kind: "class",
+              filePath,
+              startLine,
+              endLine,
+              signature: getSig(node.startPosition.row, node.endPosition.row),
+              confidence: "ast"
+            });
+            for (const child of node.children) {
+              walk(child, name);
+            }
+            return;
+          }
+        } else if (node.type === "interface_declaration") {
+          const name = node.childForFieldName("name")?.text;
+          if (name) {
+            symbols.push({
+              id: `${filePath}:iface:${name}:${startLine}`,
+              name,
+              kind: "interface",
+              filePath,
+              startLine,
+              endLine,
+              signature: getSig(node.startPosition.row, node.endPosition.row),
+              confidence: "ast"
+            });
+            for (const child of node.children) {
+              walk(child, name);
+            }
+            return;
+          }
+        } else if (node.type === "enum_declaration") {
+          const name = node.childForFieldName("name")?.text;
+          if (name) {
+            symbols.push({
+              id: `${filePath}:enum:${name}:${startLine}`,
+              name,
+              kind: "type",
+              filePath,
+              startLine,
+              endLine,
+              signature: getSig(node.startPosition.row, node.endPosition.row),
+              confidence: "ast"
+            });
+            for (const child of node.children) {
+              walk(child, name);
+            }
+            return;
+          }
+        } else if (node.type === "constructor_declaration") {
+          const name = node.childForFieldName("name")?.text;
+          if (name) {
+            symbols.push({
+              id: `${filePath}:constructor:${name}:${startLine}`,
+              name,
+              kind: "method",
+              filePath,
+              startLine,
+              endLine,
+              signature: getSig(node.startPosition.row, node.endPosition.row),
+              confidence: "ast"
+            });
+            for (const child of node.children) {
+              walk(child, parentClass);
+            }
+            return;
+          }
+        } else if (node.type === "method_declaration") {
+          const name = node.childForFieldName("name")?.text;
+          if (name) {
+            symbols.push({
+              id: `${filePath}:method:${name}:${startLine}`,
+              name,
+              kind: "method",
+              filePath,
+              startLine,
+              endLine,
+              signature: getSig(node.startPosition.row, node.endPosition.row),
+              confidence: "ast"
+            });
+            for (const child of node.children) {
+              walk(child, parentClass);
+            }
+            return;
+          }
+        }
+        break;
+      }
+
+      case "cpp": {
+        if (node.type === "class_specifier" || node.type === "struct_specifier") {
+          const name = node.childForFieldName("name")?.text ||
+            node.children.find((c: any) => c.type === "type_identifier")?.text;
+          if (name) {
+            symbols.push({
+              id: `${filePath}:class:${name}:${startLine}`,
+              name,
+              kind: "class",
+              filePath,
+              startLine,
+              endLine,
+              signature: getSig(node.startPosition.row, node.endPosition.row),
+              confidence: "ast"
+            });
+            for (const child of node.children) {
+              walk(child, name);
+            }
+            return;
+          }
+        } else if (node.type === "enum_specifier") {
+          const name = node.childForFieldName("name")?.text ||
+            node.children.find((c: any) => c.type === "type_identifier")?.text;
+          if (name) {
+            symbols.push({
+              id: `${filePath}:enum:${name}:${startLine}`,
+              name,
+              kind: "type",
+              filePath,
+              startLine,
+              endLine,
+              signature: getSig(node.startPosition.row, node.endPosition.row),
+              confidence: "ast"
+            });
+            return;
+          }
+        } else if (node.type === "function_definition") {
+          let declarator = node.childForFieldName("declarator");
+          while (declarator && declarator.childForFieldName && declarator.childForFieldName("declarator")) {
+            declarator = declarator.childForFieldName("declarator");
+          }
+          const name = declarator?.childForFieldName("name")?.text ||
+            declarator?.text?.split("(")[0]?.trim() ||
+            node.children.find((c: any) => c.type === "function_declarator")?.children.find((c: any) => c.type === "identifier" || c.type === "field_identifier")?.text;
+          if (name) {
+            const kind = parentClass ? "method" : "function";
+            symbols.push({
+              id: `${filePath}:${kind === "method" ? "method" : "fn"}:${name}:${startLine}`,
+              name,
+              kind,
+              filePath,
+              startLine,
+              endLine,
+              signature: getSig(node.startPosition.row, node.endPosition.row),
+              confidence: "ast"
+            });
+            for (const child of node.children) {
+              walk(child, parentClass);
+            }
+            return;
+          }
+        }
+        break;
+      }
+
+      case "kotlin": {
+        if (node.type === "class_declaration") {
+          const nameNode = node.children.find((c: any) => c.type === "type_identifier");
+          const name = nameNode?.text;
+          const isInterface = node.children.some((c: any) => c.type === "interface" || c.text === "interface");
+          const isEnum = node.children.some((c: any) => c.type === "enum" || c.text === "enum");
+          if (name) {
+            const kind = isInterface ? "interface" : isEnum ? "type" : "class";
+            symbols.push({
+              id: `${filePath}:${kind}:${name}:${startLine}`,
+              name,
+              kind,
+              filePath,
+              startLine,
+              endLine,
+              signature: getSig(node.startPosition.row, node.endPosition.row),
+              confidence: "ast"
+            });
+            for (const child of node.children) {
+              walk(child, name);
+            }
+            return;
+          }
+        } else if (node.type === "object_declaration") {
+          const nameNode = node.children.find((c: any) => c.type === "type_identifier");
+          const name = nameNode?.text;
+          if (name) {
+            symbols.push({
+              id: `${filePath}:class:${name}:${startLine}`,
+              name,
+              kind: "class",
+              filePath,
+              startLine,
+              endLine,
+              signature: getSig(node.startPosition.row, node.endPosition.row),
+              confidence: "ast"
+            });
+            for (const child of node.children) {
+              walk(child, name);
+            }
+            return;
+          }
+        } else if (node.type === "function_declaration") {
+          const nameNode = node.children.find((c: any) => c.type === "simple_identifier");
+          const name = nameNode?.text;
+          if (name) {
+            const kind = parentClass ? "method" : "function";
+            symbols.push({
+              id: `${filePath}:${kind === "method" ? "method" : "fn"}:${name}:${startLine}`,
+              name,
+              kind,
+              filePath,
+              startLine,
+              endLine,
+              signature: getSig(node.startPosition.row, node.endPosition.row),
+              confidence: "ast"
+            });
+            for (const child of node.children) {
+              walk(child, parentClass);
+            }
+            return;
+          }
+        } else if (node.type === "secondary_constructor") {
+          const name = parentClass || "constructor";
+          symbols.push({
+            id: `${filePath}:constructor:${name}:${startLine}`,
+            name,
+            kind: "method",
+            filePath,
+            startLine,
+            endLine,
+            signature: getSig(node.startPosition.row, node.endPosition.row),
+            confidence: "ast"
+          });
+          return;
+        }
+        break;
+      }
     }
 
     for (const child of node.children) {
@@ -567,6 +821,26 @@ export function extractSymbolsHeuristic(
   // Rust
   else if (language === "Rust" || ext === "rs") {
     extractRustHeuristic(filePath, lines, symbols);
+  }
+  // Java
+  else if (language === "Java" || ext === "java") {
+    extractJavaHeuristic(filePath, lines, symbols);
+  }
+  // C++
+  else if (
+    language === "C++" ||
+    language === "Cpp" ||
+    ext === "cpp" ||
+    ext === "cc" ||
+    ext === "cxx" ||
+    ext === "hpp" ||
+    ext === "h"
+  ) {
+    extractCppHeuristic(filePath, lines, symbols);
+  }
+  // Kotlin
+  else if (language === "Kotlin" || ext === "kt" || ext === "kts") {
+    extractKotlinHeuristic(filePath, lines, symbols);
   }
 
   return symbols;
@@ -946,6 +1220,255 @@ function extractRustHeuristic(filePath: string, lines: string[], symbols: Indexe
         startLine: idx + 1,
         endLine: idx + 1,
         signature: `const ${match[1]}`,
+        confidence: "heuristic"
+      });
+    }
+  });
+}
+
+function extractJavaHeuristic(filePath: string, lines: string[], symbols: IndexedSymbol[]) {
+  const javaClassPattern = /(?:public\s+|protected\s+|private\s+)?(?:abstract\s+|final\s+)?class\s+([a-zA-Z0-9_]+)/;
+  const javaInterfacePattern = /(?:public\s+|protected\s+|private\s+)?interface\s+([a-zA-Z0-9_]+)/;
+  const javaEnumPattern = /(?:public\s+|protected\s+|private\s+)?enum\s+([a-zA-Z0-9_]+)/;
+  const javaMethodPattern = /(?:public|protected|private|static|final|native|synchronized|abstract)\s+[\w\<\>\[\],\s]+\s+([a-zA-Z0-9_]+)\s*\([^)]*\)\s*(?:throws\s+[\w,\s]+)?\s*[{;]/;
+
+  let currentClass: string | null = null;
+
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*")) return;
+
+    let match = javaClassPattern.exec(trimmed);
+    if (match) {
+      currentClass = match[1];
+      const endLine = findBraceEndLine(lines, idx);
+      symbols.push({
+        id: `${filePath}:class:${match[1]}:${idx + 1}`,
+        name: match[1],
+        kind: "class",
+        filePath,
+        startLine: idx + 1,
+        endLine,
+        signature: `class ${match[1]}`,
+        confidence: "heuristic"
+      });
+      return;
+    }
+
+    match = javaInterfacePattern.exec(trimmed);
+    if (match) {
+      currentClass = match[1];
+      const endLine = findBraceEndLine(lines, idx);
+      symbols.push({
+        id: `${filePath}:iface:${match[1]}:${idx + 1}`,
+        name: match[1],
+        kind: "interface",
+        filePath,
+        startLine: idx + 1,
+        endLine,
+        signature: `interface ${match[1]}`,
+        confidence: "heuristic"
+      });
+      return;
+    }
+
+    match = javaEnumPattern.exec(trimmed);
+    if (match) {
+      currentClass = match[1];
+      const endLine = findBraceEndLine(lines, idx);
+      symbols.push({
+        id: `${filePath}:enum:${match[1]}:${idx + 1}`,
+        name: match[1],
+        kind: "type",
+        filePath,
+        startLine: idx + 1,
+        endLine,
+        signature: `enum ${match[1]}`,
+        confidence: "heuristic"
+      });
+      return;
+    }
+
+    if (currentClass) {
+      const ctorPattern = new RegExp(`^(?:public\\s+|protected\\s+|private\\s+)?${currentClass}\\s*\\([^)]*\\)`);
+      match = ctorPattern.exec(trimmed);
+      if (match) {
+        const endLine = findBraceEndLine(lines, idx);
+        symbols.push({
+          id: `${filePath}:constructor:${currentClass}:${idx + 1}`,
+          name: currentClass,
+          kind: "method",
+          filePath,
+          startLine: idx + 1,
+          endLine,
+          signature: trimmed.split("{")[0].trim(),
+          confidence: "heuristic"
+        });
+        return;
+      }
+    }
+
+    match = javaMethodPattern.exec(trimmed);
+    if (match && !["if", "for", "while", "switch", "catch"].includes(match[1])) {
+      const endLine = findBraceEndLine(lines, idx);
+      symbols.push({
+        id: `${filePath}:method:${match[1]}:${idx + 1}`,
+        name: match[1],
+        kind: "method",
+        filePath,
+        startLine: idx + 1,
+        endLine,
+        signature: trimmed.split("{")[0].trim(),
+        confidence: "heuristic"
+      });
+    }
+  });
+}
+
+function extractCppHeuristic(filePath: string, lines: string[], symbols: IndexedSymbol[]) {
+  const cppClassPattern = /(?:class|struct)\s+([a-zA-Z0-9_]+)\s*(?::|{|\n)/;
+  const cppEnumPattern = /enum\s+(?:class\s+)?([a-zA-Z0-9_]+)/;
+  const cppFuncPattern = /(?:[\w:<>]+\s+)+([a-zA-Z0-9_]+)\s*\([^)]*\)\s*(?:const)?\s*[{;]/;
+
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("//") || trimmed.startsWith("/*") || trimmed.startsWith("#")) return;
+
+    let match = cppClassPattern.exec(trimmed);
+    if (match) {
+      const endLine = findBraceEndLine(lines, idx);
+      symbols.push({
+        id: `${filePath}:class:${match[1]}:${idx + 1}`,
+        name: match[1],
+        kind: "class",
+        filePath,
+        startLine: idx + 1,
+        endLine,
+        signature: `class ${match[1]}`,
+        confidence: "heuristic"
+      });
+      return;
+    }
+
+    match = cppEnumPattern.exec(trimmed);
+    if (match) {
+      const endLine = findBraceEndLine(lines, idx);
+      symbols.push({
+        id: `${filePath}:enum:${match[1]}:${idx + 1}`,
+        name: match[1],
+        kind: "type",
+        filePath,
+        startLine: idx + 1,
+        endLine,
+        signature: `enum ${match[1]}`,
+        confidence: "heuristic"
+      });
+      return;
+    }
+
+    match = cppFuncPattern.exec(trimmed);
+    if (match && !["if", "for", "while", "switch", "catch"].includes(match[1])) {
+      const endLine = findBraceEndLine(lines, idx);
+      symbols.push({
+        id: `${filePath}:fn:${match[1]}:${idx + 1}`,
+        name: match[1],
+        kind: "function",
+        filePath,
+        startLine: idx + 1,
+        endLine,
+        signature: trimmed.split("{")[0].trim(),
+        confidence: "heuristic"
+      });
+    }
+  });
+}
+
+function extractKotlinHeuristic(filePath: string, lines: string[], symbols: IndexedSymbol[]) {
+  const ktClassPattern = /(?:data\s+|sealed\s+|open\s+)?class\s+([a-zA-Z0-9_]+)/;
+  const ktInterfacePattern = /interface\s+([a-zA-Z0-9_]+)/;
+  const ktEnumPattern = /enum\s+class\s+([a-zA-Z0-9_]+)/;
+  const ktObjectPattern = /object\s+([a-zA-Z0-9_]+)/;
+  const ktFuncPattern = /fun\s+(?:<[^>]+>\s+)?([a-zA-Z0-9_]+)\s*\(/;
+
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("//") || trimmed.startsWith("/*")) return;
+
+    let match = ktEnumPattern.exec(trimmed);
+    if (match) {
+      const endLine = findBraceEndLine(lines, idx);
+      symbols.push({
+        id: `${filePath}:enum:${match[1]}:${idx + 1}`,
+        name: match[1],
+        kind: "type",
+        filePath,
+        startLine: idx + 1,
+        endLine,
+        signature: `enum ${match[1]}`,
+        confidence: "heuristic"
+      });
+      return;
+    }
+
+    match = ktInterfacePattern.exec(trimmed);
+    if (match) {
+      const endLine = findBraceEndLine(lines, idx);
+      symbols.push({
+        id: `${filePath}:iface:${match[1]}:${idx + 1}`,
+        name: match[1],
+        kind: "interface",
+        filePath,
+        startLine: idx + 1,
+        endLine,
+        signature: `interface ${match[1]}`,
+        confidence: "heuristic"
+      });
+      return;
+    }
+
+    match = ktClassPattern.exec(trimmed);
+    if (match) {
+      const endLine = findBraceEndLine(lines, idx);
+      symbols.push({
+        id: `${filePath}:class:${match[1]}:${idx + 1}`,
+        name: match[1],
+        kind: "class",
+        filePath,
+        startLine: idx + 1,
+        endLine,
+        signature: `class ${match[1]}`,
+        confidence: "heuristic"
+      });
+      return;
+    }
+
+    match = ktObjectPattern.exec(trimmed);
+    if (match) {
+      const endLine = findBraceEndLine(lines, idx);
+      symbols.push({
+        id: `${filePath}:class:${match[1]}:${idx + 1}`,
+        name: match[1],
+        kind: "class",
+        filePath,
+        startLine: idx + 1,
+        endLine,
+        signature: `object ${match[1]}`,
+        confidence: "heuristic"
+      });
+      return;
+    }
+
+    match = ktFuncPattern.exec(trimmed);
+    if (match) {
+      const endLine = findBraceEndLine(lines, idx);
+      symbols.push({
+        id: `${filePath}:fn:${match[1]}:${idx + 1}`,
+        name: match[1],
+        kind: "function",
+        filePath,
+        startLine: idx + 1,
+        endLine,
+        signature: trimmed.split("{")[0].trim(),
         confidence: "heuristic"
       });
     }

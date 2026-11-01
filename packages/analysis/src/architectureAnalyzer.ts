@@ -34,6 +34,7 @@ export class ArchitectureAnalyzer {
     const ENTRY_PATTERNS = [
       /^(?:src\/|app\/|pages\/|lib\/|cmd\/[^/]+\/|backend\/|api\/)?(?:index|main|app|server|cli|page|layout|run|manage)\.(?:ts|tsx|js|jsx|mjs|py|go|rs|rb|php|java)$/i,
       /^(?:src\/)?(?:App|Server|Main)\.(?:tsx|jsx|ts|js|java)$/,
+      /^(?:.*\/)?[A-Z][a-zA-Z0-9]*Application\.(?:java|kt)$/,
       /^(?:src\/)?(?:lib|main)\.rs$/i,
       /^(?:cmd\/main\.go|main\.go|app\.py|wsgi\.py|asgi\.py|index\.html)$/i
     ];
@@ -56,9 +57,42 @@ export class ArchitectureAnalyzer {
         baseName === "docker-compose.yml" ||
         baseName === "vite.config.ts" ||
         baseName === "next.config.mjs" ||
-        baseName === "next.config.js"
+        baseName === "next.config.js" ||
+        baseName === "pom.xml" ||
+        baseName === "build.gradle" ||
+        baseName === "build.gradle.kts"
       ) {
         manifestFiles.push(file.path);
+      }
+
+      // Detect Spring Boot annotations and main() entry points in file content
+      if (file.content) {
+        if (file.content.includes("@SpringBootApplication")) {
+          frameworks.add("Spring Boot");
+          frameworks.add("Spring");
+          if (!entryPoints.includes(file.path)) {
+            entryPoints.push(file.path);
+          }
+        } else if (
+          file.path.endsWith(".java") &&
+          (file.content.includes("public static void main") || file.content.includes("static void main("))
+        ) {
+          if (!entryPoints.includes(file.path)) {
+            entryPoints.push(file.path);
+          }
+        }
+
+        if (baseName === "pom.xml" || baseName === "build.gradle" || baseName === "build.gradle.kts") {
+          if (
+            file.content.includes("spring-boot") ||
+            file.content.includes("org.springframework.boot") ||
+            file.content.includes("spring-framework") ||
+            file.content.includes("org.springframework")
+          ) {
+            frameworks.add("Spring Boot");
+            frameworks.add("Spring");
+          }
+        }
       }
     }
 
@@ -115,6 +149,15 @@ export class ArchitectureAnalyzer {
         if (manifestContent.includes("fastapi")) frameworks.add("FastAPI");
         if (manifestContent.includes("gin-gonic")) frameworks.add("Gin");
         if (manifestContent.includes("actix")) frameworks.add("Actix");
+        if (
+          manifestContent.includes("spring-boot") ||
+          manifestContent.includes("org.springframework.boot") ||
+          manifestContent.includes("spring-framework") ||
+          manifestContent.includes("org.springframework")
+        ) {
+          frameworks.add("Spring Boot");
+          frameworks.add("Spring");
+        }
       }
     }
 
