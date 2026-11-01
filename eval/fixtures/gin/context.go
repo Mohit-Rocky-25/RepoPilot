@@ -6,3 +6,7 @@ type Context struct {
 }
 
 func (c *Context) JSON(code int, obj any) {}
+
+func (c *Context) Query(key string) string {
+    return ""
+}

@@ -1,0 +1,4 @@
+[project]
+name = "itsdangerous"
+version = "2.2.0"
+description = "Safely pass untrusted data to untrusted environments and back."

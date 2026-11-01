@@ -25,5 +25,32 @@
     "commitSha": "8a791a8770c8901ebbe2a7a92df44f6974530467",
     "language": "Go",
     "description": "HTTP web framework written in Go (Golang)"
+  },
+  {
+    "id": "mitt",
+    "name": "developit/mitt",
+    "owner": "developit",
+    "repo": "mitt",
+    "commitSha": "e4a2cf52a13ba5ee756debdc589b2762f0227bb8",
+    "language": "TypeScript",
+    "description": "Tiny 200b functional event emitter library"
+  },
+  {
+    "id": "itsdangerous",
+    "name": "pallets/itsdangerous",
+    "owner": "pallets",
+    "repo": "itsdangerous",
+    "commitSha": "77df98ab219dcb64be735ec090e54dcb3e956627",
+    "language": "Python",
+    "description": "Cryptographic data signing and token serialization library"
+  },
+  {
+    "id": "ratelimit",
+    "name": "uber-go/ratelimit",
+    "owner": "uber-go",
+    "repo": "ratelimit",
+    "commitSha": "3e9be6587445778810e75a896ad2a39a7b9735d4",
+    "language": "Go",
+    "description": "Blocking leaky-bucket rate limiter for Go"
   }
 ]

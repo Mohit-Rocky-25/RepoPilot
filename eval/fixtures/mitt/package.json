@@ -1,0 +1,8 @@
+{
+  "name": "mitt",
+  "version": "3.0.1",
+  "description": "Tiny 200b functional Event Emitter / pubsub",
+  "main": "dist/mitt.js",
+  "module": "dist/mitt.mjs",
+  "types": "dist/mitt.d.ts"
+}

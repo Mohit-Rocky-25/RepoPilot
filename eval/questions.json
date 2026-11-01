@@ -56,6 +56,22 @@
     "category": "extension-hook"
   },
   {
+    "id": "swr-8",
+    "repo": "vercel/swr",
+    "question": "Where is mergeConfigurations helper defined for merging SWR options?",
+    "expectedFiles": ["_internal/utils/config.ts", "core/types.ts"],
+    "expectedSymbol": "mergeConfigurations",
+    "category": "configuration"
+  },
+  {
+    "id": "swr-9",
+    "repo": "vercel/swr",
+    "question": "Where is the internal cache serializer helper defined?",
+    "expectedFiles": ["_internal/utils/cache.ts", "core/types.ts"],
+    "expectedSymbol": "serialize",
+    "category": "cache"
+  },
+  {
     "id": "flask-1",
     "repo": "pallets/flask",
     "question": "Where is the central Flask application class defined?",
@@ -112,6 +128,22 @@
     "category": "templating"
   },
   {
+    "id": "flask-8",
+    "repo": "pallets/flask",
+    "question": "Where is AppContext application-level context managed?",
+    "expectedFiles": ["src/flask/ctx.py", "flask/ctx.py"],
+    "expectedSymbol": "AppContext",
+    "category": "context"
+  },
+  {
+    "id": "flask-9",
+    "repo": "pallets/flask",
+    "question": "Where is current_app context proxy defined?",
+    "expectedFiles": ["src/flask/globals.py", "flask/globals.py"],
+    "expectedSymbol": "current_app",
+    "category": "globals"
+  },
+  {
     "id": "gin-1",
     "repo": "gin-gonic/gin",
     "question": "Where is the core Gin Engine struct and New/Default constructors located?",
@@ -158,5 +190,228 @@
     "expectedFiles": ["binding/binding.go", "binding.go"],
     "expectedSymbol": "Binding",
     "category": "binding"
+  },
+  {
+    "id": "gin-7",
+    "repo": "gin-gonic/gin",
+    "question": "Where is Query parameter lookup implemented on the Context?",
+    "expectedFiles": ["context.go"],
+    "expectedSymbol": "Query",
+    "category": "context"
+  },
+  {
+    "id": "gin-8",
+    "repo": "gin-gonic/gin",
+    "question": "Where is DefaultEngine recovery setup helper defined?",
+    "expectedFiles": ["gin.go"],
+    "expectedSymbol": "Default",
+    "category": "core-engine"
+  },
+  {
+    "id": "gin-9",
+    "repo": "gin-gonic/gin",
+    "question": "Where is RecoveryWithWriter panic recovery middleware defined?",
+    "expectedFiles": ["recovery.go"],
+    "expectedSymbol": "RecoveryWithWriter",
+    "category": "middleware"
+  },
+  {
+    "id": "mitt-1",
+    "repo": "developit/mitt",
+    "question": "Where is the default mitt factory function defined?",
+    "expectedFiles": ["src/index.ts", "index.ts"],
+    "expectedSymbol": "mitt",
+    "category": "factory"
+  },
+  {
+    "id": "mitt-2",
+    "repo": "developit/mitt",
+    "question": "Where is the Emitter interface for event dispatching declared?",
+    "expectedFiles": ["src/index.ts", "index.ts"],
+    "expectedSymbol": "Emitter",
+    "category": "types"
+  },
+  {
+    "id": "mitt-3",
+    "repo": "developit/mitt",
+    "question": "Where is the Handler type callback defined in mitt?",
+    "expectedFiles": ["src/index.ts", "index.ts"],
+    "expectedSymbol": "Handler",
+    "category": "types"
+  },
+  {
+    "id": "mitt-4",
+    "repo": "developit/mitt",
+    "question": "Where is the WildcardHandler type declared for catch-all events?",
+    "expectedFiles": ["src/index.ts", "index.ts"],
+    "expectedSymbol": "WildcardHandler",
+    "category": "types"
+  },
+  {
+    "id": "mitt-5",
+    "repo": "developit/mitt",
+    "question": "Where is the EventHandlerMap type mapping event names to handler lists?",
+    "expectedFiles": ["src/index.ts", "index.ts"],
+    "expectedSymbol": "EventHandlerMap",
+    "category": "types"
+  },
+  {
+    "id": "mitt-6",
+    "repo": "developit/mitt",
+    "question": "Where is the EventHandlerList type declared in mitt?",
+    "expectedFiles": ["src/index.ts", "index.ts"],
+    "expectedSymbol": "EventHandlerList",
+    "category": "types"
+  },
+  {
+    "id": "mitt-7",
+    "repo": "developit/mitt",
+    "question": "Where is the WildCardEventHandlerList type declared?",
+    "expectedFiles": ["src/index.ts", "index.ts"],
+    "expectedSymbol": "WildCardEventHandlerList",
+    "category": "types"
+  },
+  {
+    "id": "mitt-8",
+    "repo": "developit/mitt",
+    "question": "Where is the EventType type alias for string and symbol events defined?",
+    "expectedFiles": ["src/index.ts", "index.ts"],
+    "expectedSymbol": "EventType",
+    "category": "types"
+  },
+  {
+    "id": "mitt-9",
+    "repo": "developit/mitt",
+    "question": "Where is the package manifest and entry point configured for mitt?",
+    "expectedFiles": ["package.json"],
+    "category": "config"
+  },
+  {
+    "id": "itsdangerous-1",
+    "repo": "pallets/itsdangerous",
+    "question": "Where is the core Signer class implemented for signing data?",
+    "expectedFiles": ["src/itsdangerous/signer.py", "itsdangerous/signer.py"],
+    "expectedSymbol": "Signer",
+    "category": "signing"
+  },
+  {
+    "id": "itsdangerous-2",
+    "repo": "pallets/itsdangerous",
+    "question": "Where is HMACAlgorithm hashing algorithm defined?",
+    "expectedFiles": ["src/itsdangerous/signer.py", "itsdangerous/signer.py"],
+    "expectedSymbol": "HMACAlgorithm",
+    "category": "algorithm"
+  },
+  {
+    "id": "itsdangerous-3",
+    "repo": "pallets/itsdangerous",
+    "question": "Where is SigningAlgorithm base interface defined?",
+    "expectedFiles": ["src/itsdangerous/signer.py", "itsdangerous/signer.py"],
+    "expectedSymbol": "SigningAlgorithm",
+    "category": "algorithm"
+  },
+  {
+    "id": "itsdangerous-4",
+    "repo": "pallets/itsdangerous",
+    "question": "Where is the Serializer class for JSON payload serialization defined?",
+    "expectedFiles": ["src/itsdangerous/serializer.py", "itsdangerous/serializer.py"],
+    "expectedSymbol": "Serializer",
+    "category": "serializer"
+  },
+  {
+    "id": "itsdangerous-5",
+    "repo": "pallets/itsdangerous",
+    "question": "Where is TimestampSigner with timestamp expiration implemented?",
+    "expectedFiles": ["src/itsdangerous/timed.py", "itsdangerous/timed.py"],
+    "expectedSymbol": "TimestampSigner",
+    "category": "signing"
+  },
+  {
+    "id": "itsdangerous-6",
+    "repo": "pallets/itsdangerous",
+    "question": "Where is TimedSerializer for time-sensitive deserialization defined?",
+    "expectedFiles": ["src/itsdangerous/timed.py", "itsdangerous/timed.py"],
+    "expectedSymbol": "TimedSerializer",
+    "category": "serializer"
+  },
+  {
+    "id": "itsdangerous-7",
+    "repo": "pallets/itsdangerous",
+    "question": "Where is the BadSignature exception class defined?",
+    "expectedFiles": ["src/itsdangerous/exc.py", "itsdangerous/exc.py"],
+    "expectedSymbol": "BadSignature",
+    "category": "exceptions"
+  },
+  {
+    "id": "itsdangerous-8",
+    "repo": "pallets/itsdangerous",
+    "question": "Where is SignatureExpired exception raised when token age exceeds max_age?",
+    "expectedFiles": ["src/itsdangerous/exc.py", "itsdangerous/exc.py"],
+    "expectedSymbol": "SignatureExpired",
+    "category": "exceptions"
+  },
+  {
+    "id": "ratelimit-1",
+    "repo": "uber-go/ratelimit",
+    "question": "Where is the primary Limiter interface defined?",
+    "expectedFiles": ["ratelimit.go"],
+    "expectedSymbol": "Limiter",
+    "category": "core-interface"
+  },
+  {
+    "id": "ratelimit-2",
+    "repo": "uber-go/ratelimit",
+    "question": "Where is the New limiter constructor function implemented?",
+    "expectedFiles": ["ratelimit.go"],
+    "expectedSymbol": "New",
+    "category": "constructor"
+  },
+  {
+    "id": "ratelimit-3",
+    "repo": "uber-go/ratelimit",
+    "question": "Where is WithoutSlack option defined to prevent accumulating slack?",
+    "expectedFiles": ["ratelimit.go"],
+    "expectedSymbol": "WithoutSlack",
+    "category": "options"
+  },
+  {
+    "id": "ratelimit-4",
+    "repo": "uber-go/ratelimit",
+    "question": "Where is the Per option function to configure rate time interval defined?",
+    "expectedFiles": ["ratelimit.go"],
+    "expectedSymbol": "Per",
+    "category": "options"
+  },
+  {
+    "id": "ratelimit-5",
+    "repo": "uber-go/ratelimit",
+    "question": "Where is the atomicLimiter struct and lock-free Take implementation located?",
+    "expectedFiles": ["limiter_atomic.go"],
+    "expectedSymbol": "atomicLimiter",
+    "category": "implementation"
+  },
+  {
+    "id": "ratelimit-6",
+    "repo": "uber-go/ratelimit",
+    "question": "Where is the newAtomicBased constructor for atomic rate limiting?",
+    "expectedFiles": ["limiter_atomic.go"],
+    "expectedSymbol": "newAtomicBased",
+    "category": "constructor"
+  },
+  {
+    "id": "ratelimit-7",
+    "repo": "uber-go/ratelimit",
+    "question": "Where is mutexLimiter struct with sync.Mutex implemented?",
+    "expectedFiles": ["limiter_mutex.go"],
+    "expectedSymbol": "mutexLimiter",
+    "category": "implementation"
+  },
+  {
+    "id": "ratelimit-8",
+    "repo": "uber-go/ratelimit",
+    "question": "Where is newMutexBased constructor for mutex rate limiting located?",
+    "expectedFiles": ["limiter_mutex.go"],
+    "expectedSymbol": "newMutexBased",
+    "category": "constructor"
   }
 ]
