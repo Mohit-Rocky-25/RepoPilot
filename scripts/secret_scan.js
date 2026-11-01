@@ -33,7 +33,8 @@ const IGNORED_FILES = new Set([
   "pnpm-lock.yaml",
   "yarn.lock",
   "securityControls.test.ts", // Contains synthetic/mock invalid secret strings for negative tests
-  "modelProvider.test.ts"     // Contains synthetic/mock secret strings for redaction tests
+  "modelProvider.test.ts",     // Contains synthetic/mock secret strings for redaction tests
+  "keyHandling.test.ts"       // Contains synthetic/mock secret strings for redaction tests
 ]);
 
 let violations = 0;

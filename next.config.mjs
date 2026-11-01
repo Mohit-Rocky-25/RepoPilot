@@ -39,7 +39,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://api.github.com https://raw.githubusercontent.com http://localhost:11434 http://127.0.0.1:11434",
+      "connect-src 'self' https://api.github.com https://codeload.github.com http://localhost:11434 http://127.0.0.1:11434",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'"

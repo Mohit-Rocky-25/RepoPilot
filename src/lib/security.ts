@@ -233,17 +233,25 @@ export function sanitizeErrorMessage(message: unknown, fallback = "An unexpected
 
   let clean = message;
 
-  // Strip potential Windows absolute paths: C:\Users\... or C:/Users/...
-  clean = clean.replace(/[a-zA-Z]:[\\/][^ \n\r"']+/g, "[REDACTED_PATH]");
+  // Strip API keys / tokens first: sk-..., sk-ant-..., AIza..., ghp_..., github_pat_..., Bearer ...
+  clean = clean.replace(/sk-ant-[a-zA-Z0-9_\-]{20,}/g, "[REDACTED_API_KEY]");
+  clean = clean.replace(/sk-[a-zA-Z0-9_\-]{20,}/g, "[REDACTED_API_KEY]");
+  clean = clean.replace(/AIza[0-9A-Za-z\-_]{30,45}/g, "[REDACTED_API_KEY]");
+  clean = clean.replace(/gh[psour]_[a-zA-Z0-9_]{20,}/g, "[REDACTED_TOKEN]");
+  clean = clean.replace(/github_pat_[a-zA-Z0-9_]{20,}/g, "[REDACTED_TOKEN]");
+  clean = clean.replace(/Bearer\s+[a-zA-Z0-9_\-.]+/gi, "Bearer [REDACTED]");
+
+  // Strip secrets in URLs or query strings: ?api_key=xyz, &token=xyz
+  clean = clean.replace(/([?&](?:token|key|api_key|apiKey|secret|access_token)=)[^&\s"']+/gi, "$1[REDACTED]");
+
+  // Strip sensitive JSON fields
+  clean = clean.replace(/("(?:apiKey|token|secret|password|access_token|authorization)"\s*:\s*")[^"]+(")/gi, '$1[REDACTED]$2');
+
+  // Strip potential Windows absolute paths (e.g. C:\Users\... or C:/Users/...), avoiding http:// or https://
+  clean = clean.replace(/(?:^|[\s"'(])([a-zA-Z]:[\\/][^ \n\r"']+)/g, (match, path) => match.replace(path, "[REDACTED_PATH]"));
 
   // Strip potential Unix absolute paths: /home/..., /Users/..., /etc/...
   clean = clean.replace(/(?:\/home|\/Users|\/root|\/etc)[^ \n\r"']+/g, "[REDACTED_PATH]");
-
-  // Strip API keys / tokens: sk-..., ghp_..., github_pat_..., Bearer ...
-  clean = clean.replace(/sk-[a-zA-Z0-9_-]{20,}/g, "[REDACTED_API_KEY]");
-  clean = clean.replace(/ghp_[a-zA-Z0-9]{20,}/g, "[REDACTED_TOKEN]");
-  clean = clean.replace(/github_pat_[a-zA-Z0-9_]{20,}/g, "[REDACTED_TOKEN]");
-  clean = clean.replace(/Bearer\s+[a-zA-Z0-9_\-.]+/gi, "Bearer [REDACTED]");
 
   // Remove stack traces if someone threw an error and called String(err)
   clean = clean.replace(/^\s*at\s+.*$/gm, "").trim();
