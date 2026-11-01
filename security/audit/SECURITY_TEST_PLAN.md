@@ -4,7 +4,7 @@
 **Target Application:** RepoPilot (`Mohit-Rocky-25/RepoPilot`)  
 **Deployment Surface:** Vercel Edge / Serverless (`https://repo-pilot-git.vercel.app`)  
 **Assessment Date:** October 2026  
-**Classification:** Confidential — Security Testing Specification  
+**Classification:** Public Open-Source — Security Testing Specification  
 
 ---
 

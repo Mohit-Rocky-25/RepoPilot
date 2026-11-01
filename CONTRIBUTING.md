@@ -1,96 +1,104 @@
 # Contributing to RepoPilot
 
-Thank you for your interest in contributing to **RepoPilot**!
+Thank you for your interest in contributing to **RepoPilot**! RepoPilot is an open-source codebase intelligence, 3D architecture visualization, and evidence-grounded debugging platform built with **Next.js 14 App Router, TypeScript strict mode, Zod, and Vitest**.
 
-RepoPilot is an open-source codebase intelligence and developer productivity platform. We welcome contributions from developers, researchers, and open-source advocates of all experience levels.
-
----
-
-## 🌟 Code of Conduct
-
-We are committed to providing a welcoming, constructive, and inclusive environment. Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating in the community.
+We welcome contributions from software engineers, researchers, and open-source advocates worldwide.
 
 ---
 
-## 🚀 Development Setup
+## 1. Code of Conduct
 
-### 1. Prerequisites
-- **Node.js**: v18.18+ or v20+
-- **npm**: v9+ or v10+
-- **Git**: Installed and configured
-- *(Optional)* **Ollama**: For local open-weights coding model testing ([https://ollama.com](https://ollama.com))
+We are committed to providing a welcoming, inclusive, and harassment-free environment for all contributors. Please treat everyone with respect and kindness.
 
-### 2. Fork and Clone
+---
+
+## 2. Development Setup
+
+### Prerequisites
+- **Node.js**: v20.x or later
+- **npm**: v10.x or later
+- **Git**
+
+### Getting Started
+
 ```bash
-# 1. Fork the repository on GitHub
-# 2. Clone your personal fork
-git clone https://github.com/<your-username>/RepoPilot.git
+# 1. Clone the repository
+git clone https://github.com/Mohit-Rocky-25/RepoPilot.git
 cd RepoPilot
 
-# 3. Install dependencies
-npm install
+# 2. Install dependencies cleanly
+npm ci
 
-# 4. Start the development server
+# 3. Start local development server
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) to view the application.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🧪 Quality Verification Suite
+## 3. Architecture & Monorepo Layout
 
-Before submitting any pull request, ensure all three quality gates pass with zero errors:
+RepoPilot organizes its core logic into focused packages under `packages/` with strict domain boundaries:
 
-```bash
-# 1. Typecheck: Verify strict TypeScript compilation
-npm run typecheck
-
-# 2. Tests: Run all unit and integration test suites
-npm test
-
-# 3. Build: Verify that all production routes compile
-npm run build
+```
+packages/
+├── core/         # Core domain entities, interfaces, and Zod validation schemas
+├── github/       # GitHub API client, SSRF-defended safeFetch, tarball extractor, token validator
+├── indexer/      # Tree-sitter WASM AST symbol extractors (TS, JS, Py, Go, Rust, Java, C++, Kotlin)
+├── search/       # Inverted index, identifier splitting (camelCase/snake_case), BM25 lexical search
+├── analysis/     # Framework detection, entry point discovery, and 2D/3D spatial graph generation
+├── ai/           # Bounded context prompt builder, Ollama provider, and 3-pass citation validator
+├── debugging/    # Stack trace parser, candidate diff generator, lightweight TS type checker
+└── execution/    # Execution policy enforcing untrusted repository sandboxing
 ```
 
----
-
-## 📐 Engineering Guidelines & Principles
-
-1. **Evidence-Grounded Intelligence**:
-   - Any feature that references code or architecture must be grounded in actual indexed files and line numbers.
-   - Do not display fabricated metrics, fake repository stars, or synthetic data.
-
-2. **Deterministic Core & Zero Mandatory Fees**:
-   - The core functionality (file browsing, search, AST symbol indexing, architecture mapping, stack trace parsing) must operate 100% offline without requiring paid third-party APIs.
-   - AI features are strictly optional and rely on local open-weights models (via Ollama).
-
-3. **Untrusted Code Security**:
-   - Treat third-party repository code as untrusted. Never add automated scripts that execute user code, build manifests, or install scripts on the server.
-   - Provide reproducible manual instructions and unified diffs instead.
-
-4. **Design System Consistency**:
-   - Adhere to the established design system:
-     - Obsidian canvas: `#010102`
-     - Elevated surfaces: `#0F1011` to `#191A1B`
-     - Crisp 1px borders: `#23252A`, `#34343A`, `#3E3E44`
-     - Restrained primary accent: `#5E6AD2`
-     - Monospace typography for technical identifiers, hashes, and line coordinates.
+The web application UI resides in `src/app/` using the Next.js 14 App Router.
 
 ---
 
-## 📬 Pull Request Workflow
+## 4. Quality Gates & Testing Standards
 
-1. Create a feature branch from `main`:
-   ```bash
-   git checkout -b feat/your-feature-name
-   ```
-2. Commit your changes using conventional commit messages:
-   ```bash
-   git commit -m "feat(indexer): add Kotlin AST symbol extractor"
-   ```
-3. Push your branch to GitHub:
-   ```bash
-   git push origin feat/your-feature-name
-   ```
-4. Open a Pull Request on GitHub against `main`. Fill out the pull request template with a clear explanation of what was changed and the testing verification performed.
+All pull requests must pass automated CI checks. Before submitting a PR or pushing commits, run:
+
+```bash
+# 1. TypeScript Strict Typecheck
+npm run typecheck
+
+# 2. Next.js ESLint
+npm run lint
+
+# 3. Vitest Unit & Integration Suite
+npm test
+
+# 4. Secret & Credential Scanning
+npm run security:scan
+
+# 5. Playwright End-to-End Tests
+npm run test:e2e
+```
+
+### Core Contribution Rules
+1. **Never Break Existing Tests:** All 270+ test cases across all suites must pass.
+2. **Add Tests for Every Behavior Change:** Every bug fix or new capability must include unit or integration tests that fail before the change and pass after.
+3. **Honest Claims:** Documentation and UI claims must be strictly verified by automated tests. No claim may be stronger than what tests prove.
+4. **Zero Untrusted Code Execution:** RepoPilot strictly treats third-party repository code as untrusted data. Never execute repository build scripts, test suites, or package install hooks on the server.
+5. **Feature Flags for Large Features:** Large or experimental capabilities (e.g. GitHub App OAuth, multi-repo workspaces) must ship behind feature flags, disabled by default.
+6. **SessionStorage for Secrets:** User credentials (tokens, API keys) must be stored exclusively in `sessionStorage` in the browser tab and never persisted in `localStorage` or server databases.
+
+---
+
+## 5. Commit & Pull Request Guidelines
+
+### Commit Messages
+We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+- `feat(scope): add Java AST symbol extractor`
+- `fix(security): reject SSRF DNS rebinding on redirect hops`
+- `test(ai): add 3-pass citation support check test`
+- `docs(readme): add known limitations section`
+
+### Opening a Pull Request
+1. Branch from `main`: `git checkout -b feat/your-feature-name`.
+2. Commit in logical, well-tested units.
+3. Verify all checks pass locally (`typecheck`, `lint`, `test`, `security:scan`).
+4. Push your branch and open a Pull Request with a clear description of the problem, the solution, and tests added.

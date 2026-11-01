@@ -455,7 +455,7 @@ npm start
 - **Safe Tarball Extraction**: Ingestion downloads a single gzipped tarball from `codeload.github.com`, enforcing a 25MB archive cap, 100KB per-file cap, symlink root containment, and path traversal (`../`) rejection.
 - **Path Traversal Mitigation**: File path lookups within repository trees are validated against directory navigation sequences (`..`) and null bytes.
 - **Untrusted Code Sandbox**: No arbitrary repository scripts, package install hooks, or test runners are executed on the server. Patches are suggestions for human review.
-- **Client-Side Secrets**: Personal Access Tokens (PATs) and BYO AI keys default strictly to browser `sessionStorage` (with explicit opt-in for device persistence), are never logged, and are sent only to their respective upstream providers over HTTPS.
+- **Client-Side Secrets**: Personal Access Tokens (PATs) and BYO AI keys default strictly to browser `sessionStorage` (strictly sessionStorage only, never persisted across browser restarts or written to localStorage), are never logged, and are sent only to their respective upstream providers over HTTPS.
 - **SVG XSS Sanitization**: Mermaid architecture diagrams are sanitized via DOMParser, stripping `<script>`, inline event handlers (`onload`), and `javascript:` pseudo-protocols.
 
 ### Known Limitations:
@@ -485,6 +485,7 @@ RepoPilot/
 │   ├── ai/                          # Bounded Ollama client & citation validator
 │   ├── debugging/                   # Stack trace parser & candidate diff generator
 │   └── execution/                   # Sandbox safety policies
+├── legacy/                          # Archived pre-Next.js static HTML/CSS prototypes
 ├── docs/                            # Architecture specifications & decision records (ADRs)
 ├── tests/                           # Vitest unit and integration test suites
 ├── assets/                          # Official brand logo and banner imagery

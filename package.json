@@ -2,7 +2,7 @@
   "name": "repopilot",
   "version": "1.0.0",
   "description": "Open-source codebase intelligence, architecture visualization, and evidence-grounded debugging platform",
-  "main": "index.html",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/Mohit-Rocky-25/RepoPilot.git"
