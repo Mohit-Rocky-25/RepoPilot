@@ -6,6 +6,101 @@ let treeSitterInitPromise: Promise<boolean> | null = null;
 let ParserConstructor: any = null;
 const loadedLanguages = new Map<string, any>();
 
+export type WasmStatus = "idle" | "warming" | "ready" | "fallback";
+
+export interface WasmState {
+  status: WasmStatus;
+  language: string | null;
+}
+
+let currentWasmState: WasmState = { status: "idle", language: null };
+const wasmListeners = new Set<(state: WasmState) => void>();
+
+export function getWasmStatus(): WasmState {
+  return { ...currentWasmState };
+}
+
+export function onWasmStatusChange(listener: (state: WasmState) => void): () => void {
+  wasmListeners.add(listener);
+  listener(getWasmStatus());
+  return () => wasmListeners.delete(listener);
+}
+
+export function setWasmState(status: WasmStatus, language?: string | null) {
+  currentWasmState = {
+    status,
+    language: language !== undefined ? language : currentWasmState.language
+  };
+  for (const listener of wasmListeners) {
+    try {
+      listener(getWasmStatus());
+    } catch {}
+  }
+}
+
+const WASM_CACHE_NAME = "repopilot-wasm-v1";
+
+/**
+ * Loads wasm grammar using Cache Storage in browsers when available.
+ */
+async function loadWasmWithCacheStorage(wasmBase: string, wasmFileName: string): Promise<any> {
+  const path = await import("path");
+  const fallbackPath = path.join(wasmBase, wasmFileName);
+
+  if (typeof window !== "undefined" && typeof window.caches !== "undefined") {
+    try {
+      const cache = await window.caches.open(WASM_CACHE_NAME);
+      const cacheMatch = await cache.match(wasmFileName);
+      if (cacheMatch) {
+        const bytes = await cacheMatch.arrayBuffer();
+        return await ParserConstructor.Language.load(new Uint8Array(bytes));
+      }
+
+      // Try fetching and caching
+      const response = await fetch(`/wasm/${wasmFileName}`);
+      if (response.ok) {
+        await cache.put(wasmFileName, response.clone());
+        const bytes = await response.arrayBuffer();
+        return await ParserConstructor.Language.load(new Uint8Array(bytes));
+      }
+    } catch {
+      // Fall through to standard loading
+    }
+  }
+
+  return await ParserConstructor.Language.load(fallbackPath);
+}
+
+/**
+ * Preloads the Tree-sitter grammar for the primary repository language.
+ * Lazy-loads other language grammars on demand.
+ */
+export async function preloadGrammarForLanguage(languageOrKey: string): Promise<boolean> {
+  if (!languageOrKey) return false;
+  const langKey = resolveLanguageKey(undefined, languageOrKey) || languageOrKey.toLowerCase();
+
+  if (loadedLanguages.has(langKey)) {
+    setWasmState("ready", langKey);
+    return true;
+  }
+
+  setWasmState("warming", langKey);
+
+  try {
+    const grammar = await getLanguageGrammar(langKey);
+    if (grammar) {
+      setWasmState("ready", langKey);
+      return true;
+    } else {
+      setWasmState("fallback", langKey);
+      return false;
+    }
+  } catch {
+    setWasmState("fallback", langKey);
+    return false;
+  }
+}
+
 /**
  * Lazily initialize web-tree-sitter and locate wasm files.
  * Returns true if tree-sitter is ready for use, false if unavailable.
@@ -92,9 +187,9 @@ async function getLanguageGrammar(langKey: string): Promise<any | null> {
         return null;
     }
 
-    const wasmPath = path.join(wasmBase, wasmFileName);
-    const lang = await ParserConstructor.Language.load(wasmPath);
+    const lang = await loadWasmWithCacheStorage(wasmBase, wasmFileName);
     loadedLanguages.set(langKey, lang);
+    setWasmState("ready", langKey);
     return lang;
   } catch {
     return null;

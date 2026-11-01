@@ -26,11 +26,11 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import type { RepositoryFile, IndexedSymbol } from "@repopilot/core";
-import { extractSymbols } from "@repopilot/indexer";
+import { extractSymbols, preloadGrammarForLanguage, onWasmStatusChange, type WasmState } from "@repopilot/indexer";
 import { ArchitectureAnalyzer } from "@repopilot/analysis";
 import { clientFetch } from "@/lib/api";
 import { generateMarkdownReport, downloadMarkdownReport } from "@/lib/reportGenerator";
-import { Download, ShieldCheck, Share2, Check } from "lucide-react";
+import { Download, ShieldCheck, Zap, Share2, Check } from "lucide-react";
 import { getIndexFromIndexedDB, saveIndexToIndexedDB } from "@/lib/browserIndexCache";
 
 function formatFileSize(bytes: number): string {
@@ -52,6 +52,7 @@ function ExploreContent() {
   const shaParam = searchParams.get("sha");
   const [cacheHit, setCacheHit] = useState<"indexeddb" | "server" | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
+  const [wasmState, setWasmState] = useState<WasmState>({ status: "idle", language: null });
   const initialLine = searchParams.get("line") ? parseInt(searchParams.get("line")!, 10) : undefined;
   const ownerParam = searchParams.get("owner");
   const repoParam = searchParams.get("repo");
@@ -174,6 +175,23 @@ function ExploreContent() {
       }
     }
   }, [currentRepo, files.length, setFiles, shaParam]);
+
+  // Listen to WASM warming status
+  useEffect(() => {
+    const unsubscribe = onWasmStatusChange((state) => {
+      setWasmState(state);
+    });
+    return unsubscribe;
+  }, []);
+
+  // Preload primary language grammar when files are loaded
+  useEffect(() => {
+    if (files.length === 0) return;
+    const summary = ArchitectureAnalyzer.analyze(files);
+    if (summary.primaryLanguage && summary.primaryLanguage !== "Unknown") {
+      preloadGrammarForLanguage(summary.primaryLanguage);
+    }
+  }, [files]);
 
   // Resolve target file or directory whenever files or search params change
   useEffect(() => {
