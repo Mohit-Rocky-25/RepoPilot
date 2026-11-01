@@ -28,6 +28,9 @@ jobs:
       - name: Run Secret Scan
         run: npm run security:scan
 
+      - name: Run Dependency Audit (Fail on High Severity)
+        run: npm audit --audit-level=high
+
       - name: Run ESLint
         run: npm run lint
 
