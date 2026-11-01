@@ -349,7 +349,17 @@ ${mermaidCode}
 
     // 11. Strict Citation Validation & Cleansing
     const extractedCitations = CitationValidator.extractCitations(rawResponse);
-    const validationResult = CitationValidator.validate(extractedCitations, tree);
+    const fileContentsMap = new Map<string, string>();
+    for (const chunk of rawChunks) {
+      fileContentsMap.set(chunk.filePath, chunk.content);
+    }
+    const validationResult = CitationValidator.validate(
+      extractedCitations,
+      tree,
+      undefined,
+      fileContentsMap,
+      rawResponse
+    );
     const cleanedAnswer = validationResult.invalidCitations.length > 0
       ? CitationValidator.cleanInvalidCitations(rawResponse, validationResult.invalidCitations)
       : rawResponse;
@@ -359,6 +369,8 @@ ${mermaidCode}
       answer: cleanedAnswer,
       citations: citations,
       validatedCitations: validationResult.validCitations,
+      weakCitations: validationResult.weakCitations,
+      uncitedClaims: validationResult.uncitedClaims,
       citationWarning: validationResult.warning,
       confidence: validationResult.validCitations.length > 0 ? "high" : "medium",
       modelUsed: model,

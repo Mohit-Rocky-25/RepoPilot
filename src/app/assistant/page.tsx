@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import type { SourceReference } from "@repopilot/core";
+import type { ParsedCitation, UncitedClaim } from "@repopilot/ai";
 import { clientFetch } from "@/lib/api";
 
 interface QAItem {
@@ -37,6 +38,9 @@ interface QAItem {
   question: string;
   answer: string;
   citations: SourceReference[];
+  validatedCitations?: ParsedCitation[];
+  weakCitations?: ParsedCitation[];
+  uncitedClaims?: UncitedClaim[];
   modelUsed?: string;
   confidence?: string;
   timestamp: string;
@@ -153,6 +157,9 @@ export default function AssistantPage() {
         question: qText.trim(),
         answer: data.answer,
         citations: data.citations || [],
+        validatedCitations: data.validatedCitations || [],
+        weakCitations: data.weakCitations || [],
+        uncitedClaims: data.uncitedClaims || [],
         modelUsed: data.modelUsed,
         confidence: data.confidence,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -595,31 +602,82 @@ export default function AssistantPage() {
                     Grounding Source References:
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {item.citations.map((cit, idx) => (
-                      <Link
-                        key={idx}
-                        href={`/explore?file=${encodeURIComponent(cit.filePath)}&line=${cit.startLine}`}
-                        className="p-2.5 rounded bg-linear-surface-2 hover:bg-linear-surface-3 border border-linear-border-1 hover:border-linear-accent/40 transition-colors group font-mono text-xs block"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 truncate">
-                            <FileCode className="w-3.5 h-3.5 text-linear-accent shrink-0" />
-                            <span className="text-linear-text-main font-medium truncate group-hover:text-linear-accent">
-                              {cit.filePath}
-                            </span>
+                    {item.citations.map((cit, idx) => {
+                      const val = item.validatedCitations?.find(
+                        (v) => v.filePath === cit.filePath && v.startLine === cit.startLine
+                      );
+                      const isWeak = val?.isWeakSupport || val?.supportStatus === "weak";
+                      const isUnverified = val ? !val.isValid : false;
+
+                      return (
+                        <Link
+                          key={idx}
+                          href={`/explore?file=${encodeURIComponent(cit.filePath)}&line=${cit.startLine}`}
+                          className={`p-2.5 rounded bg-linear-surface-2 hover:bg-linear-surface-3 border ${
+                            isUnverified
+                              ? "border-red-500/40 hover:border-red-500/60"
+                              : isWeak
+                              ? "border-amber-500/40 hover:border-amber-500/60"
+                              : "border-linear-border-1 hover:border-linear-accent/40"
+                          } transition-colors group font-mono text-xs block`}
+                        >
+                          <div className="flex items-center justify-between gap-1.5">
+                            <div className="flex items-center gap-1.5 truncate">
+                              <FileCode className="w-3.5 h-3.5 text-linear-accent shrink-0" />
+                              <span className="text-linear-text-main font-medium truncate group-hover:text-linear-accent">
+                                {cit.filePath}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-[11px] text-linear-text-subtle">
+                                L{cit.startLine}-{cit.endLine}
+                              </span>
+                              {isUnverified ? (
+                                <Badge variant="danger" size="sm">
+                                  Unverified
+                                </Badge>
+                              ) : isWeak ? (
+                                <Badge variant="warning" size="sm">
+                                  Weak support
+                                </Badge>
+                              ) : (
+                                <Badge variant="success" size="sm">
+                                  Verified
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <span className="text-[11px] text-linear-text-subtle shrink-0">
-                            L{cit.startLine}-{cit.endLine}
-                          </span>
-                        </div>
-                        {cit.codeSnippet && (
-                          <div className="mt-1.5 text-[10px] text-linear-text-muted truncate bg-linear-surface-3 p-1 rounded border border-linear-border-1">
-                            {cit.codeSnippet.split("\n")[0]}
-                          </div>
-                        )}
-                      </Link>
-                    ))}
+                          {cit.codeSnippet && (
+                            <div className="mt-1.5 text-[10px] text-linear-text-muted truncate bg-linear-surface-3 p-1 rounded border border-linear-border-1">
+                              {cit.codeSnippet.split("\n")[0]}
+                            </div>
+                          )}
+                          {isWeak && (
+                            <div className="mt-1 text-[10px] text-amber-400 font-mono">
+                              ⚠ Weak support: cited span has low relevance to claim
+                            </div>
+                          )}
+                        </Link>
+                      );
+                    })}
                   </div>
+                </div>
+              )}
+
+              {/* Uncited Claims Banner */}
+              {item.uncitedClaims && item.uncitedClaims.length > 0 && (
+                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono space-y-1.5">
+                  <div className="flex items-center gap-1.5 font-semibold text-amber-400">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span>Uncited claims detected ({item.uncitedClaims.length}):</span>
+                  </div>
+                  <ul className="space-y-1 list-disc list-inside text-[11px] text-amber-200/90">
+                    {item.uncitedClaims.map((claim, idx) => (
+                      <li key={idx} className="leading-relaxed">
+                        &ldquo;{claim.sentence}&rdquo; — <span className="text-amber-400 font-semibold">{claim.reason}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </Card>
