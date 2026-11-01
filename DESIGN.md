@@ -271,3 +271,49 @@ A persistent legend is displayed in the lower-right corner of the architecture c
 3. Verify the contrast ratio against light surface (`#FFFFFF`) and dark surface (`#292A2D`) using relative luminance formulas.
 4. Document the new token and measured contrast in `DESIGN.md`.
 
+---
+
+## 11. Responsive Design and Mobile Foundations
+
+### 11.1 Target Devices and Viewport Spectrum
+RepoPilot fully supports mobile, tablet, and desktop viewports without degrading desktop ergonomics:
+- **320px** — Ultra-compact mobile (iPhone SE 1st gen, small Android)
+- **360px** — Baseline Android device (e.g., Galaxy A-series, throttled 4G)
+- **390px / 412px** — Modern flagship and mid-range mobile viewports (iPhone 14/15, Pixel 7)
+- **600px / 768px** — Compact and full-size tablets portrait (iPad Mini, iPad 10th gen)
+- **1024px** — Tablets landscape and small laptops
+- **1280px+** — Standard and ultra-wide desktop monitors
+
+### 11.2 Fluid Typography Tokens (Clamp-Based)
+All typography scales smoothly with the viewport width using CSS `clamp()` functions to prevent text truncation while maintaining readability:
+
+| Token | Clamp Definition | Range (Mobile → Desktop) | Intended Usage |
+| :--- | :--- | :--- | :--- |
+| `--font-size-xs` | `clamp(0.75rem, 0.7rem + 0.25vw, 0.8125rem)` | 12px → 13px | Timestamps, micro-labels, badges |
+| `--font-size-sm` | `clamp(0.8125rem, 0.77rem + 0.2vw, 0.875rem)` | 13px → 14px | Table cells, file tree labels, helper text |
+| `--font-size-base` | `clamp(1rem, 0.95rem + 0.25vw, 1.0625rem)` | 16px → 17px | Body text, explanation copy, default font |
+| `--font-size-lg` | `clamp(1.125rem, 1.05rem + 0.35vw, 1.25rem)` | 18px → 20px | Subheadings, section titles |
+| `--font-size-xl` | `clamp(1.25rem, 1.15rem + 0.5vw, 1.5rem)` | 20px → 24px | Modal titles, card headers |
+| `--font-size-2xl` | `clamp(1.5rem, 1.3rem + 1vw, 2rem)` | 24px → 32px | Page titles, hero subheadings |
+| `--font-size-3xl` | `clamp(1.875rem, 1.6rem + 1.4vw, 2.5rem)` | 30px → 40px | Hero display headings |
+
+### 11.3 Form Controls and iOS Auto-Zoom Prevention
+- **Rule:** Every `<input>`, `<select>`, and `<textarea>` element computes to at least **16px font-size** on viewports `<= 768px`.
+- **Reason:** Mobile WebKit (iOS Safari) automatically forces a destructive page zoom whenever a form input with font size under 16px is focused, breaking the layout.
+- **Enforcement:** Global rule `@media (max-width: 768px) { input, select, textarea { font-size: 16px !important; } }` and component classes `text-base sm:text-sm`.
+
+### 11.4 Touch Targets and Spacing
+- **Minimum Target Dimension:** Visible interactive targets (buttons, chips, file tree rows, tabs, citation badges, theme radios) must measure at least **44×44 CSS px** on touch devices.
+- **Target Spacing:** Minimum **8px clearance** between adjacent interactive touch targets.
+- **Enforcement:** Base utility `min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0` and `@media (pointer: coarse)` CSS overrides.
+
+### 11.5 Viewport Insets and Full-Height Layouts
+- **Dynamic Viewport:** Use `dvh` / `svh` units (`h-[100dvh]`, `min-h-[100dvh]`) instead of `vh` to accommodate browser navigation bars and mobile chrome dynamically.
+- **Safe Areas:** Adhere to `env(safe-area-inset-*)` with utility classes `.pt-safe`, `.pb-safe`, `.pl-safe`, `.pr-safe` for notched screens (iPhone Dynamic Island / Home Indicator).
+- **Zero Horizontal Page Scroll:** The root page containers enforce `max-width: 100vw; overflow-x: hidden`. Wide content (code blocks, syntax trees, diff views, tables) scrolls strictly inside its own overflow container.
+
+### 11.6 Motion and Interaction Accessibility
+- **Reduced Motion:** When `prefers-reduced-motion: reduce` is enabled, all transitions and animations are collapsed to 0.01ms.
+- **No Hover-Only Dependence:** Essential information, tooltips, and contextual actions are accessible via tap or focus, never requiring hover.
+
+

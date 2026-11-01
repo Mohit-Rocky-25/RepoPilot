@@ -28,7 +28,8 @@ export const viewport: Viewport = {
   ],
   colorScheme: "light dark",
   width: "device-width",
-  initialScale: 1
+  initialScale: 1,
+  viewportFit: "cover"
 };
 
 export const metadata: Metadata = {

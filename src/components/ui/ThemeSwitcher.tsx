@@ -144,7 +144,7 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
             tabIndex={0}
             onClick={() => handleSelect(opt.value)}
             onKeyDown={(e) => handleKeyDown(e, idx)}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-blue cursor-pointer ${
+            className={`flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-blue cursor-pointer ${
               isSelected
                 ? "bg-theme-surface text-theme-text font-medium shadow-xs border border-theme-border"
                 : "text-theme-text-muted hover:text-theme-text hover:bg-theme-surface/50 border border-transparent"

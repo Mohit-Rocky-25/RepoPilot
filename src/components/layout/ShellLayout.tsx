@@ -25,7 +25,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
 
   if (isLandingPage) {
     return (
-      <div className="min-h-screen w-full bg-theme-bg text-theme-text font-sans antialiased selection:bg-theme-blue/20 selection:text-theme-blue flex flex-col">
+      <div className="min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-theme-bg text-theme-text font-sans antialiased selection:bg-theme-blue/20 selection:text-theme-blue flex flex-col pt-safe pb-safe">
         <TopColorBar />
         {/* Landing Top Navigation Bar */}
         <header className="h-14 bg-theme-surface border-b border-theme-border px-4 sm:px-6 flex items-center justify-between shrink-0 select-none shadow-xs">
@@ -73,7 +73,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-theme-bg text-theme-text font-sans antialiased selection:bg-theme-blue/20 selection:text-theme-blue">
+    <div className="flex flex-col h-[100dvh] min-h-[100dvh] w-full max-w-[100vw] overflow-hidden bg-theme-bg text-theme-text font-sans antialiased selection:bg-theme-blue/20 selection:text-theme-blue pt-safe">
       {/* Signature Top 4-Color Bar */}
       <TopColorBar />
 
@@ -93,7 +93,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
           />
 
           {/* Dynamic Page Content */}
-          <main className="flex-1 overflow-y-auto bg-theme-bg p-6 lg:p-8">
+          <main className="flex-1 overflow-y-auto bg-theme-bg p-3 sm:p-4 md:p-6 lg:p-8">
             <div className="max-w-[1340px] mx-auto">{children}</div>
           </main>
         </div>
