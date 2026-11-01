@@ -6,6 +6,8 @@ node_modules/
 # Testing & Coverage
 coverage/
 *.lcov
+test-results/
+playwright-report/
 
 # Next.js Build Output
 .next/

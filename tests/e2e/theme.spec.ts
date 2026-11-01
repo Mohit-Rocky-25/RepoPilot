@@ -44,7 +44,7 @@ test.describe("Google/GDG Theme System & Zero-Flash Persistence Specs", () => {
     await page.goto("/");
 
     // Find and click the Dark option in ThemeSwitcher
-    const darkBtn = page.locator('button[role="radio"][aria-label="Dark theme"]');
+    const darkBtn = page.locator('button[role="radio"][aria-label="Dark theme"]').first();
     await expect(darkBtn).toBeVisible();
     await darkBtn.click();
 
@@ -58,7 +58,8 @@ test.describe("Google/GDG Theme System & Zero-Flash Persistence Specs", () => {
 
     // Verify persistent state
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-    await expect(darkBtn).toHaveAttribute("aria-checked", "true");
+    const reloadedDarkBtn = page.locator('button[role="radio"][aria-label="Dark theme"]').first();
+    await expect(reloadedDarkBtn).toHaveAttribute("aria-checked", "true");
   });
 
   test("4. Selecting Light via ThemeSwitcher sets html[data-theme='light'] and persists across reload", async ({ page }) => {
@@ -70,7 +71,7 @@ test.describe("Google/GDG Theme System & Zero-Flash Persistence Specs", () => {
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 
     // Click Light option
-    const lightBtn = page.locator('button[role="radio"][aria-label="Light theme"]');
+    const lightBtn = page.locator('button[role="radio"][aria-label="Light theme"]').first();
     await lightBtn.click();
 
     // Verify DOM and storage
@@ -81,7 +82,8 @@ test.describe("Google/GDG Theme System & Zero-Flash Persistence Specs", () => {
     // Reload page
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-    await expect(lightBtn).toHaveAttribute("aria-checked", "true");
+    const reloadedLightBtn = page.locator('button[role="radio"][aria-label="Light theme"]').first();
+    await expect(reloadedLightBtn).toHaveAttribute("aria-checked", "true");
   });
 
   test("5. Selecting System mode dynamically synchronizes with OS preference changes", async ({ page }) => {
@@ -90,7 +92,7 @@ test.describe("Google/GDG Theme System & Zero-Flash Persistence Specs", () => {
     await page.goto("/");
 
     // Click System mode
-    const systemBtn = page.locator('button[role="radio"][aria-label="System theme"]');
+    const systemBtn = page.locator('button[role="radio"][aria-label="System theme"]').first();
     await systemBtn.click();
 
     const stored = await page.evaluate(() => window.localStorage.getItem("repopilot-theme"));
@@ -111,12 +113,12 @@ test.describe("Google/GDG Theme System & Zero-Flash Persistence Specs", () => {
   test("6. ThemeSwitcher accessibility & keyboard navigation", async ({ page }) => {
     await page.goto("/");
 
-    const radiogroup = page.locator('div[role="radiogroup"][aria-label="Theme selection"]');
+    const radiogroup = page.locator('div[role="radiogroup"][aria-label="Theme selection"]').first();
     await expect(radiogroup).toBeVisible();
 
-    const lightBtn = page.locator('button[role="radio"][aria-label="Light theme"]');
-    const darkBtn = page.locator('button[role="radio"][aria-label="Dark theme"]');
-    const systemBtn = page.locator('button[role="radio"][aria-label="System theme"]');
+    const lightBtn = radiogroup.locator('button[role="radio"][aria-label="Light theme"]');
+    const darkBtn = radiogroup.locator('button[role="radio"][aria-label="Dark theme"]');
+    const systemBtn = radiogroup.locator('button[role="radio"][aria-label="System theme"]');
 
     // Focus the radiogroup button
     await lightBtn.focus();
@@ -150,7 +152,7 @@ test.describe("Google/GDG Theme System & Zero-Flash Persistence Specs", () => {
     await expect(page2.locator("html")).toHaveAttribute("data-theme", "light");
 
     // Change to Dark on Page 1
-    const darkBtn1 = page1.locator('button[role="radio"][aria-label="Dark theme"]');
+    const darkBtn1 = page1.locator('button[role="radio"][aria-label="Dark theme"]').first();
     await darkBtn1.click();
 
     await expect(page1.locator("html")).toHaveAttribute("data-theme", "dark");
@@ -170,7 +172,7 @@ test.describe("Google/GDG Theme System & Zero-Flash Persistence Specs", () => {
     await expect(page.locator("text=Choose between Google developer-light")).toBeVisible();
 
     // Toggle theme in Settings page
-    const darkBtn = page.locator('button[role="radio"][aria-label="Dark theme"]');
+    const darkBtn = page.locator('button[role="radio"][aria-label="Dark theme"]').first();
     await darkBtn.click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   });
