@@ -290,7 +290,44 @@ RepoPilot is built strictly on verified open-source technologies:
 
 ---
 
-## 8. Quick Start
+## 8. Choose Your AI Setup
+
+RepoPilot provides three distinct operating configurations to match your privacy requirements, hardware capabilities, and budget:
+
+| Setup Mode | Quality & Multi-File Reasoning | Cost / Limits | Privacy & Data Boundary | Hardware Recommendations |
+| :--- | :--- | :--- | :--- | :--- |
+| **Local Ollama** | Good (Fast code Q&A) | **$0 / Free** (Zero API fees) | **100% Private** (Runs on local machine) | • **16 GB+ RAM**: 7B model (`qwen2.5-coder:7b`)<br>• **8 GB RAM**: 1.5B model (`qwen2.5-coder:1.5b`)<br>*(Hardware limited by local CPU/GPU)* |
+| **Bring-Your-Own Key** | **Best Quality** (Frontier reasoning) | Provider rates apply | **Strict `sessionStorage`** (Never saved to disk or server logs) | Any laptop / desktop (Cloud API handles compute) |
+| **Offline Mode** | Deterministic (BM25 + AST) | **$0 / Free** | **100% Offline** (No outbound AI calls) | Any hardware (Runs in browser memory) |
+
+### Setup Details
+
+#### 1. Local Ollama (Private & Free, Hardware-Limited)
+Run open-weights coding models locally on your workstation using [Ollama](https://ollama.com). No credit card, API key, or cloud account required.
+- **Hardware Guidance**:
+  - Machines with **16 GB RAM or more**: We recommend a 7B-class model for robust multi-file code understanding:
+    ```bash
+    ollama run qwen2.5-coder:7b
+    ```
+  - Machines with **8 GB RAM**: We recommend a lightweight 1.5B model that runs smoothly on standard laptops:
+    ```bash
+    ollama run qwen2.5-coder:1.5b
+    ```
+- **Trade-off**: Private and free, but hardware limited. Local inference latency and token context throughput depend entirely on your available CPU, GPU, and RAM.
+
+#### 2. Bring-Your-Own Key (Hosted API, Best Quality)
+Connect an OpenAI-compatible endpoint in `/settings/ai` (e.g. OpenAI `gpt-4o-mini`, Groq `llama-3.3-70b-versatile`, OpenRouter, or DeepSeek).
+- **Security & Storage**: Stored **strictly in browser `sessionStorage`**. Your key is sent only over HTTPS for your request session and is cleared as soon as you close the tab. It is never stored in databases, disk caches, or server logs.
+- **Trade-off**: Delivers the highest synthesis quality, fastest generation speed, and deepest multi-file reasoning, but provider rate limits and per-token costs apply.
+
+#### 3. Offline Mode (Always Works, Deterministic)
+If no AI provider is configured or Ollama is not running, RepoPilot functions natively in **Offline Mode**.
+- **Capabilities**: Full repository tree exploration, Tree-sitter AST symbol extraction, 2D/3D architecture maps, and ranked lexical/symbol search.
+- **Trade-off**: Citations are derived deterministically from indexed symbols and code locations. No generative natural language explanation is synthesized, but every result is verified to exist at the pinned commit SHA.
+
+---
+
+## 9. Quick Start
 
 ### Prerequisites
 - **Node.js**: v18.18+ or v20+
@@ -336,7 +373,7 @@ Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
 ---
 
-## 9. Development & Verification Commands
+## 10. Development & Verification Commands
 
 RepoPilot includes automated verification scripts to ensure code health:
 
@@ -344,10 +381,10 @@ RepoPilot includes automated verification scripts to ensure code health:
 # Type checking (TypeScript Strict Mode)
 npm run typecheck
 
-# Unit, integration, and security test suite (102 tests across 15 files)
+# Unit, integration, and security test suite (186 tests across 22 files)
 npm test
 
-# Automated retrieval and citation accuracy evaluation (20 questions across 3 repos)
+# Automated retrieval, citation validity, and weak-support evaluation (52 questions across 6 repos)
 npm run eval
 
 # Production bundle build
@@ -361,17 +398,18 @@ npm start
 
 | Metric | Measured Score | Target | Verdict |
 | :--- | :--- | :--- | :--- |
-| **Retrieval Hit Rate (Top-5)** | **100.0%** (20/20) | > 85.0% | **PASS** |
-| **Symbol Ranking Top-3 Recall** | **95.0%** (19/20) | > 80.0% | **PASS** |
-| **Citation Strict Validity** | **100.0%** (20/20) | 100.0% | **PASS** |
-| **Human Correctness Score** | **100.0%** (40/40 pts) | > 80.0% | **PASS** |
-| **Average Query Latency** | **< 10 ms** | < 250 ms | **PASS** |
+| **Retrieval Recall@5** | **98.1%** (51/52) | > 85.0% | **PASS** |
+| **Symbol Ranking Top-3 Recall** | **98.1%** (51/51) | > 80.0% | **PASS** |
+| **Citation Strict Validity** | **100.0%** (52/52) | > 95.0% | **PASS** |
+| **Weak-Support Rate** | **7.7%** (4/52 flagged) | < 15.0% | **PASS** |
+| **Human Correctness Score** | **100.0%** (104/104 pts) | > 80.0% | **PASS** |
+| **Average Query Latency** | **1 ms** | < 250 ms | **PASS** |
 
-*Evaluated across 3 public repositories (`vercel/swr`, `pallets/flask`, `gin-gonic/gin`) pinned to immutable commit SHAs. Full detailed report in [`eval/RESULTS.md`](eval/RESULTS.md).*
+*Evaluated across 6 public repositories (3 major frameworks, 3 micro-libraries: `vercel/swr`, `pallets/flask`, `gin-gonic/gin`, `developit/mitt`, `pallets/itsdangerous`, `uber-go/ratelimit`) pinned to immutable commit SHAs. Full detailed report in [`docs/eval-results.md`](docs/eval-results.md).*
 
 ---
 
-## 10. Feature-Specific Usage Instructions
+## 11. Feature-Specific Usage Instructions
 
 ### A. Code Explorer (`/explore`)
 1. Import a public GitHub repository URL (e.g. `https://github.com/facebook/react`).
@@ -408,7 +446,7 @@ npm start
 
 ---
 
-## 11. Security, Privacy & Known Limitations
+## 12. Security, Privacy & Known Limitations
 
 ### Security Protections:
 - **SSRF Safeguards**: All repository imports and AI base URLs are strictly checked against SSRF policies. Resolves DNS ahead of connection, blocking loopback IPs, private RFC1918 subnets, link-local metadata addresses (`169.254.169.254`), and IPv4-mapped IPv6 variants.
@@ -422,12 +460,12 @@ npm start
 - **Public Repositories Only**: RepoPilot targets public GitHub repositories. Private repository OAuth authentication and organization access are not currently supported.
 - **Repository Size Caps**: Repositories are bounded to a maximum archive size of 25MB, up to 1,500 active source files, and individual source files capped at 100KB. Files exceeding these bounds are omitted from indexing.
 - **AST Language Coverage**: Tree-sitter WASM grammars are provided for TypeScript/TSX, JavaScript, Python, Go, and Rust. Other file types fall back to heuristic pattern extraction (`confidence: heuristic`).
-- **Model-Quality Caveats**: Models under 7B parameters (such as `1.5B` fast models) can struggle with complex architectural synthesis. While RepoPilot's citation verifier strips hallucinated citations, all generated answers and patch suggestions should be reviewed by an engineer before use.
+- **Model-Quality Caveats**: Models under 7B parameters (such as `1.5B` fast models) can struggle with complex architectural synthesis. While RepoPilot's citation verifier flags weak support and strips hallucinated citations, all generated answers and patch suggestions should be reviewed by an engineer before use.
 - **Serverless Rate Limiting**: In-memory rate limiting is best-effort on serverless platforms (e.g. Vercel) and resets across cold starts. Production deployments should configure `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` for distributed rate limiting.
 
 ---
 
-## 12. Project Structure
+## 13. Project Structure
 
 ```
 RepoPilot/
@@ -457,7 +495,7 @@ RepoPilot/
 
 ---
 
-## 13. Contributing
+## 14. Contributing
 
 We welcome contributions from developers, researchers, and open-source advocates!
 
@@ -471,7 +509,7 @@ Please read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE
 
 ---
 
-## 14. Roadmap
+## 15. Roadmap
 
 Only verified upcoming enhancements are listed below:
 - [ ] **Tree-sitter WASM Integration**: In-browser Tree-sitter parsers for deep semantic symbol trees across additional languages.
@@ -480,7 +518,7 @@ Only verified upcoming enhancements are listed below:
 
 ---
 
-## 15. License & Attribution
+## 16. License & Attribution
 
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for full details.
 

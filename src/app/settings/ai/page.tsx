@@ -249,70 +249,153 @@ export default function AISettingsPage() {
         </div>
       </div>
 
-      {/* Mode Selector Tabs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <button
-          type="button"
-          onClick={() => setActiveMode("ollama")}
-          className={`p-4 rounded-xl border text-left transition-all ${
-            activeMode === "ollama"
-              ? "bg-linear-surface-2 border-linear-accent ring-1 ring-linear-accent"
-              : "bg-linear-surface-1 border-linear-border-1 hover:border-linear-border-2"
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-mono text-xs font-bold text-linear-text-main flex items-center gap-1.5">
-              <Laptop className="w-4 h-4 text-linear-accent" />
-              1. Local Ollama
-            </span>
-            <Badge variant="primary" className="text-[10px] font-mono">₹0 / Free</Badge>
+      {/* Choose Your AI Setup Panel */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 className="text-base font-bold text-linear-text-main flex items-center gap-2">
+              <Cpu className="w-4 h-4 text-linear-accent" />
+              Choose Your AI Setup
+            </h2>
+            <p className="text-xs text-linear-text-muted mt-0.5">
+              Select how RepoPilot runs grounded reasoning. Match your hardware capacity, privacy requirements, or zero-AI preference.
+            </p>
           </div>
-          <p className="text-[11px] text-linear-text-muted leading-relaxed">
-            Run open-weights models (qwen2.5-coder, llama3.2) locally on your hardware. Complete privacy.
-          </p>
-        </button>
+          <Badge
+            variant={activeMode === "openai-compatible" ? "success" : activeMode === "ollama" ? "primary" : "neutral"}
+            className="font-mono text-xs w-fit"
+          >
+            Active: {activeMode === "openai-compatible" ? "Bring-Your-Own Key" : activeMode === "ollama" ? "Local Ollama" : "Offline Mode"}
+          </Badge>
+        </div>
 
-        <button
-          type="button"
-          onClick={() => setActiveMode("openai-compatible")}
-          className={`p-4 rounded-xl border text-left transition-all ${
-            activeMode === "openai-compatible"
-              ? "bg-linear-surface-2 border-linear-accent ring-1 ring-linear-accent"
-              : "bg-linear-surface-1 border-linear-border-1 hover:border-linear-border-2"
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-mono text-xs font-bold text-linear-text-main flex items-center gap-1.5">
-              <Key className="w-4 h-4 text-linear-accent" />
-              2. Bring Your Key
-            </span>
-            <Badge variant="neutral" className="text-[10px] font-mono">Hosted API</Badge>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* 1. Local Ollama */}
+          <div
+            onClick={() => setActiveMode("ollama")}
+            className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+              activeMode === "ollama"
+                ? "bg-linear-surface-2 border-linear-accent ring-2 ring-linear-accent/40 shadow-sm"
+                : "bg-linear-surface-1 border-linear-border-1 hover:border-linear-border-2"
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-mono text-xs font-bold text-linear-text-main flex items-center gap-1.5">
+                  <Laptop className="w-4 h-4 text-linear-accent" />
+                  Local Ollama
+                </span>
+                <Badge variant="primary" className="text-[10px] font-mono">Private · Free</Badge>
+              </div>
+              <p className="text-xs text-linear-text-muted mb-3 leading-relaxed">
+                Runs open-weights models directly on your hardware. Complete privacy with zero cloud fees.
+              </p>
+              <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 space-y-1.5 text-[11px] font-mono">
+                <div className="text-linear-accent font-semibold flex items-center gap-1">
+                  <Activity className="w-3 h-3" />
+                  Hardware Guidance:
+                </div>
+                <div className="text-linear-text-secondary">
+                  • <strong>16 GB RAM</strong>: Recommend <strong>7B model</strong> (e.g. <code>qwen2.5-coder:7b</code>)
+                </div>
+                <div className="text-linear-text-secondary">
+                  • <strong>8 GB RAM</strong>: Recommend <strong>1.5B model</strong> (e.g. <code>qwen2.5-coder:1.5b</code>)
+                </div>
+                <div className="text-[10px] text-amber-400/90 pt-0.5">
+                  ⚠️ Hardware limited: inference speed and multi-file reasoning capacity depend on your local hardware.
+                </div>
+              </div>
+            </div>
+            <div className="pt-3 mt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono">
+              <span className="text-linear-text-subtle">Provider Cost:</span>
+              <span className="text-linear-success font-semibold">₹0 / $0 (Always Free)</span>
+            </div>
           </div>
-          <p className="text-[11px] text-linear-text-muted leading-relaxed">
-            Works on public Vercel deploy. Connect OpenAI, Groq, Together, OpenRouter, or DeepSeek.
-          </p>
-        </button>
 
-        <button
-          type="button"
-          onClick={setOfflineMode}
-          className={`p-4 rounded-xl border text-left transition-all ${
-            activeMode === "offline"
-              ? "bg-linear-surface-2 border-linear-accent ring-1 ring-linear-accent"
-              : "bg-linear-surface-1 border-linear-border-1 hover:border-linear-border-2"
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-mono text-xs font-bold text-linear-text-main flex items-center gap-1.5">
-              <Sliders className="w-4 h-4 text-linear-accent" />
-              3. Offline Deterministic
-            </span>
-            <Badge variant="neutral" className="text-[10px] font-mono">No AI</Badge>
+          {/* 2. Bring Your Own Key */}
+          <div
+            onClick={() => setActiveMode("openai-compatible")}
+            className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+              activeMode === "openai-compatible"
+                ? "bg-linear-surface-2 border-linear-accent ring-2 ring-linear-accent/40 shadow-sm"
+                : "bg-linear-surface-1 border-linear-border-1 hover:border-linear-border-2"
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-mono text-xs font-bold text-linear-text-main flex items-center gap-1.5">
+                  <Key className="w-4 h-4 text-linear-accent" />
+                  Bring-Your-Own Key
+                </span>
+                <Badge variant="success" className="text-[10px] font-mono">Best Quality</Badge>
+              </div>
+              <p className="text-xs text-linear-text-muted mb-3 leading-relaxed">
+                Connect OpenAI, Groq, OpenRouter, or DeepSeek. Best quality and multi-file context synthesis.
+              </p>
+              <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 space-y-1.5 text-[11px] font-mono">
+                <div className="text-emerald-400 font-semibold flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" />
+                  Provider Limits & Security:
+                </div>
+                <div className="text-linear-text-secondary">
+                  • Keys kept <strong>strictly in browser sessionStorage</strong>
+                </div>
+                <div className="text-linear-text-secondary">
+                  • Never saved to disk, server logs, or databases
+                </div>
+                <div className="text-[10px] text-amber-400/90 pt-0.5">
+                  ⚠️ Provider limits & per-token usage costs apply.
+                </div>
+              </div>
+            </div>
+            <div className="pt-3 mt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono">
+              <span className="text-linear-text-subtle">Provider Cost:</span>
+              <span className="text-linear-text-muted font-semibold">Provider Rates</span>
+            </div>
           </div>
-          <p className="text-[11px] text-linear-text-muted leading-relaxed">
-            Deterministic search & Mermaid architecture synthesis without any AI model requirements.
-          </p>
-        </button>
+
+          {/* 3. Offline Mode */}
+          <div
+            onClick={setOfflineMode}
+            className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+              activeMode === "offline"
+                ? "bg-linear-surface-2 border-linear-accent ring-2 ring-linear-accent/40 shadow-sm"
+                : "bg-linear-surface-1 border-linear-border-1 hover:border-linear-border-2"
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-mono text-xs font-bold text-linear-text-main flex items-center gap-1.5">
+                  <Sliders className="w-4 h-4 text-linear-accent" />
+                  Offline Mode
+                </span>
+                <Badge variant="neutral" className="text-[10px] font-mono">Always Works</Badge>
+              </div>
+              <p className="text-xs text-linear-text-muted mb-3 leading-relaxed">
+                Deterministic keyword and AST symbol search. Zero AI models, zero cloud APIs, zero setup needed.
+              </p>
+              <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 space-y-1.5 text-[11px] font-mono">
+                <div className="text-linear-text-main font-semibold flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3 text-linear-success" />
+                  Operational Guarantee:
+                </div>
+                <div className="text-linear-text-secondary">
+                  • Instant query latency (&lt; 5 ms)
+                </div>
+                <div className="text-linear-text-secondary">
+                  • Tree-sitter AST symbol extraction & lexical ranking
+                </div>
+                <div className="text-[10px] text-linear-text-subtle pt-0.5">
+                  ✓ Always works, even in air-gapped environments.
+                </div>
+              </div>
+            </div>
+            <div className="pt-3 mt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono">
+              <span className="text-linear-text-subtle">Provider Cost:</span>
+              <span className="text-linear-success font-semibold">₹0 / $0 (Always Free)</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Mode Details Section */}

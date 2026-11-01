@@ -22,7 +22,12 @@ import {
   Network,
   GitBranch,
   X,
-  Layers
+  Layers,
+  Cpu,
+  Laptop,
+  Globe,
+  Sliders,
+  Key
 } from "lucide-react";
 import { useRepository } from "@/context/RepositoryContext";
 import { Card } from "@/components/ui/Card";
@@ -256,18 +261,31 @@ export default function AssistantPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Active Mode Indicator */}
           {providerMode === "openai-compatible" ? (
-            <Badge variant="success" size="sm" className="font-mono">
-              AI: Your API key
-            </Badge>
+            <div
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono text-emerald-400"
+              title="Active Mode: Bring-your-own key. Best quality, provider limits/costs apply."
+            >
+              <Globe className="w-3.5 h-3.5 text-emerald-400" />
+              <span>AI Mode: BYO Key (Best Quality)</span>
+            </div>
           ) : providerMode === "ollama" ? (
-            <Badge variant="primary" size="sm" className="font-mono">
-              AI: Local Ollama ({aiConfig.modelName})
-            </Badge>
+            <div
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-xs font-mono text-indigo-300"
+              title="Active Mode: Local Ollama. Private, hardware limited (recommend 7B for 16GB RAM, 1.5B for 8GB)."
+            >
+              <Laptop className="w-3.5 h-3.5 text-indigo-400" />
+              <span>AI Mode: Local Ollama ({aiConfig.modelName || "7B / 1.5B"})</span>
+            </div>
           ) : (
-            <Badge variant="neutral" size="sm" className="font-mono">
-              AI: Offline (deterministic only)
-            </Badge>
+            <div
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-500/10 border border-gray-500/30 text-xs font-mono text-gray-300"
+              title="Active Mode: Offline mode. Always works, keyword & AST search."
+            >
+              <Sliders className="w-3.5 h-3.5 text-gray-400" />
+              <span>AI Mode: Offline (Deterministic AST/Keyword)</span>
+            </div>
           )}
 
           {/* Context Token Budget Setting */}
@@ -298,8 +316,8 @@ export default function AssistantPage() {
             </Button>
           </Link>
           <Link href="/settings/ai">
-            <Button variant="secondary" size="sm">
-              Configure AI
+            <Button variant="secondary" size="sm" icon={<Cpu className="w-3.5 h-3.5 text-[#828FFF]" />}>
+              Choose AI Setup
             </Button>
           </Link>
         </div>
