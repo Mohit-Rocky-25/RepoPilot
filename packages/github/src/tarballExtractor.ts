@@ -4,8 +4,10 @@ import type { RepositoryFile } from "@repopilot/core";
 export interface TarballExtractionOptions {
   maxArchiveSizeBytes?: number; // default: 25 MB
   maxTotalExtractedBytes?: number; // default: 50 MB
-  maxFileSize?: number; // default: 100 KB
-  maxFileCount?: number; // default: 1500
+  maxFileSize?: number; // default: 100 KB (cached text content cap)
+  maxSingleFileSize?: number; // default: 10 MB (strict abort cap per file)
+  maxFileCount?: number; // default: 1500 (strict abort cap)
+  maxPathLength?: number; // default: 512 (strict abort cap)
 }
 
 export interface ExtractedRepository {
@@ -19,7 +21,9 @@ const DEFAULT_OPTIONS: Required<TarballExtractionOptions> = {
   maxArchiveSizeBytes: 25 * 1024 * 1024, // 25 MB
   maxTotalExtractedBytes: 50 * 1024 * 1024, // 50 MB
   maxFileSize: 100 * 1024, // 100 KB
-  maxFileCount: 1500
+  maxSingleFileSize: 10 * 1024 * 1024, // 10 MB
+  maxFileCount: 1500,
+  maxPathLength: 512
 };
 
 const IGNORED_PREFIXES = [
@@ -136,8 +140,22 @@ export function extractTarballSafely(
       break;
     }
 
+    // Check for null bytes in raw header name block
+    const nameField = headerBlock.subarray(0, 100);
+    const firstNull = nameField.indexOf(0);
+    if (firstNull !== -1) {
+      for (let i = firstNull + 1; i < 100; i++) {
+        if (nameField[i] !== 0) {
+          throw new Error(`Security Violation: Null byte in archive path detected.`);
+        }
+      }
+    }
+
     // Read header fields
-    let rawName = nextOverrideName || headerBlock.subarray(0, 100).toString("utf-8").replace(/\0.*$/, "").trim();
+    let rawName = nextOverrideName || nameField.toString("utf-8").replace(/\0.*$/, "").trim();
+    if (nextOverrideName && nextOverrideName.includes("\0")) {
+      throw new Error(`Security Violation: Null byte in archive path detected.`);
+    }
     nextOverrideName = null;
 
     // Check ustar prefix (bytes 345..500)
@@ -167,13 +185,33 @@ export function extractTarballSafely(
       continue;
     }
 
-    // Reject symlinks escaping the repository (typeflag '2' or '1')
-    if (typeFlag === "2" || typeFlag === "1") {
-      const linkTarget = headerBlock.subarray(157, 257).toString("utf-8").replace(/\0.*$/, "").trim();
-      if (linkTarget.includes("..") || linkTarget.startsWith("/") || linkTarget.startsWith("\\")) {
-        throw new Error(`Security Violation: Malicious symlink detected in archive ("${rawName}" -> "${linkTarget}").`);
-      }
-      continue; // Skip symlink entry
+    // Strict Entry Type Enforcement:
+    // Reject symlinks ('2'), hardlinks ('1'), char devices ('3'), block devices ('4'), FIFOs ('6')
+    if (typeFlag === "2") {
+      throw new Error(`Security Violation: Prohibited tar entry type: Malicious symlink detected ("${rawName}").`);
+    }
+    if (typeFlag === "1") {
+      throw new Error(`Security Violation: Prohibited tar entry type: Hard link detected ("${rawName}").`);
+    }
+    if (typeFlag === "3" || typeFlag === "4") {
+      throw new Error(`Security Violation: Prohibited tar entry type: Device entry detected ("${rawName}").`);
+    }
+    if (typeFlag === "6") {
+      throw new Error(`Security Violation: Prohibited tar entry type: FIFO/pipe entry detected ("${rawName}").`);
+    }
+
+    // Absolute paths, backslashes, drive letters, and traversal checks on rawName
+    if (rawName.startsWith("/") || rawName.startsWith("\\")) {
+      throw new Error(`Security Violation: Absolute path detected in archive entry ("${rawName}").`);
+    }
+    if (rawName.includes("\\")) {
+      throw new Error(`Security Violation: Backslash in archive path detected ("${rawName}").`);
+    }
+    if (/^[a-zA-Z]:/.test(rawName)) {
+      throw new Error(`Security Violation: Drive letter detected in archive entry ("${rawName}").`);
+    }
+    if (rawName.includes("..") || rawName.split("/").some((p) => p === "..")) {
+      throw new Error(`Security Violation: Path traversal detected in archive entry ("${rawName}").`);
     }
 
     // Strip top-level directory (GitHub archives wrap files in <owner>-<repo>-<sha>/)
@@ -183,12 +221,20 @@ export function extractTarballSafely(
     }
     const relativePath = parts.slice(1).join("/");
 
-    // 1. Path Traversal & Security Validation
+    // Path length validation
+    if (relativePath.length > opts.maxPathLength || rawName.length > opts.maxPathLength) {
+      throw new Error(
+        `Security Violation: Path length (${Math.max(relativePath.length, rawName.length)}) exceeds maximum allowed length of ${opts.maxPathLength} characters.`
+      );
+    }
+
+    // Secondary path validation on relative path
     if (
       relativePath.includes("\0") ||
       relativePath.includes("..") ||
       relativePath.startsWith("/") ||
-      relativePath.startsWith("\\")
+      relativePath.includes("\\") ||
+      /^[a-zA-Z]:/.test(relativePath)
     ) {
       throw new Error(`Security Violation: Path traversal detected in archive entry ("${relativePath}").`);
     }
@@ -198,14 +244,23 @@ export function extractTarballSafely(
       continue;
     }
 
+    // Single file size limit enforcement (streaming abort)
+    if (fileSize > opts.maxSingleFileSize) {
+      throw new Error(
+        `Security Violation: File "${relativePath}" exceeds maximum single file size limit of ${opts.maxSingleFileSize} bytes.`
+      );
+    }
+
     // Skip ignored directories
     if (IGNORED_PREFIXES.some((p) => relativePath.startsWith(p) || relativePath.includes("/" + p))) {
       continue;
     }
 
-    // Skip if exceeding max file count
+    // Abort if exceeding max file count cap
     if (files.length >= opts.maxFileCount) {
-      break;
+      throw new Error(
+        `Security Violation: Repository exceeds maximum file count limit of ${opts.maxFileCount}.`
+      );
     }
 
     const ext = relativePath.includes(".") ? relativePath.split(".").pop()?.toLowerCase() : undefined;
