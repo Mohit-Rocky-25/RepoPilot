@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
+import { BottomTabBar } from "./BottomTabBar";
 import { ImportModal } from "@/components/modals/ImportModal";
 import { TopColorBar } from "@/components/ui/signature/TopColorBar";
 import { FourDots } from "@/components/ui/signature/FourDots";
@@ -93,11 +94,14 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
           />
 
           {/* Dynamic Page Content */}
-          <main className="flex-1 overflow-y-auto bg-theme-bg p-3 sm:p-4 md:p-6 lg:p-8">
+          <main className="flex-1 overflow-y-auto bg-theme-bg p-3 sm:p-4 md:p-6 lg:p-8 pb-20 md:pb-8">
             <div className="max-w-[1340px] mx-auto">{children}</div>
           </main>
         </div>
       </div>
+
+      {/* Persistent Mobile Bottom Navigation Bar */}
+      <BottomTabBar />
 
       {/* Modals */}
       <ImportModal />

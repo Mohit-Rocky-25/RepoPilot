@@ -98,7 +98,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-64 bg-theme-surface border-r border-theme-border flex flex-col shrink-0 select-none shadow-xs">
+    <aside className="hidden md:flex w-64 bg-theme-surface border-r border-theme-border flex-col shrink-0 select-none shadow-xs">
       {/* Brand Header / Home Link */}
       <Link
         href="/"

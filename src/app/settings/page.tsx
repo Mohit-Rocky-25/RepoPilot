@@ -218,24 +218,24 @@ export default function GeneralSettingsPage() {
       </div>
 
       {/* Settings Navigation Tabs */}
-      <div className="flex items-center gap-2 p-1 bg-theme-surface border border-theme-border rounded-lg shadow-xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 p-1 bg-theme-surface border border-theme-border rounded-lg shadow-xs">
         <Link
           href="/settings"
-          className="flex-1 text-center py-1.5 px-3 rounded-md text-xs font-mono font-medium bg-theme-surface-alt text-theme-text border border-theme-border shadow-xs flex items-center justify-center gap-2"
+          className="flex-1 text-center py-2 sm:py-1.5 px-3 rounded-md text-xs font-mono font-medium bg-theme-surface-alt text-theme-text border border-theme-border shadow-xs flex items-center justify-center gap-2 min-h-[44px] sm:min-h-0"
         >
           <SettingsIcon className="w-3.5 h-3.5 text-theme-blue" />
           <span>General & Appearance</span>
         </Link>
         <Link
           href="/settings/ai"
-          className="flex-1 text-center py-1.5 px-3 rounded-md text-xs font-mono font-medium text-theme-text-muted hover:text-theme-text hover:bg-theme-surface-alt transition-all flex items-center justify-center gap-2"
+          className="flex-1 text-center py-2 sm:py-1.5 px-3 rounded-md text-xs font-mono font-medium text-theme-text-muted hover:text-theme-text hover:bg-theme-surface-alt transition-all flex items-center justify-center gap-2 min-h-[44px] sm:min-h-0"
         >
           <Activity className="w-3.5 h-3.5" />
           <span>Local AI (Ollama)</span>
         </Link>
         <Link
           href="/docs"
-          className="flex-1 text-center py-1.5 px-3 rounded-md text-xs font-mono font-medium text-theme-text-muted hover:text-theme-text hover:bg-theme-surface-alt transition-all flex items-center justify-center gap-2"
+          className="flex-1 text-center py-2 sm:py-1.5 px-3 rounded-md text-xs font-mono font-medium text-theme-text-muted hover:text-theme-text hover:bg-theme-surface-alt transition-all flex items-center justify-center gap-2 min-h-[44px] sm:min-h-0"
         >
           <BookOpen className="w-3.5 h-3.5" />
           <span>Docs & Guides</span>

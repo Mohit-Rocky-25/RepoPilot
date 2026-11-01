@@ -114,7 +114,7 @@ export default function HomePage() {
           </p>
 
           {/* Hero Repository Input Form */}
-          <div className="pt-4 max-w-xl mx-auto">
+          <div className="pt-4 max-w-xl mx-auto w-full">
             <form
               onSubmit={handleHeroImport}
               className="flex flex-col sm:flex-row gap-2 p-1.5 bg-theme-surface border border-theme-border rounded-xl shadow-card focus-within:border-theme-blue focus-within:ring-2 focus-within:ring-theme-blue/20 transition-all"
@@ -130,14 +130,14 @@ export default function HomePage() {
                     setError(null);
                   }}
                   disabled={loading}
-                  className="w-full bg-transparent text-sm text-theme-text placeholder:text-theme-text-muted font-mono focus:outline-none"
+                  className="w-full bg-transparent text-base sm:text-sm text-theme-text placeholder:text-theme-text-muted font-mono focus:outline-none min-h-[44px] sm:min-h-0"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-theme-blue text-white text-xs font-semibold hover:bg-theme-blue-hover transition-all disabled:opacity-60 shrink-0 shadow-xs cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 rounded-lg bg-theme-blue text-white text-sm sm:text-xs font-semibold hover:bg-theme-blue-hover transition-all disabled:opacity-60 shrink-0 shadow-xs cursor-pointer min-h-[44px]"
               >
                 {loading ? (
                   <>
@@ -152,6 +152,18 @@ export default function HomePage() {
                 )}
               </button>
             </form>
+
+            {/* Local Folder Option Directly Below */}
+            <div className="pt-2.5 text-center">
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(true)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-theme-border bg-theme-surface hover:bg-theme-surface-alt text-xs font-mono text-theme-text-muted hover:text-theme-text transition-all shadow-xs cursor-pointer min-h-[44px]"
+              >
+                <FolderTree className="w-4 h-4 text-theme-blue" />
+                <span>Or open a local folder on this device</span>
+              </button>
+            </div>
 
             {error && (
               <p className="text-xs text-theme-danger font-mono mt-2 flex items-center justify-center gap-1.5">

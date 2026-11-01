@@ -264,7 +264,7 @@ ${activeInvestigation.suggestedTests?.map(t => `- [ ] ${t}`).join("\n") || "- [ 
 
           {/* Pull Request Draft Markdown Export */}
           <Card className="p-5 space-y-3 bg-theme-surface border-theme-border">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div className="flex items-center gap-2">
                 <GitPullRequest className="w-4 h-4 text-theme-blue" />
                 <h2 className="text-sm font-semibold text-theme-text font-mono uppercase">
@@ -274,6 +274,7 @@ ${activeInvestigation.suggestedTests?.map(t => `- [ ] ${t}`).join("\n") || "- [ 
               <Button
                 variant="primary"
                 size="sm"
+                className="w-full sm:w-auto"
                 icon={copiedPR ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
                 onClick={() => copyPRMarkdown(prDraft)}
               >
