@@ -12,7 +12,6 @@ import {
   Compass,
   List,
   Eye,
-  GitBranch,
   Folder,
   FileCode
 } from "lucide-react";
@@ -26,15 +25,26 @@ interface Props {
   summary?: ArchitectureSummary | null;
 }
 
-const TYPE_COLORS: Record<ArchitectureGraphNode["type"], string> = {
-  root: "#F7F8F8",
-  dir: "#8A8F98",
-  entry: "#5E6AD2",
-  route: "#38BDF8",
-  component: "#27A644",
-  test: "#F59E0B",
-  config: "#A855F7",
-  source: "#62666D"
+const LIGHT_TYPE_COLORS: Record<ArchitectureGraphNode["type"], string> = {
+  root: "#5F6368",
+  dir: "#5F6368",
+  entry: "#1A73E8",
+  route: "#1A73E8",
+  component: "#EA4335",
+  test: "#9334E6",
+  config: "#B06000",
+  source: "#5F6368"
+};
+
+const DARK_TYPE_COLORS: Record<ArchitectureGraphNode["type"], string> = {
+  root: "#9AA0A6",
+  dir: "#9AA0A6",
+  entry: "#8AB4F8",
+  route: "#8AB4F8",
+  component: "#F28B82",
+  test: "#C58AF9",
+  config: "#FDD663",
+  source: "#9AA0A6"
 };
 
 const TYPE_LABELS: Record<ArchitectureGraphNode["type"], string> = {
@@ -50,9 +60,44 @@ const TYPE_LABELS: Record<ArchitectureGraphNode["type"], string> = {
 
 const NODE_CAP = 50;
 
-export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summary }) => {
+export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Active theme tracking
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  useEffect(() => {
+    const getTheme = () =>
+      document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+
+    setTheme(getTheme());
+
+    const handleThemeChange = () => {
+      setTheme(getTheme());
+    };
+
+    window.addEventListener("repopilot-theme-change", handleThemeChange);
+
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === "attributes" && m.attributeName === "data-theme") {
+          setTheme(getTheme());
+        }
+      }
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"]
+    });
+
+    return () => {
+      window.removeEventListener("repopilot-theme-change", handleThemeChange);
+      observer.disconnect();
+    };
+  }, []);
+
+  const typeColors = theme === "dark" ? DARK_TYPE_COLORS : LIGHT_TYPE_COLORS;
 
   // Default to 2D for repos above 50 relevant modules or nodes
   const totalModuleCount = summary?.keyModules?.length || graph.nodes.filter((n) => n.type === "dir").length;
@@ -88,6 +133,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
     });
     return Array.from(folders).sort();
   }, [graph.nodes]);
+
   const [isDragging, setIsDragging] = useState(false);
   const [dragMode, setDragMode] = useState<"orbit" | "pan">("orbit");
   const dragStartRef = useRef({ x: 0, y: 0, yaw: 0, pitch: 0, panX: 0, panY: 0 });
@@ -260,13 +306,15 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
 
-    // Dark Obsidian Canvas
-    ctx.fillStyle = "#010102";
+    const isDark = theme === "dark";
+
+    // Theme-Aware Canvas Background
+    ctx.fillStyle = isDark ? "#202124" : "#FFFFFF";
     ctx.fillRect(0, 0, width, height);
 
     // Perspective Grid in 3D Mode
     if (!is2DMode) {
-      ctx.strokeStyle = "rgba(35, 37, 42, 0.45)";
+      ctx.strokeStyle = isDark ? "rgba(60, 64, 67, 0.45)" : "rgba(218, 220, 224, 0.65)";
       ctx.lineWidth = 1;
       const gridSize = 240;
       const step = 60;
@@ -314,20 +362,20 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
       ctx.lineTo(tgt.proj.screenX, tgt.proj.screenY);
 
       if (isHighlighted) {
-        ctx.strokeStyle = "#828FFF";
+        ctx.strokeStyle = isDark ? "#8AB4F8" : "#1A73E8";
         ctx.setLineDash([]);
         ctx.lineWidth = 2;
       } else if (edge.type === "dependency") {
-        // Emerald dashed edge for real import dependency relationships
-        ctx.strokeStyle = "rgba(52, 211, 153, 0.65)";
+        // High-contrast dashed edge for dependency relationships
+        ctx.strokeStyle = isDark ? "rgba(129, 201, 149, 0.85)" : "rgba(52, 168, 83, 0.85)";
         ctx.setLineDash([4, 4]);
         ctx.lineWidth = 1.5;
       } else if (edge.type === "entry") {
-        ctx.strokeStyle = "rgba(94, 106, 210, 0.5)";
+        ctx.strokeStyle = isDark ? "rgba(138, 180, 248, 0.75)" : "rgba(26, 115, 232, 0.75)";
         ctx.setLineDash([]);
         ctx.lineWidth = 1.5;
       } else {
-        ctx.strokeStyle = "rgba(52, 52, 58, 0.4)";
+        ctx.strokeStyle = isDark ? "rgba(60, 64, 67, 0.6)" : "rgba(218, 220, 224, 0.9)";
         ctx.setLineDash([]);
         ctx.lineWidth = 1;
       }
@@ -345,26 +393,44 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
       const isHovered = hoveredNode?.id === node.id;
       const isSelected = selectedNode?.id === node.id;
       const baseRadius = node.type === "root" ? 10 : node.type === "dir" ? 7 : node.type === "entry" ? 7 : 5;
-      const radius = Math.max(3, baseRadius * Math.min(1.4, Math.max(0.6, proj.scale * 1.1))) * (isHovered || isSelected ? 1.3 : 1);
+      const radius =
+        Math.max(3, baseRadius * Math.min(1.4, Math.max(0.6, proj.scale * 1.1))) *
+        (isHovered || isSelected ? 1.3 : 1);
 
       // Node shadow / glow
       ctx.beginPath();
       ctx.arc(proj.screenX, proj.screenY, radius + 2, 0, Math.PI * 2);
       ctx.fillStyle = isSelected
-        ? "rgba(94, 106, 210, 0.45)"
+        ? isDark
+          ? "rgba(138, 180, 248, 0.35)"
+          : "rgba(26, 115, 232, 0.25)"
         : isHovered
-        ? "rgba(130, 143, 255, 0.35)"
-        : "rgba(0, 0, 0, 0.5)";
+        ? isDark
+          ? "rgba(138, 180, 248, 0.2)"
+          : "rgba(26, 115, 232, 0.15)"
+        : isDark
+        ? "rgba(0, 0, 0, 0.4)"
+        : "rgba(0, 0, 0, 0.08)";
       ctx.fill();
 
       // Node circle
       ctx.beginPath();
       ctx.arc(proj.screenX, proj.screenY, radius, 0, Math.PI * 2);
-      ctx.fillStyle = TYPE_COLORS[node.type] || "#8A8F98";
+      ctx.fillStyle = typeColors[node.type] || (isDark ? "#9AA0A6" : "#5F6368");
       ctx.fill();
 
       // Node border ring
-      ctx.strokeStyle = isSelected ? "#828FFF" : isHovered ? "#F7F8F8" : "#23252A";
+      ctx.strokeStyle = isSelected
+        ? isDark
+          ? "#8AB4F8"
+          : "#1A73E8"
+        : isHovered
+        ? isDark
+          ? "#E8EAED"
+          : "#202124"
+        : isDark
+        ? "#3C4043"
+        : "#DADCE0";
       ctx.lineWidth = isSelected ? 2.5 : isHovered ? 2 : 1;
       ctx.stroke();
 
@@ -378,14 +444,24 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
         distance < 300;
 
       if (shouldDrawLabel) {
-        ctx.font = isHovered || isSelected ? "bold 11px monospace" : "10px monospace";
-        ctx.fillStyle = isSelected ? "#828FFF" : isHovered ? "#F7F8F8" : "#8A8F98";
+        ctx.font = isHovered || isSelected ? "bold 11px Roboto Mono, monospace" : "10px Roboto Mono, monospace";
+        ctx.fillStyle = isSelected
+          ? isDark
+            ? "#8AB4F8"
+            : "#1A73E8"
+          : isHovered
+          ? isDark
+            ? "#E8EAED"
+            : "#202124"
+          : isDark
+          ? "#9AA0A6"
+          : "#5F6368";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
         ctx.fillText(node.name, proj.screenX, proj.screenY + radius + 4);
       }
     });
-  }, [displayNodes, visibleEdges, hoveredNode, selectedNode, distance, is2DMode, project3D, viewFormat]);
+  }, [displayNodes, visibleEdges, hoveredNode, selectedNode, distance, is2DMode, project3D, viewFormat, theme, typeColors]);
 
   // Mouse interaction: Hover & Drag
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -467,7 +543,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
     setDistance((prev) => Math.max(140, Math.min(850, prev + delta)));
   };
 
-  // Mobile Touch Gestures (Single finger orbit/pan, two-finger pinch zoom, tap select)
+  // Mobile Touch Gestures
   const touchStartRef = useRef<{ x: number; y: number; dist?: number }>({ x: 0, y: 0 });
 
   const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
@@ -551,7 +627,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
     }
   };
 
-  // Keyboard navigation for accessibility (Rule 5)
+  // Keyboard navigation for accessibility
   const handleKeyDown = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
     if (e.key === "ArrowRight") {
       e.preventDefault();
@@ -603,11 +679,11 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
   return (
     <div className="space-y-3" ref={containerRef}>
       {/* Top Controls Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#0F1011] border border-[#23252A] rounded-xl shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-theme-surface border border-theme-border rounded-xl shadow-xs">
         {/* Search & Filter pills */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative w-44 sm:w-56">
-            <Search className="w-3.5 h-3.5 text-[#62666D] absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-theme-text-muted absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search to focus on node..."
@@ -624,19 +700,19 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
                   focusNode(filteredNodes[0]);
                 }
               }}
-              className="w-full bg-[#141516] border border-[#23252A] text-[#F7F8F8] font-mono text-xs pl-8 pr-2.5 py-1.5 rounded-lg focus:outline-none focus:border-[#5E6AD2]"
+              className="w-full bg-theme-surface-alt border border-theme-border text-theme-text font-mono text-xs pl-8 pr-2.5 py-1.5 rounded-lg focus:outline-none focus:border-theme-blue"
             />
             {/* Search to focus suggestions dropdown */}
             {showSearchResults && searchQuery.trim() && (
-              <div className="absolute left-0 top-full mt-1 w-64 bg-[#0F1011] border border-[#23252A] rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto divide-y divide-[#23252A] font-mono text-[11px]">
+              <div className="absolute left-0 top-full mt-1 w-64 bg-theme-surface border border-theme-border rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto divide-y divide-theme-border font-mono text-[11px]">
                 {filteredNodes.slice(0, 6).map((node) => (
                   <div
                     key={node.id}
                     onClick={() => focusNode(node)}
-                    className="p-2 hover:bg-[#18191A] cursor-pointer flex items-center justify-between group transition-colors"
+                    className="p-2 hover:bg-theme-surface-alt cursor-pointer flex items-center justify-between group transition-colors"
                   >
-                    <span className="text-[#D0D6E0] group-hover:text-white truncate">{node.name}</span>
-                    <span className="text-[10px] text-[#62666D]">{TYPE_LABELS[node.type]?.slice(0, 10)}</span>
+                    <span className="text-theme-text group-hover:text-theme-blue truncate">{node.name}</span>
+                    <span className="text-[10px] text-theme-text-muted">{TYPE_LABELS[node.type]?.slice(0, 10)}</span>
                   </div>
                 ))}
               </div>
@@ -647,7 +723,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
           <select
             value={selectedFolder}
             onChange={(e) => setSelectedFolder(e.target.value)}
-            className="bg-[#141516] border border-[#23252A] text-[#8A8F98] hover:text-[#F7F8F8] font-mono text-xs px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-[#5E6AD2] cursor-pointer"
+            className="bg-theme-surface-alt border border-theme-border text-theme-text-muted hover:text-theme-text font-mono text-xs px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-theme-blue cursor-pointer"
           >
             <option value="all">All Folders</option>
             {availableFolders.map((f) => (
@@ -670,10 +746,10 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
               <button
                 key={tab.id}
                 onClick={() => setFilterType(tab.id)}
-                className={`px-2.5 py-1 rounded-md transition-colors ${
+                className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
                   filterType === tab.id
-                    ? "bg-[#5E6AD2] text-white font-medium"
-                    : "bg-[#141516] text-[#8A8F98] hover:text-[#F7F8F8] hover:bg-[#18191A]"
+                    ? "bg-theme-blue text-white font-medium"
+                    : "bg-theme-surface-alt text-theme-text-muted hover:text-theme-text hover:bg-theme-border/20"
                 }`}
               >
                 {tab.label}
@@ -685,7 +761,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
           {filteredNodes.length > NODE_CAP && (
             <button
               onClick={() => setShowAllNodes(!showAllNodes)}
-              className="px-2.5 py-1 rounded-md text-[11px] font-mono bg-[#141516] text-[#828FFF] hover:text-[#F7F8F8] border border-[#23252A] hover:border-[#5E6AD2] transition-colors cursor-pointer"
+              className="px-2.5 py-1 rounded-md text-[11px] font-mono bg-theme-surface-alt text-theme-blue hover:text-theme-text border border-theme-border hover:border-theme-blue transition-colors cursor-pointer"
             >
               {showAllNodes
                 ? `Showing All (${filteredNodes.length} modules)`
@@ -694,7 +770,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
           )}
         </div>
 
-        {/* View mode actions (Rule 1: 2D Default, 3D opt-in; Rule 5: Text list alternative) */}
+        {/* View mode actions */}
         <div className="flex items-center gap-1.5 font-mono text-xs">
           <Button
             variant={viewFormat === "text-list" ? "primary" : "secondary"}
@@ -746,13 +822,12 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
 
       {/* Main Viewport: Canvas OR Accessible Text List Alternative */}
       {viewFormat === "text-list" ? (
-        /* Accessible Text List Alternative (Rule 5) */
         <div
           role="tree"
           aria-label="Repository Architecture Tree Structure"
-          className="border border-[#23252A] rounded-xl bg-[#010102] p-5 h-[520px] overflow-y-auto space-y-3 font-mono text-xs"
+          className="border border-theme-border rounded-xl bg-theme-surface p-5 h-[520px] overflow-y-auto space-y-3 font-mono text-xs shadow-xs"
         >
-          <div className="pb-2 border-b border-[#23252A] flex items-center justify-between text-[#8A8F98]">
+          <div className="pb-2 border-b border-theme-border flex items-center justify-between text-theme-text-muted">
             <span>Accessible Hierarchy Tree ({displayNodes.length} nodes)</span>
             <span className="text-[11px]">Navigate with Tab / Enter</span>
           </div>
@@ -772,21 +847,21 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
                       setSelectedNode(node);
                     }
                   }}
-                  className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors focus:outline-none focus:ring-1 focus:ring-[#5E6AD2] ${
+                  className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors focus:outline-none focus:ring-1 focus:ring-theme-blue ${
                     isSelected
-                      ? "bg-[#5E6AD2]/20 border border-[#5E6AD2]/50 text-[#F7F8F8]"
-                      : "bg-[#0F1011] hover:bg-[#141516] border border-[#23252A] text-[#D0D6E0]"
+                      ? "bg-theme-blue/10 border border-theme-blue/40 text-theme-text font-medium"
+                      : "bg-theme-surface-alt hover:bg-theme-border/20 border border-theme-border text-theme-text"
                   }`}
                   style={{ paddingLeft: `${Math.max(8, node.depth * 16)}px` }}
                 >
                   <div className="flex items-center gap-2 truncate">
                     {node.type === "dir" ? (
-                      <Folder className="w-3.5 h-3.5 text-[#8A8F98] shrink-0" />
+                      <Folder className="w-3.5 h-3.5 text-theme-text-muted shrink-0" />
                     ) : (
-                      <FileCode className="w-3.5 h-3.5 text-[#5E6AD2] shrink-0" />
+                      <FileCode className="w-3.5 h-3.5 text-theme-blue shrink-0" />
                     )}
                     <span className="font-medium truncate">{node.name}</span>
-                    <span className="text-[10px] text-[#62666D] truncate">{node.path}</span>
+                    <span className="text-[10px] text-theme-text-muted truncate">{node.path}</span>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
@@ -801,7 +876,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
                             : `/explore?file=${encodeURIComponent(node.path)}`
                         }
                         onClick={(e) => e.stopPropagation()}
-                        className="text-[11px] text-[#828FFF] hover:underline"
+                        className="text-[11px] text-theme-blue hover:underline"
                       >
                         inspect →
                       </Link>
@@ -813,14 +888,14 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
           </div>
         </div>
       ) : (
-        <div className="relative border border-[#23252A] rounded-xl overflow-hidden bg-[#010102] h-[520px]">
+        <div className="relative border border-theme-border rounded-xl overflow-hidden bg-theme-surface h-[520px] shadow-xs">
           <canvas
             ref={canvasRef}
             role="img"
             aria-label="Interactive architecture graph. Arrow keys pan/orbit, +/- zoom, Enter selects, Esc clears."
             tabIndex={0}
             onKeyDown={handleKeyDown}
-            className="w-full h-full cursor-grab active:cursor-grabbing block focus:outline-none focus:ring-1 focus:ring-[#5E6AD2]"
+            className="w-full h-full cursor-grab active:cursor-grabbing block focus:outline-none focus:ring-1 focus:ring-theme-blue"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -831,15 +906,15 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
             onWheel={handleWheel}
             onContextMenu={(e) => e.preventDefault()}
           >
-            <p className="text-xs text-[#8A8F98] p-4">
+            <p className="text-xs text-theme-text-muted p-4">
               Interactive canvas is not supported in this environment. Please switch to the Accessible List view above.
             </p>
           </canvas>
 
           {/* Instructions Overlay */}
-          <div className="absolute left-3 bottom-3 p-2.5 bg-[#0F1011]/85 backdrop-blur-xs border border-[#23252A] rounded-lg shadow-md font-mono text-[11px] text-[#8A8F98] pointer-events-none space-y-0.5">
-            <div className="flex items-center gap-1.5 font-semibold text-[#F7F8F8]">
-              <Compass className="w-3.5 h-3.5 text-[#5E6AD2]" />
+          <div className="absolute left-3 bottom-3 p-2.5 bg-theme-surface/90 backdrop-blur-xs border border-theme-border rounded-lg shadow-sm font-mono text-[11px] text-theme-text-muted pointer-events-none space-y-0.5">
+            <div className="flex items-center gap-1.5 font-semibold text-theme-text">
+              <Compass className="w-3.5 h-3.5 text-theme-blue" />
               <span>{is2DMode ? "2D Mode Controls" : "3D Perspective Controls"}</span>
             </div>
             <p>• Click + Drag to {is2DMode ? "Pan" : "Orbit"} • Shift/Right-Click to Pan</p>
@@ -848,17 +923,17 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
 
           {/* Hover Tooltip */}
           {hoveredNode && !selectedNode && (
-            <div className="absolute top-3 right-3 p-3 bg-[#141516] border border-[#34343A] rounded-xl shadow-2xl font-mono text-xs space-y-1.5 max-w-xs pointer-events-none animate-fadeIn">
+            <div className="absolute top-3 right-3 p-3 bg-theme-surface border border-theme-border rounded-xl shadow-xl font-mono text-xs space-y-1.5 max-w-xs pointer-events-none animate-fadeIn">
               <div className="flex items-center gap-2">
                 <span
                   className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: TYPE_COLORS[hoveredNode.type] }}
+                  style={{ backgroundColor: typeColors[hoveredNode.type] }}
                 />
-                <span className="font-semibold text-[#F7F8F8] truncate">
+                <span className="font-semibold text-theme-text truncate">
                   {hoveredNode.name}
                 </span>
               </div>
-              <p className="text-[11px] text-[#8A8F98] truncate">
+              <p className="text-[11px] text-theme-text-muted truncate">
                 {hoveredNode.path || "Repository Root"}
               </p>
               <div className="flex items-center gap-2 pt-1">
@@ -866,7 +941,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
                   {TYPE_LABELS[hoveredNode.type]}
                 </Badge>
                 {hoveredNode.language && (
-                  <span className="text-[11px] text-[#D0D6E0] font-medium">
+                  <span className="text-[11px] text-theme-text font-medium">
                     {hoveredNode.language}
                   </span>
                 )}
@@ -876,20 +951,20 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
 
           {/* Selected Node Details Drawer */}
           {selectedNode && (
-            <div className="absolute top-3 right-3 w-80 bg-[#0F1011] border border-[#34343A] rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.9)] font-mono text-xs p-4 space-y-3 max-h-[480px] overflow-y-auto">
-              <div className="flex items-center justify-between border-b border-[#23252A] pb-2.5">
+            <div className="absolute top-3 right-3 w-80 bg-theme-surface border border-theme-border rounded-xl shadow-xl font-mono text-xs p-4 space-y-3 max-h-[480px] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-theme-border pb-2.5">
                 <div className="flex items-center gap-2 truncate">
                   <span
                     className="w-3 h-3 rounded-full shrink-0"
-                    style={{ backgroundColor: TYPE_COLORS[selectedNode.type] }}
+                    style={{ backgroundColor: typeColors[selectedNode.type] }}
                   />
-                  <h3 className="font-semibold text-[#F7F8F8] truncate text-xs">
+                  <h3 className="font-semibold text-theme-text truncate text-xs">
                     {selectedNode.name}
                   </h3>
                 </div>
                 <button
                   onClick={() => setSelectedNode(null)}
-                  className="text-[#8A8F98] hover:text-[#F7F8F8] text-sm font-bold"
+                  className="text-theme-text-muted hover:text-theme-text text-sm font-bold cursor-pointer"
                   aria-label="Close details"
                 >
                   ✕
@@ -897,24 +972,24 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
               </div>
 
               <div className="space-y-1">
-                <span className="text-[10px] text-[#62666D] uppercase block">
+                <span className="text-[10px] text-theme-text-muted uppercase block">
                   Repository Path
                 </span>
-                <p className="p-1.5 bg-[#141516] border border-[#23252A] rounded text-[#D0D6E0] break-all text-[11px]">
+                <p className="p-1.5 bg-theme-surface-alt border border-theme-border rounded text-theme-text break-all text-[11px]">
                   {selectedNode.path || "/ (Root)"}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-[11px]">
                 <div>
-                  <span className="text-[#62666D] block">Type</span>
+                  <span className="text-theme-text-muted block">Type</span>
                   <Badge variant="neutral" size="sm" className="mt-0.5">
                     {TYPE_LABELS[selectedNode.type]}
                   </Badge>
                 </div>
                 <div>
-                  <span className="text-[#62666D] block">Depth</span>
-                  <span className="font-semibold text-[#D0D6E0] mt-0.5 block">
+                  <span className="text-theme-text-muted block">Depth</span>
+                  <span className="font-semibold text-theme-text mt-0.5 block">
                     Level {selectedNode.depth}
                   </span>
                 </div>
@@ -922,18 +997,18 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
 
               {selectedNodeRelations.outgoing.length > 0 && (
                 <div className="space-y-1 pt-1">
-                  <span className="text-[10px] text-[#62666D] uppercase block">
+                  <span className="text-[10px] text-theme-text-muted uppercase block">
                     Outgoing Relations ({selectedNodeRelations.outgoing.length})
                   </span>
-                  <div className="max-h-24 overflow-y-auto divide-y divide-[#23252A] border border-[#23252A] rounded bg-[#141516]">
+                  <div className="max-h-24 overflow-y-auto divide-y divide-theme-border border border-theme-border rounded bg-theme-surface-alt">
                     {selectedNodeRelations.outgoing.slice(0, 10).map((rel) => (
                       <div
                         key={rel.id}
                         onClick={() => setSelectedNode(rel)}
-                        className="p-1.5 hover:bg-[#18191A] cursor-pointer flex items-center justify-between text-[11px]"
+                        className="p-1.5 hover:bg-theme-surface cursor-pointer flex items-center justify-between text-[11px]"
                       >
-                        <span className="text-[#D0D6E0] truncate">{rel.name}</span>
-                        <span className="text-[10px] text-[#62666D]">view</span>
+                        <span className="text-theme-text truncate">{rel.name}</span>
+                        <span className="text-[10px] text-theme-text-muted">view</span>
                       </div>
                     ))}
                   </div>
@@ -942,16 +1017,16 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
 
               {/* Architectural Module Brief (if directory) */}
               {selectedNode.type === "dir" && (
-                <div className="p-2.5 rounded-lg bg-[#141516] border border-[#23252A] space-y-1">
-                  <span className="text-[10px] text-[#62666D] uppercase block font-semibold">
+                <div className="p-2.5 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1">
+                  <span className="text-[10px] text-theme-text-muted uppercase block font-semibold">
                     Architectural Module Brief
                   </span>
-                  <p className="text-[#D0D6E0] font-sans text-xs leading-relaxed">
+                  <p className="text-theme-text font-sans text-xs leading-relaxed">
                     {summary?.keyModules?.find((m) => m.directory === selectedNode.path)?.description ||
                       "Module directory grouping related implementation targets."}
                   </p>
                   {summary?.keyModules?.find((m) => m.directory === selectedNode.path)?.fileCount !== undefined && (
-                    <span className="text-[10px] text-[#828FFF] block font-mono">
+                    <span className="text-[10px] text-theme-blue block font-mono">
                       {summary.keyModules.find((m) => m.directory === selectedNode.path)?.fileCount} tracked files in this module
                     </span>
                   )}
@@ -974,20 +1049,20 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
                   <div className="space-y-2 pt-1">
                     {childFiles.length > 0 && selectedNode.type === "dir" && (
                       <div className="space-y-1">
-                        <span className="text-[10px] text-[#62666D] uppercase block font-semibold">
+                        <span className="text-[10px] text-theme-text-muted uppercase block font-semibold">
                           Files in this Module ({childFiles.length})
                         </span>
-                        <div className="max-h-24 overflow-y-auto divide-y divide-[#23252A] border border-[#23252A] rounded bg-[#141516]">
+                        <div className="max-h-24 overflow-y-auto divide-y divide-theme-border border border-theme-border rounded bg-theme-surface-alt">
                           {childFiles.slice(0, 10).map((child) => (
                             <Link
                               key={child.id}
                               href={`/explore?dir=${encodeURIComponent(selectedNode.path!)}&file=${encodeURIComponent(child.path!)}`}
-                              className="p-1.5 hover:bg-[#18191A] flex items-center justify-between text-[11px] group transition-colors"
+                              className="p-1.5 hover:bg-theme-surface flex items-center justify-between text-[11px] group transition-colors"
                             >
-                              <span className="text-[#D0D6E0] group-hover:text-[#828FFF] truncate">
+                              <span className="text-theme-text group-hover:text-theme-blue truncate">
                                 {child.name}
                               </span>
-                              <span className="text-[10px] text-[#62666D] group-hover:text-[#8A8F98]">
+                              <span className="text-[10px] text-theme-text-muted group-hover:text-theme-text">
                                 inspect →
                               </span>
                             </Link>
@@ -1014,11 +1089,11 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
         </div>
       )}
 
-      {/* Legend Bar (Rule 4: Edge types labeled) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5 bg-[#0F1011] border border-[#23252A] rounded-xl font-mono text-[11px] text-[#8A8F98]">
+      {/* Legend Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5 bg-theme-surface border border-theme-border rounded-xl font-mono text-[11px] text-theme-text-muted shadow-xs">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="font-semibold text-[#D0D6E0]">Nodes:</span>
-          {Object.entries(TYPE_COLORS).map(([type, color]) => (
+          <span className="font-semibold text-theme-text">Nodes:</span>
+          {Object.entries(typeColors).map(([type, color]) => (
             <div key={type} className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
               <span className="capitalize">{type}</span>
@@ -1026,18 +1101,18 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, repoFullName, summar
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 border-t sm:border-t-0 sm:border-l border-[#23252A] pt-1 sm:pt-0 sm:pl-3">
-          <span className="font-semibold text-[#D0D6E0]">Edges:</span>
+        <div className="flex flex-wrap items-center gap-3 border-t sm:border-t-0 sm:border-l border-theme-border pt-1 sm:pt-0 sm:pl-3">
+          <span className="font-semibold text-theme-text">Edges:</span>
           <div className="flex items-center gap-1.5">
-            <span className="w-3.5 h-0.5 bg-[#52525A] inline-block" />
+            <span className="w-3.5 h-0.5 bg-theme-border inline-block" />
             <span>Contains</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3.5 h-0.5 bg-[#5E6AD2] inline-block" />
+            <span className="w-3.5 h-0.5 bg-theme-blue inline-block" />
             <span>Entry Path</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3.5 h-0.5 border-t border-dashed border-[#34D399] inline-block" />
+            <span className="w-3.5 h-0.5 border-t border-dashed border-theme-green inline-block" />
             <span>Import Dependency</span>
           </div>
         </div>

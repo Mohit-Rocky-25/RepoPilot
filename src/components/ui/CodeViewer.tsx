@@ -28,7 +28,7 @@ function renderHighlightedTokens(line: string): React.ReactNode {
 
     if (matchIndex > lastIndex) {
       elements.push(
-        <span key={`text-${lastIndex}`} className="text-[#E8EAED]">
+        <span key={`text-${lastIndex}`} className="text-theme-code-text">
           {line.substring(lastIndex, matchIndex)}
         </span>
       );
@@ -37,49 +37,49 @@ function renderHighlightedTokens(line: string): React.ReactNode {
     if (match[1]) {
       // Comment
       elements.push(
-        <span key={`comm-${matchIndex}`} className="text-[#9AA0A6] italic">
+        <span key={`comm-${matchIndex}`} className="text-theme-code-comment italic">
           {matchText}
         </span>
       );
     } else if (match[2]) {
       // String
       elements.push(
-        <span key={`str-${matchIndex}`} className="text-[#81C995]">
+        <span key={`str-${matchIndex}`} className="text-theme-green">
           {matchText}
         </span>
       );
     } else if (match[3]) {
       // Keyword
       elements.push(
-        <span key={`kw-${matchIndex}`} className="text-[#C58AF9] font-medium">
+        <span key={`kw-${matchIndex}`} className="text-theme-purple font-medium">
           {matchText}
         </span>
       );
     } else if (match[4]) {
       // Boolean / Null
       elements.push(
-        <span key={`bool-${matchIndex}`} className="text-[#FDD663]">
+        <span key={`bool-${matchIndex}`} className="text-theme-yellow font-medium">
           {matchText}
         </span>
       );
     } else if (match[5]) {
       // Number
       elements.push(
-        <span key={`num-${matchIndex}`} className="text-[#FDD663]">
+        <span key={`num-${matchIndex}`} className="text-theme-yellow">
           {matchText}
         </span>
       );
     } else if (match[6]) {
       // Type / Class
       elements.push(
-        <span key={`type-${matchIndex}`} className="text-[#8AB4F8]">
+        <span key={`type-${matchIndex}`} className="text-theme-blue font-medium">
           {matchText}
         </span>
       );
     } else if (match[7]) {
       // Function call
       elements.push(
-        <span key={`fn-${matchIndex}`} className="text-[#AECBFA]">
+        <span key={`fn-${matchIndex}`} className="text-theme-blue">
           {matchText}
         </span>
       );
@@ -90,7 +90,7 @@ function renderHighlightedTokens(line: string): React.ReactNode {
 
   if (lastIndex < line.length) {
     elements.push(
-      <span key={`text-${lastIndex}`} className="text-[#E8EAED]">
+      <span key={`text-${lastIndex}`} className="text-theme-code-text">
         {line.substring(lastIndex)}
       </span>
     );
@@ -122,31 +122,31 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
   };
 
   return (
-    <div className="w-full bg-[#202124] border border-theme-border rounded-xl overflow-hidden font-mono text-xs shadow-md">
+    <div className="w-full bg-theme-code-bg border border-theme-border rounded-xl overflow-hidden font-mono text-xs shadow-md">
       {/* File header bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#171717] border-b border-white/10 text-[#9AA0A6]">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-theme-surface-alt border-b border-theme-border text-theme-text-muted">
         <div className="flex items-center gap-2.5 truncate">
-          <span className="font-medium text-[#E8EAED] truncate text-xs">
+          <span className="font-medium text-theme-text truncate text-xs">
             {filePath || "Code Snippet"}
           </span>
           {language && (
-            <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-[4px] bg-white/10 border border-white/15 text-[#E8EAED]">
+            <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-[4px] bg-theme-surface border border-theme-border text-theme-text-muted">
               {language}
             </span>
           )}
-          <span className="text-[#9AA0A6] text-[11px]">
+          <span className="text-theme-text-muted text-[11px]">
             {lines.length} lines
           </span>
         </div>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 text-[11px] text-[#9AA0A6] hover:text-[#E8EAED] px-2 py-1 rounded-md hover:bg-white/10 transition-colors"
+          className="flex items-center gap-1.5 text-[11px] text-theme-text-muted hover:text-theme-text px-2 py-1 rounded-md hover:bg-theme-surface transition-colors cursor-pointer"
           title="Copy code"
         >
           {copied ? (
             <>
-              <Check className="w-3.5 h-3.5 text-[#81C995]" />
-              <span className="text-[#81C995] font-medium">Copied</span>
+              <Check className="w-3.5 h-3.5 text-theme-green" />
+              <span className="text-theme-green font-medium">Copied</span>
             </>
           ) : (
             <>
@@ -174,11 +174,11 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({
                   onClick={() => onLineClick?.(lineNum)}
                   className={`group transition-colors ${
                     highlighted
-                      ? "bg-[#1A73E8]/25 border-l-2 border-[#8AB4F8]"
-                      : "hover:bg-white/5 border-l-2 border-transparent"
+                      ? "bg-theme-blue/15 border-l-2 border-theme-blue"
+                      : "hover:bg-theme-surface-alt/40 border-l-2 border-transparent"
                   }`}
                 >
-                  <td className="w-12 py-0.5 pr-3 pl-3 text-right select-none text-[#5F6368] group-hover:text-[#9AA0A6] text-[11px] align-top font-mono">
+                  <td className="w-12 py-0.5 pr-3 pl-3 text-right select-none text-theme-text-muted group-hover:text-theme-text text-[11px] align-top font-mono">
                     {lineNum}
                   </td>
                   <td className="py-0.5 pr-4 pl-1 whitespace-pre font-mono leading-relaxed text-xs">

@@ -11,8 +11,6 @@ import {
   Layers,
   GitBranch,
   Network,
-  RotateCcw,
-  Sparkles,
   Loader2,
   ZoomIn,
   ZoomOut,
@@ -21,7 +19,8 @@ import {
   ArrowDownUp,
   ArrowLeftRight,
   Activity,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -57,8 +56,41 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
   const [renderError, setRenderError] = useState<string | null>(null);
   const [zoom, setZoom] = useState<number>(1);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Sync with active application theme
+  useEffect(() => {
+    const getTheme = () =>
+      document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+
+    setTheme(getTheme());
+
+    const handleThemeChange = () => {
+      setTheme(getTheme());
+    };
+
+    window.addEventListener("repopilot-theme-change", handleThemeChange);
+
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === "attributes" && m.attributeName === "data-theme") {
+          setTheme(getTheme());
+        }
+      }
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"]
+    });
+
+    return () => {
+      window.removeEventListener("repopilot-theme-change", handleThemeChange);
+      observer.disconnect();
+    };
+  }, []);
 
   // Update orientation default when diagram type changes
   const handleSelectDiagramType = (type: MermaidDiagramType) => {
@@ -80,7 +112,7 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
     return generateMermaidDiagram(summary, graph, diagramType, repoFullName, orientation);
   }, [summary, graph, diagramType, repoFullName, orientation]);
 
-  // Dynamically load Mermaid script if not present
+  // Dynamically load Mermaid script & re-render on code or theme change
   useEffect(() => {
     let isMounted = true;
 
@@ -96,7 +128,9 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
             if (existingScript) {
               if (window.mermaid) return resolve();
               existingScript.addEventListener("load", () => resolve());
-              existingScript.addEventListener("error", () => reject(new Error("Failed to load Mermaid CDN")));
+              existingScript.addEventListener("error", () =>
+                reject(new Error("Failed to load Mermaid CDN"))
+              );
               return;
             }
 
@@ -112,11 +146,13 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
 
         if (!isMounted) return;
 
+        const isDark = theme === "dark";
+
         window.mermaid.initialize({
           startOnLoad: false,
           theme: "base",
           securityLevel: "loose",
-          fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+          fontFamily: "Roboto, Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
           flowchart: {
             htmlLabels: false, // Critical: Renders native SVG <text> elements so labels never get stripped
             curve: "basis",
@@ -125,33 +161,53 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
             padding: 18,
             useMaxWidth: true
           },
-          themeVariables: {
-            darkMode: true,
-            background: "#08090A",
-            fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
-            fontSize: "12.5px",
-            // Subgraph / Cluster styles
-            clusterBkg: "#0B0E14",
-            clusterBorder: "#1E293B",
-            titleColor: "#F8FAFC",
-            // Edge lines
-            lineColor: "#64748B",
-            edgeLabelBackground: "#0F172A",
-            // Nodes base
-            mainBkg: "#0F172A",
-            nodeBorder: "#38BDF8",
-            nodeTextColor: "#FFFFFF",
-            // Color palettes
-            primaryColor: "#1E1B4B",
-            primaryTextColor: "#FFFFFF",
-            primaryBorderColor: "#818CF8",
-            secondaryColor: "#082F49",
-            secondaryTextColor: "#FFFFFF",
-            secondaryBorderColor: "#38BDF8",
-            tertiaryColor: "#064E3B",
-            tertiaryTextColor: "#FFFFFF",
-            tertiaryBorderColor: "#34D399"
-          }
+          themeVariables: isDark
+            ? {
+                darkMode: true,
+                background: "#202124",
+                fontFamily: "Roboto, Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+                fontSize: "12.5px",
+                clusterBkg: "#292A2D",
+                clusterBorder: "#3C4043",
+                titleColor: "#E8EAED",
+                lineColor: "#9AA0A6",
+                edgeLabelBackground: "#202124",
+                mainBkg: "#292A2D",
+                nodeBorder: "#8AB4F8",
+                nodeTextColor: "#E8EAED",
+                primaryColor: "#1E1B4B",
+                primaryTextColor: "#FFFFFF",
+                primaryBorderColor: "#8AB4F8",
+                secondaryColor: "#064E3B",
+                secondaryTextColor: "#FFFFFF",
+                secondaryBorderColor: "#81C995",
+                tertiaryColor: "#4C0519",
+                tertiaryTextColor: "#FFFFFF",
+                tertiaryBorderColor: "#F28B82"
+              }
+            : {
+                darkMode: false,
+                background: "#FFFFFF",
+                fontFamily: "Roboto, Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+                fontSize: "12.5px",
+                clusterBkg: "#F8F9FA",
+                clusterBorder: "#DADCE0",
+                titleColor: "#202124",
+                lineColor: "#5F6368",
+                edgeLabelBackground: "#FFFFFF",
+                mainBkg: "#FFFFFF",
+                nodeBorder: "#1A73E8",
+                nodeTextColor: "#202124",
+                primaryColor: "#E8F0FE",
+                primaryTextColor: "#1A73E8",
+                primaryBorderColor: "#1A73E8",
+                secondaryColor: "#E6F4EA",
+                secondaryTextColor: "#137333",
+                secondaryBorderColor: "#34A853",
+                tertiaryColor: "#FCE8E6",
+                tertiaryTextColor: "#C5221F",
+                tertiaryBorderColor: "#EA4335"
+              }
         });
 
         const uniqueId = "mermaid_svg_" + Math.random().toString(36).substring(2, 9);
@@ -174,7 +230,7 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
     return () => {
       isMounted = false;
     };
-  }, [diagramCode]);
+  }, [diagramCode, theme]);
 
   const copyMarkdown = () => {
     const fullMarkdown = `\`\`\`mermaid\n${diagramCode}\n\`\`\``;
@@ -236,7 +292,7 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
         canvas.height = height * scale;
         const ctx = canvas.getContext("2d");
         if (ctx) {
-          ctx.fillStyle = "#08090A";
+          ctx.fillStyle = theme === "dark" ? "#202124" : "#FFFFFF";
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           const pngUrl = canvas.toDataURL("image/png");
@@ -259,7 +315,7 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
     try {
       const state = {
         code: diagramCode,
-        mermaid: { theme: "dark" },
+        mermaid: { theme: theme === "dark" ? "dark" : "default" },
         autoSync: true,
         updateDiagram: true
       };
@@ -292,20 +348,26 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
   }, [isFullscreen]);
 
   return (
-    <div className={`space-y-4 ${isFullscreen ? "fixed inset-0 z-50 bg-[#08090A]/95 backdrop-blur-md p-6 overflow-y-auto" : ""}`}>
+    <div
+      className={`space-y-4 ${
+        isFullscreen
+          ? "fixed inset-0 z-50 bg-theme-bg/95 backdrop-blur-md p-6 overflow-y-auto"
+          : ""
+      }`}
+    >
       {/* Control Header */}
-      <Card className="p-4 bg-linear-surface-1 border-linear-border-1 flex flex-col xl:flex-row xl:items-center justify-between gap-3 shadow-lg">
+      <Card className="p-4 bg-theme-surface border border-theme-border flex flex-col xl:flex-row xl:items-center justify-between gap-3 shadow-xs">
         {/* Diagram Type Selector */}
-        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#0F1011] border border-[#23252A] rounded-lg">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-theme-surface-alt border border-theme-border rounded-lg">
           <button
             onClick={() => handleSelectDiagramType("system")}
             className={`px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
               diagramType === "system"
-                ? "bg-[#1E1B4B] text-[#828FFF] border border-[#5E6AD2]/50 shadow-xs"
-                : "text-[#8A8F98] hover:text-[#F7F8F8]"
+                ? "bg-theme-surface text-theme-blue border border-theme-border shadow-2xs"
+                : "text-theme-text-muted hover:text-theme-text"
             }`}
           >
-            <Network className="w-3.5 h-3.5" />
+            <Network className="w-3.5 h-3.5 text-theme-blue" />
             <span>System Flowchart</span>
           </button>
 
@@ -313,11 +375,11 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
             onClick={() => handleSelectDiagramType("hierarchy")}
             className={`px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
               diagramType === "hierarchy"
-                ? "bg-[#1E1B4B] text-[#828FFF] border border-[#5E6AD2]/50 shadow-xs"
-                : "text-[#8A8F98] hover:text-[#F7F8F8]"
+                ? "bg-theme-surface text-theme-blue border border-theme-border shadow-2xs"
+                : "text-theme-text-muted hover:text-theme-text"
             }`}
           >
-            <GitBranch className="w-3.5 h-3.5" />
+            <GitBranch className="w-3.5 h-3.5 text-theme-purple" />
             <span>Modular Hierarchy</span>
           </button>
 
@@ -325,11 +387,11 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
             onClick={() => handleSelectDiagramType("components")}
             className={`px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
               diagramType === "components"
-                ? "bg-[#1E1B4B] text-[#828FFF] border border-[#5E6AD2]/50 shadow-xs"
-                : "text-[#8A8F98] hover:text-[#F7F8F8]"
+                ? "bg-theme-surface text-theme-blue border border-theme-border shadow-2xs"
+                : "text-theme-text-muted hover:text-theme-text"
             }`}
           >
-            <Layers className="w-3.5 h-3.5" />
+            <Layers className="w-3.5 h-3.5 text-theme-red" />
             <span>Tiered Architecture</span>
           </button>
 
@@ -337,11 +399,11 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
             onClick={() => handleSelectDiagramType("dataflow")}
             className={`px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
               diagramType === "dataflow"
-                ? "bg-[#1E1B4B] text-[#828FFF] border border-[#5E6AD2]/50 shadow-xs"
-                : "text-[#8A8F98] hover:text-[#F7F8F8]"
+                ? "bg-theme-surface text-theme-blue border border-theme-border shadow-2xs"
+                : "text-theme-text-muted hover:text-theme-text"
             }`}
           >
-            <Activity className="w-3.5 h-3.5 text-[#34D399]" />
+            <Activity className="w-3.5 h-3.5 text-theme-green" />
             <span>Data Flow Pipeline</span>
           </button>
         </div>
@@ -351,17 +413,19 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
           {/* Orientation Toggle */}
           <button
             onClick={toggleOrientation}
-            title={`Current layout: ${orientation === "TD" ? "Top-to-Bottom" : "Left-to-Right"}. Click to toggle layout.`}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-[#0F1011] border border-[#23252A] hover:border-[#38BDF8]/50 text-xs font-mono text-[#8A8F98] hover:text-white transition-all cursor-pointer"
+            title={`Current layout: ${
+              orientation === "TD" ? "Top-to-Bottom" : "Left-to-Right"
+            }. Click to toggle layout.`}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-theme-surface-alt border border-theme-border hover:border-theme-blue/50 text-xs font-mono text-theme-text-muted hover:text-theme-text transition-all cursor-pointer"
           >
             {orientation === "TD" ? (
               <>
-                <ArrowDownUp className="w-3.5 h-3.5 text-[#38BDF8]" />
+                <ArrowDownUp className="w-3.5 h-3.5 text-theme-blue" />
                 <span>Layout: TD</span>
               </>
             ) : (
               <>
-                <ArrowLeftRight className="w-3.5 h-3.5 text-[#34D399]" />
+                <ArrowLeftRight className="w-3.5 h-3.5 text-theme-green" />
                 <span>Layout: LR</span>
               </>
             )}
@@ -369,19 +433,19 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
 
           {/* Zoom controls */}
           {viewMode === "visual" && (
-            <div className="flex items-center p-0.5 bg-[#0F1011] border border-[#23252A] rounded-md text-xs font-mono">
+            <div className="flex items-center p-0.5 bg-theme-surface-alt border border-theme-border rounded-md text-xs font-mono">
               <button
                 onClick={handleZoomOut}
                 disabled={zoom <= 0.4}
                 title="Zoom Out"
-                className="p-1.5 rounded hover:bg-[#141516] text-[#8A8F98] hover:text-[#F7F8F8] disabled:opacity-40 transition-colors cursor-pointer"
+                className="p-1.5 rounded hover:bg-theme-surface text-theme-text-muted hover:text-theme-text disabled:opacity-40 transition-colors cursor-pointer"
               >
                 <ZoomOut className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={handleZoomReset}
                 title="Reset Zoom to 100%"
-                className="px-2 py-0.5 rounded text-[11px] font-mono text-[#8A8F98] hover:text-[#F7F8F8] hover:bg-[#141516] transition-colors cursor-pointer"
+                className="px-2 py-0.5 rounded text-[11px] font-mono text-theme-text-muted hover:text-theme-text hover:bg-theme-surface transition-colors cursor-pointer"
               >
                 {Math.round(zoom * 100)}%
               </button>
@@ -389,7 +453,7 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
                 onClick={handleZoomIn}
                 disabled={zoom >= 2.2}
                 title="Zoom In"
-                className="p-1.5 rounded hover:bg-[#141516] text-[#8A8F98] hover:text-[#F7F8F8] disabled:opacity-40 transition-colors cursor-pointer"
+                className="p-1.5 rounded hover:bg-theme-surface text-theme-text-muted hover:text-theme-text disabled:opacity-40 transition-colors cursor-pointer"
               >
                 <ZoomIn className="w-3.5 h-3.5" />
               </button>
@@ -400,19 +464,23 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
             title={isFullscreen ? "Exit Fullscreen (Esc)" : "Expand Diagram to Fullscreen"}
-            className="p-1.5 rounded-md bg-[#0F1011] border border-[#23252A] hover:border-[#5E6AD2]/50 text-[#8A8F98] hover:text-[#F7F8F8] transition-colors cursor-pointer"
+            className="p-1.5 rounded-md bg-theme-surface-alt border border-theme-border hover:border-theme-blue/50 text-theme-text-muted hover:text-theme-text transition-colors cursor-pointer"
           >
-            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            {isFullscreen ? (
+              <Minimize2 className="w-3.5 h-3.5" />
+            ) : (
+              <Maximize2 className="w-3.5 h-3.5" />
+            )}
           </button>
 
           {/* Visual vs Code Toggle */}
-          <div className="flex items-center p-0.5 bg-[#0F1011] border border-[#23252A] rounded-md text-xs font-mono">
+          <div className="flex items-center p-0.5 bg-theme-surface-alt border border-theme-border rounded-md text-xs font-mono">
             <button
               onClick={() => setViewMode("visual")}
               className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 cursor-pointer ${
                 viewMode === "visual"
-                  ? "bg-[#141516] text-[#F7F8F8] font-medium border border-[#34343A]"
-                  : "text-[#8A8F98] hover:text-[#F7F8F8]"
+                  ? "bg-theme-surface text-theme-text font-medium border border-theme-border shadow-2xs"
+                  : "text-theme-text-muted hover:text-theme-text"
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
@@ -422,8 +490,8 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
               onClick={() => setViewMode("code")}
               className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 cursor-pointer ${
                 viewMode === "code"
-                  ? "bg-[#141516] text-[#F7F8F8] font-medium border border-[#34343A]"
-                  : "text-[#8A8F98] hover:text-[#F7F8F8]"
+                  ? "bg-theme-surface text-theme-text font-medium border border-theme-border shadow-2xs"
+                  : "text-theme-text-muted hover:text-theme-text"
               }`}
             >
               <Code2 className="w-3.5 h-3.5" />
@@ -437,7 +505,7 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
             size="sm"
             onClick={downloadSvg}
             disabled={!svgContent || isRendering}
-            icon={<Download className="w-3.5 h-3.5 text-[#38BDF8]" />}
+            icon={<Download className="w-3.5 h-3.5 text-theme-blue" />}
             title="Download vector SVG format"
           >
             SVG
@@ -448,7 +516,7 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
             size="sm"
             onClick={downloadPng}
             disabled={!svgContent || isRendering}
-            icon={<ImageIcon className="w-3.5 h-3.5 text-[#34D399]" />}
+            icon={<ImageIcon className="w-3.5 h-3.5 text-theme-green" />}
             title="Download high-resolution PNG format"
           >
             PNG
@@ -458,7 +526,7 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
             variant="secondary"
             size="sm"
             onClick={openMermaidLive}
-            icon={<ExternalLink className="w-3.5 h-3.5 text-[#C084FC]" />}
+            icon={<ExternalLink className="w-3.5 h-3.5 text-theme-purple" />}
             title="Open and edit inside the official Mermaid Live Editor"
           >
             Mermaid Live
@@ -468,26 +536,34 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
             variant="primary"
             size="sm"
             onClick={copyMarkdown}
-            icon={copied ? <Check className="w-3.5 h-3.5 text-[#27A644]" /> : <Copy className="w-3.5 h-3.5" />}
+            icon={
+              copied ? (
+                <Check className="w-3.5 h-3.5 text-theme-green" />
+              ) : (
+                <Copy className="w-3.5 h-3.5" />
+              )
+            }
           >
             {copied ? "Copied for GitHub!" : "Copy for GitHub"}
           </Button>
         </div>
       </Card>
 
-      {/* Diagram Statistics & Ecosystem Context Strip */}
-      <div className="px-4 py-2.5 rounded-lg bg-[#0A0D14] border border-[#1E293B] flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
-        <div className="flex flex-wrap items-center gap-2 text-[#8A8F98]">
-          <span className="text-white font-semibold flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#34D399] animate-pulse" />
+      {/* Diagram Statistics Strip */}
+      <div className="px-4 py-2.5 rounded-lg bg-theme-surface-alt border border-theme-border flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+        <div className="flex flex-wrap items-center gap-2 text-theme-text-muted">
+          <span className="text-theme-text font-semibold flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-theme-green animate-pulse" />
             {repoFullName}
           </span>
           <span>•</span>
-          <span className="text-[#38BDF8]">{summary.primaryLanguage || "TypeScript"}</span>
+          <span className="text-theme-blue">{summary.primaryLanguage || "TypeScript"}</span>
           {summary.detectedFrameworks && summary.detectedFrameworks.length > 0 && (
             <>
               <span>•</span>
-              <span className="text-[#A78BFA]">{summary.detectedFrameworks.slice(0, 3).join(", ")}</span>
+              <span className="text-theme-purple">
+                {summary.detectedFrameworks.slice(0, 3).join(", ")}
+              </span>
             </>
           )}
           <span>•</span>
@@ -502,30 +578,36 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
           </Badge>
           <button
             onClick={copyRawCode}
-            className="text-[11px] text-[#828FFF] hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+            className="text-[11px] text-theme-blue hover:text-theme-text transition-colors cursor-pointer flex items-center gap-1"
             title="Copy raw Mermaid code without markdown backticks"
           >
-            {copiedRaw ? <Check className="w-3 h-3 text-[#27A644]" /> : <Copy className="w-3 h-3" />}
+            {copiedRaw ? (
+              <Check className="w-3 h-3 text-theme-green" />
+            ) : (
+              <Copy className="w-3 h-3" />
+            )}
             <span>{copiedRaw ? "Copied Raw!" : "Copy Raw"}</span>
           </button>
         </div>
       </div>
 
       {/* GitHub README Helper Banner */}
-      <div className="p-3.5 rounded-lg bg-[#0F1011] border border-[#23252A] text-xs font-mono flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-[#8A8F98]">
-          <Sparkles className="w-4 h-4 text-[#828FFF] shrink-0" />
+      <div className="p-3.5 rounded-lg bg-theme-surface-alt border border-theme-border text-xs font-mono flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-theme-text-muted">
+          <Sparkles className="w-4 h-4 text-theme-blue shrink-0" />
           <span>
-            <strong>GitHub Ready:</strong> GitHub automatically renders this high-contrast diagram in any repository{" "}
-            <code className="text-[#F7F8F8] bg-[#141516] px-1 py-0.5 rounded border border-[#23252A]">README.md</code> or issue using{" "}
-            <code className="text-[#828FFF]">```mermaid</code> blocks.
+            <strong>GitHub Ready:</strong> GitHub automatically renders this diagram in any repository{" "}
+            <code className="text-theme-text bg-theme-surface px-1 py-0.5 rounded border border-theme-border">
+              README.md
+            </code>{" "}
+            or issue using <code className="text-theme-blue">```mermaid</code> blocks.
           </span>
         </div>
         <a
           href="https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams"
           target="_blank"
           rel="noreferrer"
-          className="text-[#828FFF] hover:underline text-[11px] shrink-0 inline-flex items-center gap-1"
+          className="text-theme-blue hover:underline text-[11px] shrink-0 inline-flex items-center gap-1"
         >
           <span>GitHub Docs</span>
           <ExternalLink className="w-3 h-3" />
@@ -533,38 +615,56 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
       </div>
 
       {/* Main Content Canvas */}
-      <Card className={`p-6 bg-[#08090A] border border-[#23252A] rounded-xl overflow-hidden flex flex-col justify-center relative shadow-2xl ${
-        isFullscreen ? "min-h-[calc(100vh-220px)]" : "min-h-[560px]"
-      }`}>
+      <Card
+        className={`p-6 bg-theme-surface border border-theme-border rounded-xl overflow-hidden flex flex-col justify-center relative shadow-xs ${
+          isFullscreen ? "min-h-[calc(100vh-220px)]" : "min-h-[560px]"
+        }`}
+      >
         {viewMode === "visual" ? (
           <div className="w-full flex flex-col items-center justify-center overflow-hidden">
             {isRendering ? (
-              <div className="flex flex-col items-center justify-center py-24 gap-3 text-xs font-mono text-[#8A8F98]">
-                <Loader2 className="w-7 h-7 animate-spin text-[#828FFF]" />
-                <span className="text-white font-medium">Compiling high-contrast vector architecture graph...</span>
-                <span className="text-[11px] text-[#64748B]">Sanitizing SVG structures and mapping component hierarchy</span>
+              <div className="flex flex-col items-center justify-center py-24 gap-3 text-xs font-mono text-theme-text-muted">
+                <Loader2 className="w-7 h-7 animate-spin text-theme-blue" />
+                <span className="text-theme-text font-medium">
+                  Compiling vector architecture graph...
+                </span>
+                <span className="text-[11px] text-theme-text-muted">
+                  Sanitizing SVG structures and mapping component hierarchy
+                </span>
               </div>
             ) : renderError ? (
               <div className="space-y-4 text-center py-12 max-w-lg mx-auto">
-                <p className="text-xs font-mono text-[#F59E0B]">
+                <p className="text-xs font-mono text-theme-warning-text">
                   Visual renderer fallback active: {renderError}
                 </p>
-                <div className="p-4 bg-[#141516] border border-[#23252A] rounded-lg text-left text-xs font-mono text-[#8A8F98] max-h-56 overflow-auto">
+                <div className="p-4 bg-theme-code-bg border border-theme-border rounded-lg text-left text-xs font-mono text-theme-code-text max-h-56 overflow-auto">
                   <pre>{diagramCode}</pre>
                 </div>
                 <div className="flex justify-center gap-3">
-                  <Button variant="primary" size="sm" onClick={copyMarkdown} icon={<Copy className="w-3.5 h-3.5" />}>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={copyMarkdown}
+                    icon={<Copy className="w-3.5 h-3.5" />}
+                  >
                     Copy Mermaid Markdown
                   </Button>
-                  <Button variant="secondary" size="sm" onClick={openMermaidLive} icon={<ExternalLink className="w-3.5 h-3.5" />}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={openMermaidLive}
+                    icon={<ExternalLink className="w-3.5 h-3.5" />}
+                  >
                     Open in Mermaid Live
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className={`w-full overflow-auto flex items-center justify-center p-4 ${
-                isFullscreen ? "max-h-[calc(100vh-260px)]" : "max-h-[780px]"
-              }`}>
+              <div
+                className={`w-full overflow-auto flex items-center justify-center p-4 ${
+                  isFullscreen ? "max-h-[calc(100vh-260px)]" : "max-h-[780px]"
+                }`}
+              >
                 <div
                   ref={containerRef}
                   style={{
@@ -580,26 +680,32 @@ export const MermaidViewer: React.FC<Props> = ({ summary, graph, repoFullName })
           </div>
         ) : (
           <div className="space-y-3 font-mono text-xs">
-            <div className="flex items-center justify-between text-[#8A8F98] pb-2 border-b border-[#23252A]">
-              <span className="text-white font-semibold">Mermaid Markdown Source ({diagramType.toUpperCase()})</span>
+            <div className="flex items-center justify-between text-theme-text-muted pb-2 border-b border-theme-border">
+              <span className="text-theme-text font-semibold">
+                Mermaid Markdown Source ({diagramType.toUpperCase()})
+              </span>
               <div className="flex items-center gap-3">
                 <button
                   onClick={openMermaidLive}
-                  className="text-[#C084FC] hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+                  className="text-theme-purple hover:text-theme-text flex items-center gap-1 transition-colors cursor-pointer"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   <span>Mermaid Live</span>
                 </button>
                 <button
                   onClick={copyMarkdown}
-                  className="text-[#828FFF] hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+                  className="text-theme-blue hover:text-theme-text flex items-center gap-1 transition-colors cursor-pointer"
                 >
-                  {copied ? <Check className="w-3.5 h-3.5 text-[#27A644]" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? (
+                    <Check className="w-3.5 h-3.5 text-theme-green" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
                   <span>{copied ? "Copied!" : "Copy Markdown"}</span>
                 </button>
               </div>
             </div>
-            <pre className="p-4 rounded-lg bg-[#0F1011] border border-[#23252A] text-[#F7F8F8] overflow-x-auto leading-relaxed">
+            <pre className="p-4 rounded-lg bg-theme-code-bg border border-theme-border text-theme-code-text overflow-x-auto leading-relaxed">
               <code>{`\`\`\`mermaid\n${diagramCode}\n\`\`\``}</code>
             </pre>
           </div>
