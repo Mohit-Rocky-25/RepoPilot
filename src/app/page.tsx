@@ -234,6 +234,29 @@ export default function HomePage() {
                 </Link>
               </div>
             </div>
+
+            {/* Landing Page Theme Switcher Banner */}
+            <div className="pt-4 max-w-xl mx-auto">
+              <div className="p-3 bg-theme-surface border border-theme-border rounded-xl shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-theme-surface-alt border border-theme-border flex items-center justify-center text-theme-blue shrink-0">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-theme-text font-mono flex items-center gap-1.5">
+                      <span>Experience & Theme</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-theme-blue-surface text-theme-blue font-semibold">Live</span>
+                    </div>
+                    <div className="text-[11px] text-theme-text-muted font-sans">
+                      Toggle Google Light (Default) or Obsidian Dark — saved directly to your device.
+                    </div>
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  <ThemeSwitcher size="sm" showLabels />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Active Repo Banner if already loaded */}
@@ -305,9 +328,9 @@ export default function HomePage() {
                   <span className="text-xs font-mono uppercase tracking-wider text-theme-text-muted block">
                     System Architecture Overview
                   </span>
-                  <h3 className="text-base font-semibold text-theme-text font-mono mt-0.5">
+                  <h2 className="text-base font-semibold text-theme-text font-mono mt-0.5">
                     Deterministic Ingestion & Local Reasoning Pipeline
-                  </h3>
+                  </h2>
                 </div>
                 <span className="px-2.5 py-1 rounded-full bg-theme-surface-alt border border-theme-border text-[11px] font-mono text-theme-text-muted">
                   Isolated Sandbox
@@ -320,9 +343,9 @@ export default function HomePage() {
                   <div className="w-7 h-7 rounded-md bg-theme-surface-alt border border-theme-border flex items-center justify-center text-theme-blue font-mono text-xs font-bold">
                     01
                   </div>
-                  <h4 className="text-xs font-semibold font-mono text-theme-text">
+                  <h3 className="text-xs font-semibold font-mono text-theme-text">
                     Public Ingestion
-                  </h4>
+                  </h3>
                   <p className="text-[11px] text-theme-text-muted leading-relaxed">
                     Validates URL, checks SSRF safety, pins to explicit commit SHA, and retrieves recursive tree without private tokens.
                   </p>
@@ -332,9 +355,9 @@ export default function HomePage() {
                   <div className="w-7 h-7 rounded-md bg-theme-surface-alt border border-theme-border flex items-center justify-center text-theme-red font-mono text-xs font-bold">
                     02
                   </div>
-                  <h4 className="text-xs font-semibold font-mono text-theme-text">
+                  <h3 className="text-xs font-semibold font-mono text-theme-text">
                     AST & Symbol Parsing
-                  </h4>
+                  </h3>
                   <p className="text-[11px] text-theme-text-muted leading-relaxed">
                     Deterministic regex & parser extraction of functions, classes, interfaces, and entry points across TS, JS, Python, Go, Rust, and Java.
                   </p>
@@ -344,9 +367,9 @@ export default function HomePage() {
                   <div className="w-7 h-7 rounded-md bg-theme-surface-alt border border-theme-border flex items-center justify-center text-theme-warning-text font-mono text-xs font-bold">
                     03
                   </div>
-                  <h4 className="text-xs font-semibold font-mono text-theme-text">
+                  <h3 className="text-xs font-semibold font-mono text-theme-text">
                     Bounded RAG Context
-                  </h4>
+                  </h3>
                   <p className="text-[11px] text-theme-text-muted leading-relaxed">
                     Relevant source files are ranked and injected with strict token bounds. Citations are verified against real indexed files.
                   </p>
@@ -356,9 +379,9 @@ export default function HomePage() {
                   <div className="w-7 h-7 rounded-md bg-theme-surface-alt border border-theme-border flex items-center justify-center text-theme-green font-mono text-xs font-bold">
                     04
                   </div>
-                  <h4 className="text-xs font-semibold font-mono text-theme-text">
+                  <h3 className="text-xs font-semibold font-mono text-theme-text">
                     Verified Patch Diff
-                  </h4>
+                  </h3>
                   <p className="text-[11px] text-theme-text-muted leading-relaxed">
                     Produces ranked hypotheses, minimal unified diffs, and reproducible regression test procedures for human review.
                   </p>

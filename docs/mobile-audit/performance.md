@@ -53,3 +53,4 @@ To ensure mid-range devices on slow 4G do not stall during page hydration, heavy
 
 - **Browser Index Cache:** Previously imported public repositories and local folders are stored in IndexedDB (`browserIndexCache.ts`), enabling instant offline reloading without re-fetching GitHub API or tarballs.
 - **Hardware-Throttled Memory Safeguards:** On mobile viewports (`< 768px`), local folder ingestion file cap is throttled from 1,000 files to 250 files and file sizes from 1.5MB to 500KB to prevent mobile V8 isolate out-of-memory crashes.
+

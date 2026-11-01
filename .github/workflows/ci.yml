@@ -28,6 +28,9 @@ jobs:
       - name: Run Secret Scan
         run: npm run security:scan
 
+      - name: Verify Semantic Theme Tokens & Contrast
+        run: npm run theme:check
+
       - name: Run Dependency Audit (Fail on High Severity)
         run: npm audit --audit-level=high || true
         continue-on-error: true

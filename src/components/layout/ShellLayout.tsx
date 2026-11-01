@@ -31,7 +31,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         {/* Landing Top Navigation Bar */}
         <header className="h-14 bg-theme-surface border-b border-theme-border px-4 sm:px-6 flex items-center justify-between shrink-0 select-none shadow-xs">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" className="min-h-[44px] flex items-center gap-2 py-2">
               <FourDots size="xs" />
               <span className="font-bold text-sm tracking-tight text-theme-text font-mono">
                 RepoPilot
@@ -65,9 +65,9 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
           </div>
         </header>
 
-        <div className="flex-1">
+        <main className="flex-1">
           {children}
-        </div>
+        </main>
         <ImportModal />
       </div>
     );
