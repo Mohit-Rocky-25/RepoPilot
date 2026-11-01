@@ -316,4 +316,35 @@ All typography scales smoothly with the viewport width using CSS `clamp()` funct
 - **Reduced Motion:** When `prefers-reduced-motion: reduce` is enabled, all transitions and animations are collapsed to 0.01ms.
 - **No Hover-Only Dependence:** Essential information, tooltips, and contextual actions are accessible via tap or focus, never requiring hover.
 
+### 11.7 Mobile Navigation Patterns
+- **Compact Shell Header (`<Header />`):** On screens `< 768px`, the header collapses extraneous telemetry and secondary controls, displaying an accessible hamburger trigger (`min-h-[44px] min-w-[44px]`), the active repository / section badge, and a persistent theme switcher.
+- **Accessible Mobile Navigation Drawer:** Triggered by the hamburger button, the drawer slides in smoothly from the left with an overlay backdrop (`bg-black/50 backdrop-blur-xs`), comprehensive focus trapping, body scroll locking (`overflow: hidden`), and `Escape` key dismissal. All links provide `>= 44px` touch targets.
+- **Persistent Bottom Tab Bar (`<BottomTabBar />`):** Displayed exclusively on mobile devices (`md:hidden`), the bottom tab bar floats above the content with `pb-safe` (safe-area bottom inset) and provides 1-tap switching between the four primary operational modules:
+  1. **Explore** (`/explore`) — Directory structure & syntax-highlighted code.
+  2. **Architecture** (`/architecture`) — 3D/2D Spatial dependency map.
+  3. **Assistant** (`/assistant`) — Evidence-grounded local AI Q&A.
+  4. **Debugging** (`/debugging`) — Stack trace analyzer & patch generator.
 
+### 11.8 Bottom Sheets and Mobile Modals
+- **Drawer / Bottom Sheet Transformation:** Desktop centered modals (such as `<ImportModal />` and the Architecture Node Inspector) automatically transition to anchored bottom sheets on screens `< 640px` (`fixed inset-0 flex items-end`).
+- **Tactile Drag Handle:** Features a centered rounded pill (`w-12 h-1.5 rounded-full bg-theme-border-subtle`) indicating drag/swipe affordance.
+- **Focus & Keyboard Trapping:** Traps focus within the active dialog, closes cleanly on `Escape` or backdrop tap, and disables background document scrolling.
+
+### 11.9 Responsive Data Tables to Card Transformations
+- **Table Collapse:** Data tables (such as the repository file tree list on `/explore` and diff comparisons on `/debugging`) collapse below `640px` into vertically stacked cards.
+- **Card Hierarchy:** Each card features a distinct header with file or symbol name, metadata badges (language, file size, commit revision), and full-width thumb-accessible primary action buttons.
+- **Internal Container Scrolling:** Wide table content and unified diff blocks that cannot be collapsed are wrapped in dedicated scroll containers (`.code-scroll-container` with `overflow-x-auto; -webkit-overflow-scrolling: touch;`), guaranteeing zero root page horizontal scroll.
+
+### 11.10 Architecture Spatial Map Touch & Canvas Ergonomics
+- **Touch Gestures:**
+  - **One-Finger Pan:** Smoothly translates the 2D/3D camera coordinate space.
+  - **Pinch-to-Zoom:** Natural two-finger pinch scales zoom distance between 50 and 800 units.
+  - **Double-Tap to Focus:** Instantly centers the camera on the tapped module node and expands its dependency details.
+- **Enlarged Touch Target Hitboxes:** Node pick rays employ a minimum 36px invisible hit radius on touch screens to accommodate fingertip touch imprecision.
+- **Mobile Default 2D Mode:** Viewports `< 768px` default to the simplified top-down 2D orthographic canvas, minimizing battery drain and GPU thermal throttling.
+- **Device Pixel Ratio (DPR) Cap:** The WebGL renderer enforces `Math.min(window.devicePixelRatio || 1, 2)` to eliminate out-of-memory crashes on 3x/4x high-density mobile screens.
+- **Energy Conservation Observer:** Canvas rendering automatically halts when scrolled offscreen (`IntersectionObserver`) or when the browser tab enters the background (`document.hidden`).
+
+### 11.11 Virtual Keyboard Handling & Visual Viewport
+- **Dynamic Keyboard Inset:** To prevent on-screen keyboards (iOS QuickType, Android Gboard) from obscuring active input elements in conversational views (`/assistant`), containers listen to `window.visualViewport.resize` and `scroll` events.
+- **Transform Compensation:** Sticky input containers apply a dynamic upward transform (`translateY(-${keyboardOffset}px)`) matching the keyboard height, keeping the prompt input and submit button permanently visible above the virtual keys.

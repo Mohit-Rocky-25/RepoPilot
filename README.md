@@ -482,6 +482,21 @@ For the full specification including contrast measurement tables, token taxonomy
 - **Client-Side Secrets**: Personal Access Tokens (PATs) and BYO AI keys default strictly to browser `sessionStorage` (strictly sessionStorage only, never persisted across browser restarts or written to localStorage), are never logged, and are sent only to their respective upstream providers over HTTPS.
 - **SVG XSS Sanitization**: Mermaid architecture diagrams are sanitized via DOMParser, stripping `<script>`, inline event handlers (`onload`), and `javascript:` pseudo-protocols.
 
+### Supported Browsers, Devices & Mobile Architecture:
+- **Supported Browsers:** Google Chrome (desktop & mobile 110+), Apple Safari (iOS 16+ & macOS 13+), Mozilla Firefox (115+), Microsoft Edge (110+), Samsung Internet (21+).
+- **Responsive Target Viewports:** Full fidelity from 320px (compact mobile) to 1280px+ (desktop), including 360px (mid-range Android baseline), 390px/412px (iPhone 14/15, Pixel 7), 600px/768px (iPad portrait), and 1024px (iPad landscape).
+- **Mobile Touch Ergonomics:**
+  - Persistent bottom tab bar with safe-area insets (`pb-safe`) for one-tap access to Explorer, Architecture, Assistant, and Debugging.
+  - Slide-out mobile navigation drawer with focus trapping, body scroll locking, and `Escape` dismissal.
+  - Interactive touch targets strictly sized to `>= 44x44px` with minimum 8px spacing.
+  - Form inputs and textareas compute to `>= 16px` font size to permanently eliminate iOS auto-zoom on focus.
+  - Code viewer containerized horizontal scroll with sticky line numbers and user-adjustable font zoom.
+  - Architecture map supports one-finger panning, two-finger pinch-to-zoom, double-tap node focus, and automatic 2D default on screens `< 768px` with GPU memory capped at `2x DPR`.
+  - Dynamic virtual keyboard compensation via `window.visualViewport` keeping assistant inputs visible above on-screen keyboards.
+- **Mobile Limitations & Graceful Degradation:**
+  - *Local Folder Picking:* Mobile browsers (iOS Safari, Android Chrome) do not support the File System Access API directory picker (`showDirectoryPicker`). RepoPilot feature-detects support, offering `webkitdirectory` where available, and displays helpful guidance suggesting GitHub URL exploration or desktop use.
+  - *Mobile Memory Safety:* Client-side repository ingestion enforces a conservative 500KB per-file cap and 250-file total limit on mobile devices to prevent tab crashes on 4GB RAM devices.
+
 ### Known Limitations:
 - **Public Repositories Only**: RepoPilot targets public GitHub repositories. Private repository OAuth authentication and organization access are not currently supported.
 - **Repository Size Caps**: Repositories are bounded to a maximum archive size of 25MB, up to 1,500 active source files, and individual source files capped at 100KB. Files exceeding these bounds are omitted from indexing.
