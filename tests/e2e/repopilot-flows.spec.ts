@@ -257,7 +257,8 @@ test.describe("RepoPilot E2E Core Workflows", () => {
             rationale: "Null check emitter instance",
             confidence: "high",
             typeCheckStatus: "passed"
-          }
+          },
+          suggestedTests: ["Verify emitter handles undefined"]
         })
       });
     });

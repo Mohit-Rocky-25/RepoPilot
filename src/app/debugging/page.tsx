@@ -420,7 +420,7 @@ export default function DebuggingPage() {
           )}
 
           {/* Regression Test Suggestions */}
-          {analysisResult.suggestedTests.length > 0 && (
+          {analysisResult.suggestedTests && analysisResult.suggestedTests.length > 0 && (
             <Card className="p-5 space-y-3 bg-theme-surface border-theme-border">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-theme-blue" />

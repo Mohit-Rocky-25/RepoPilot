@@ -2,10 +2,13 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Google/GDG Theme System & Zero-Flash Persistence Specs", () => {
   test.beforeEach(async ({ page }) => {
-    // Clear localStorage before each test to simulate first-time visitors
+    // Clear localStorage before each test to simulate first-time visitors (only on initial load, not on page reloads)
     await page.addInitScript(() => {
       try {
-        window.localStorage.clear();
+        if (!window.sessionStorage.getItem("__rp_test_init_done")) {
+          window.sessionStorage.setItem("__rp_test_init_done", "1");
+          window.localStorage.clear();
+        }
       } catch (e) {}
     });
   });
@@ -63,9 +66,14 @@ test.describe("Google/GDG Theme System & Zero-Flash Persistence Specs", () => {
   });
 
   test("4. Selecting Light via ThemeSwitcher sets html[data-theme='light'] and persists across reload", async ({ page }) => {
-    // Pre-set dark mode
+    // Pre-set dark mode on initial load before user interaction
     await page.addInitScript(() => {
-      window.localStorage.setItem("repopilot-theme", "dark");
+      try {
+        if (!window.sessionStorage.getItem("__rp_test4_dark_seeded")) {
+          window.sessionStorage.setItem("__rp_test4_dark_seeded", "1");
+          window.localStorage.setItem("repopilot-theme", "dark");
+        }
+      } catch (e) {}
     });
     await page.goto("/");
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");

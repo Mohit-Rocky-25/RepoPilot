@@ -17,7 +17,7 @@
 | **Citation Strict Validity** | **100.0%** (52/52) | > 95.0% | **PASS** |
 | **Weak-Support Rate** | **7.7%** (4/52 flagged) | < 15.0% | **PASS** |
 | **Human Accuracy (0-2 Scale)** | **100.0%** (104/104 pts) | > 80.0% | **PASS** |
-| **Average Query Latency** | **0 ms** | < 250 ms | **PASS** |
+| **Average Query Latency** | **1 ms** | < 250 ms | **PASS** |
 
 > Note: Metrics reflect automated multi-pass verification. No single 100% headline is claimed; real codebases feature edge cases in dynamic symbol dispatch, proxy declarations, and span relevance.
 
@@ -84,41 +84,41 @@
 | `swr-2` | `vercel/swr` | Where is the default in-memory cache provider implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
 | `swr-3` | `vercel/swr` | Where is mutate function implemented for cache invalidation? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
 | `swr-4` | `vercel/swr` | Where are global SWRConfig options and context defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
-| `swr-5` | `vercel/swr` | Where is the pagination infinite loading hook useSWRInfinite implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
+| `swr-5` | `vercel/swr` | Where is the pagination infinite loading hook useSWRInfinite implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
 | `swr-6` | `vercel/swr` | Where are SWR TypeScript type definitions declared? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
 | `swr-7` | `vercel/swr` | Where is the immutable data fetching hook useSWRImmutable located? | ✓ Yes | ✓ Yes | ✓ Valid | ⚠️ Weak | 0ms | 2/2 |
-| `swr-8` | `vercel/swr` | Where is mergeConfigurations helper defined for merging SWR options? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
-| `swr-9` | `vercel/swr` | Where is the internal cache serializer helper defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
+| `swr-8` | `vercel/swr` | Where is mergeConfigurations helper defined for merging SWR options? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
+| `swr-9` | `vercel/swr` | Where is the internal cache serializer helper defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
 | `flask-1` | `pallets/flask` | Where is the central Flask application class defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
-| `flask-2` | `pallets/flask` | Where is Blueprint modular routing implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
-| `flask-3` | `pallets/flask` | Where is request context and application context handling implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
-| `flask-4` | `pallets/flask` | Where are standard Flask CLI command group tools configured? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
-| `flask-5` | `pallets/flask` | Where is config loading from files and environment variables implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ⚠️ Weak | 0ms | 2/2 |
+| `flask-2` | `pallets/flask` | Where is Blueprint modular routing implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
+| `flask-3` | `pallets/flask` | Where is request context and application context handling implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
+| `flask-4` | `pallets/flask` | Where are standard Flask CLI command group tools configured? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
+| `flask-5` | `pallets/flask` | Where is config loading from files and environment variables implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ⚠️ Weak | 1ms | 2/2 |
 | `flask-6` | `pallets/flask` | Where are request proxy objects and context locals defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
 | `flask-7` | `pallets/flask` | Where is Jinja2 template rendering helper render_template implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
-| `flask-8` | `pallets/flask` | Where is AppContext application-level context managed? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
+| `flask-8` | `pallets/flask` | Where is AppContext application-level context managed? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
 | `flask-9` | `pallets/flask` | Where is current_app context proxy defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
 | `gin-1` | `gin-gonic/gin` | Where is the core Gin Engine struct and New/Default constructors located? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
-| `gin-2` | `gin-gonic/gin` | Where is the request Context struct and helper methods defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
-| `gin-3` | `gin-gonic/gin` | Where is the radix tree router and route registration implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
+| `gin-2` | `gin-gonic/gin` | Where is the request Context struct and helper methods defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
+| `gin-3` | `gin-gonic/gin` | Where is the radix tree router and route registration implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
 | `gin-4` | `gin-gonic/gin` | Where is the crash recovery middleware implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
 | `gin-5` | `gin-gonic/gin` | Where is the request logger middleware implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
-| `gin-6` | `gin-gonic/gin` | Where is JSON, XML, and form binding logic implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
-| `gin-7` | `gin-gonic/gin` | Where is Query parameter lookup implemented on the Context? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
+| `gin-6` | `gin-gonic/gin` | Where is JSON, XML, and form binding logic implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
+| `gin-7` | `gin-gonic/gin` | Where is Query parameter lookup implemented on the Context? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
 | `gin-8` | `gin-gonic/gin` | Where is DefaultEngine recovery setup helper defined? | ✗ Miss | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
 | `gin-9` | `gin-gonic/gin` | Where is RecoveryWithWriter panic recovery middleware defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
 | `mitt-1` | `developit/mitt` | Where is the default mitt factory function defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
-| `mitt-2` | `developit/mitt` | Where is the Emitter interface for event dispatching declared? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
+| `mitt-2` | `developit/mitt` | Where is the Emitter interface for event dispatching declared? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
 | `mitt-3` | `developit/mitt` | Where is the Handler type callback defined in mitt? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
-| `mitt-4` | `developit/mitt` | Where is the WildcardHandler type declared for catch-all events? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
-| `mitt-5` | `developit/mitt` | Where is the EventHandlerMap type mapping event names to handler lists? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
+| `mitt-4` | `developit/mitt` | Where is the WildcardHandler type declared for catch-all events? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
+| `mitt-5` | `developit/mitt` | Where is the EventHandlerMap type mapping event names to handler lists? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
 | `mitt-6` | `developit/mitt` | Where is the EventHandlerList type declared in mitt? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
 | `mitt-7` | `developit/mitt` | Where is the WildCardEventHandlerList type declared? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
 | `mitt-8` | `developit/mitt` | Where is the EventType type alias for string and symbol events defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 0ms | 2/2 |
 | `mitt-9` | `developit/mitt` | Where is the package manifest and entry point configured for mitt? | ✓ Yes | ✓ Yes | ✓ Valid | ⚠️ Weak | 0ms | 2/2 |
-| `itsdangerous-1` | `pallets/itsdangerous` | Where is the core Signer class implemented for signing data? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
+| `itsdangerous-1` | `pallets/itsdangerous` | Where is the core Signer class implemented for signing data? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 2ms | 2/2 |
 | `itsdangerous-2` | `pallets/itsdangerous` | Where is HMACAlgorithm hashing algorithm defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
-| `itsdangerous-3` | `pallets/itsdangerous` | Where is SigningAlgorithm base interface defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
+| `itsdangerous-3` | `pallets/itsdangerous` | Where is SigningAlgorithm base interface defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 2ms | 2/2 |
 | `itsdangerous-4` | `pallets/itsdangerous` | Where is the Serializer class for JSON payload serialization defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
 | `itsdangerous-5` | `pallets/itsdangerous` | Where is TimestampSigner with timestamp expiration implemented? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
 | `itsdangerous-6` | `pallets/itsdangerous` | Where is TimedSerializer for time-sensitive deserialization defined? | ✓ Yes | ✓ Yes | ✓ Valid | ✓ Verified | 1ms | 2/2 |
