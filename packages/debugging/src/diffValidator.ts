@@ -13,6 +13,8 @@ export interface DiffValidationResult {
   error?: string;
   linesAdded?: number;
   linesRemoved?: number;
+  startLine?: number;
+  endLine?: number;
 }
 
 export class DiffValidator {
@@ -133,12 +135,20 @@ export class DiffValidator {
       workingLines.splice(startIndex, oldLinesExpected.length, ...newLinesReplacement);
     }
 
+    const minLine = hunks.length > 0 ? Math.min(...hunks.map((h) => h.oldStart)) : undefined;
+    const maxLine =
+      hunks.length > 0
+        ? Math.max(...hunks.map((h) => h.oldStart + Math.max(0, h.oldCount - 1)))
+        : undefined;
+
     return {
       valid: true,
       targetFile,
       patchedContent: workingLines.join("\n"),
       linesAdded,
-      linesRemoved
+      linesRemoved,
+      startLine: minLine,
+      endLine: maxLine
     };
   }
 }

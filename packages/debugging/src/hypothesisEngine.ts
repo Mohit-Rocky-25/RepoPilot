@@ -1,6 +1,7 @@
 import type { BugHypothesis, PatchProposal, SourceReference } from "@repopilot/core";
 import type { StackFrame, ParsedTrace } from "./stackTraceParser";
 import { DiffValidator, DiffValidationResult } from "./diffValidator";
+import { runLightweightTypeCheck } from "./typeChecker";
 
 export interface BugAnalysisResult {
   hypotheses: BugHypothesis[];
@@ -142,15 +143,74 @@ fn test_regression() {
     if (aiDiffProposal) {
       diffValidation = DiffValidator.validateAndApply(aiDiffProposal, fileSnippets);
       if (diffValidation.valid && diffValidation.targetFile) {
-        candidatePatch = {
-          id: "patch-1",
-          bugId: hypotheses[0]?.id || "bug-1",
-          filePath: diffValidation.targetFile,
-          diff: aiDiffProposal,
-          rationale: `Fixes failure in ${diffValidation.targetFile} (Unverified: review before applying). Validated against in-memory file content.`,
-          suggestedTests: suggestedTests.length > 0 ? suggestedTests : ["Verify reproduction trace resolves."],
-          verificationStatus: "unverified"
-        };
+        // Enforce rule: Never present a diff without the matched stack frame and the lines it changes
+        const target = diffValidation.targetFile;
+        const matchedFrame = parsedTrace.frames.find(
+          (f) =>
+            f.filePath === target ||
+            f.filePath.endsWith("/" + target) ||
+            target.endsWith("/" + f.filePath)
+        );
+
+        if (matchedFrame) {
+          const startLine = diffValidation.startLine || matchedFrame.lineNumber;
+          const endLine = diffValidation.endLine || startLine;
+          const changedLines = {
+            startLine,
+            endLine,
+            linesAdded: diffValidation.linesAdded || 0,
+            linesRemoved: diffValidation.linesRemoved || 0
+          };
+
+          // Run in-memory lightweight TypeScript type check
+          const typeCheck = runLightweightTypeCheck(target, diffValidation.patchedContent || "");
+
+          // Calculate confidence and rationale
+          let confidence: "high" | "medium" | "low" = "medium";
+          let confidenceReason = "";
+
+          const isDirectFrameMatch =
+            matchedFrame.lineNumber >= Math.max(1, startLine - 3) &&
+            matchedFrame.lineNumber <= endLine + 3;
+
+          if (matchedFrame.isUserCode && isDirectFrameMatch) {
+            confidence = "high";
+            confidenceReason = `Diff directly alters lines ${startLine}–${endLine} covering the exact failure frame in "${matchedFrame.filePath}:${matchedFrame.lineNumber}".`;
+          } else if (matchedFrame.isUserCode) {
+            confidence = "medium";
+            confidenceReason = `Diff modifies "${target}" (lines ${startLine}–${endLine}) which matches a caller stack frame, but not the exact line ${matchedFrame.lineNumber}.`;
+          } else {
+            confidence = "low";
+            confidenceReason = `Diff modifies a dependency or runtime boundary file "${target}".`;
+          }
+
+          if (typeCheck.status === "failed") {
+            confidence = "low";
+            confidenceReason += ` In-memory type check failed: ${typeCheck.reason}`;
+          } else if (typeCheck.status === "passed") {
+            confidenceReason += " In-memory TypeScript type check passed.";
+          }
+
+          candidatePatch = {
+            id: "patch-1",
+            bugId: hypotheses[0]?.id || "bug-1",
+            filePath: target,
+            diff: aiDiffProposal,
+            rationale: `Fixes failure in ${target} (Unverified: review before applying). Validated against in-memory file content.`,
+            suggestedTests: suggestedTests.length > 0 ? suggestedTests : ["Verify reproduction trace resolves."],
+            verificationStatus: "unverified",
+            confidence,
+            confidenceReason,
+            typeCheckStatus: typeCheck.status,
+            typeCheckReason: typeCheck.reason,
+            matchedStackFrame: {
+              filePath: matchedFrame.filePath,
+              lineNumber: matchedFrame.lineNumber,
+              functionName: matchedFrame.functionName
+            },
+            changedLines
+          };
+        }
       }
     }
 

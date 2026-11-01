@@ -309,17 +309,68 @@ export default function DebuggingPage() {
           {/* Candidate Patch Proposal or Suggestion Scaffold */}
           {analysisResult.candidatePatch ? (
             <Card className="p-5 space-y-3 bg-linear-surface-1 border-linear-border-1">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <GitPullRequest className="w-4 h-4 text-linear-success" />
                   <h2 className="text-sm font-semibold text-linear-text-main font-mono uppercase">
                     Proposed Minimal Candidate Patch
                   </h2>
                 </div>
-                <Badge variant="warning" size="sm">
-                  Unverified: review before applying
-                </Badge>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="warning" size="sm">
+                    Unverified: review before applying
+                  </Badge>
+
+                  {analysisResult.candidatePatch.confidence && (
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase border ${
+                        analysisResult.candidatePatch.confidence === "high"
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : analysisResult.candidatePatch.confidence === "medium"
+                          ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                      }`}
+                    >
+                      Confidence: {analysisResult.candidatePatch.confidence}
+                    </span>
+                  )}
+
+                  {analysisResult.candidatePatch.typeCheckStatus && (
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono border ${
+                        analysisResult.candidatePatch.typeCheckStatus === "passed"
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : analysisResult.candidatePatch.typeCheckStatus === "failed"
+                          ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                          : "bg-linear-surface-2 text-linear-text-muted border-linear-border-1"
+                      }`}
+                    >
+                      Type check {analysisResult.candidatePatch.typeCheckStatus === "not_run" ? "not run" : analysisResult.candidatePatch.typeCheckStatus}
+                    </span>
+                  )}
+                </div>
               </div>
+
+              {analysisResult.candidatePatch.confidenceReason && (
+                <p className="text-xs font-mono text-linear-text-muted bg-linear-surface-2/60 p-2 rounded border border-linear-border-1">
+                  <strong>Confidence Rationale:</strong> {analysisResult.candidatePatch.confidenceReason}
+                </p>
+              )}
+
+              {/* Matched Stack Frame and Changed Lines (Never present diff without these) */}
+              {analysisResult.candidatePatch.matchedStackFrame && analysisResult.candidatePatch.changedLines && (
+                <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-linear-text-muted bg-linear-surface-2 p-2.5 rounded-lg border border-linear-border-1">
+                  <span>
+                    <strong className="text-linear-text-main">Matched Frame:</strong>{" "}
+                    {analysisResult.candidatePatch.matchedStackFrame.filePath}:{analysisResult.candidatePatch.matchedStackFrame.lineNumber}
+                    {analysisResult.candidatePatch.matchedStackFrame.functionName ? ` (${analysisResult.candidatePatch.matchedStackFrame.functionName})` : ""}
+                  </span>
+                  <span>
+                    <strong className="text-linear-text-main">Changed Lines:</strong>{" "}
+                    Lines {analysisResult.candidatePatch.changedLines.startLine}–{analysisResult.candidatePatch.changedLines.endLine} (+{analysisResult.candidatePatch.changedLines.linesAdded}, -{analysisResult.candidatePatch.changedLines.linesRemoved})
+                  </span>
+                </div>
+              )}
 
               <p className="text-xs text-linear-text-muted">
                 {analysisResult.candidatePatch.rationale}

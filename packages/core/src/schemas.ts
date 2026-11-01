@@ -185,7 +185,26 @@ export const PatchProposalSchema = z.object({
   diff: z.string(),
   rationale: z.string(),
   suggestedTests: z.array(z.string()),
-  verificationStatus: z.enum(["unverified", "verified_manual", "failed"]).default("unverified")
+  verificationStatus: z.enum(["unverified", "verified_manual", "failed"]).default("unverified"),
+  confidence: z.enum(["high", "medium", "low"]).optional(),
+  confidenceReason: z.string().optional(),
+  typeCheckStatus: z.enum(["passed", "failed", "not_run"]).optional(),
+  typeCheckReason: z.string().optional(),
+  matchedStackFrame: z
+    .object({
+      filePath: z.string(),
+      lineNumber: z.number(),
+      functionName: z.string().optional()
+    })
+    .optional(),
+  changedLines: z
+    .object({
+      startLine: z.number(),
+      endLine: z.number(),
+      linesAdded: z.number(),
+      linesRemoved: z.number()
+    })
+    .optional()
 });
 
 export const AIProviderConfigurationSchema = z.object({
