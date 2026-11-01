@@ -132,7 +132,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
             }
           }}
           style={{ paddingLeft: `${depth * 14 + 8}px` }}
-          className={`flex items-center justify-between py-1.5 pr-2 rounded cursor-pointer transition-colors group ${
+          className={`flex items-center justify-between min-h-[44px] sm:min-h-[28px] py-2 sm:py-1 pr-2 rounded cursor-pointer transition-colors group ${
             isSelected
               ? "bg-theme-blue/10 text-theme-blue font-medium border-l-2 border-theme-blue"
               : isDirSelected
@@ -195,14 +195,14 @@ export const FileTree: React.FC<FileTreeProps> = ({
           placeholder="Filter files..."
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          className="w-full bg-theme-surface border border-theme-border text-theme-text placeholder:text-theme-text-muted text-xs font-mono rounded px-2.5 py-1.5 focus:outline-none focus:border-theme-blue"
+          className="w-full bg-theme-surface border border-theme-border text-theme-text placeholder:text-theme-text-muted text-base sm:text-xs font-mono rounded px-2.5 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 focus:outline-none focus:border-theme-blue"
         />
         <div className="flex items-center justify-between text-[10px] font-mono text-theme-text-muted pt-0.5">
           <span>{files.length} items</span>
           <div className="flex items-center gap-1">
             <button
               onClick={expandAll}
-              className="px-1.5 py-0.5 rounded hover:bg-theme-surface hover:text-theme-text transition-colors flex items-center gap-1 cursor-pointer"
+              className="min-h-[36px] sm:min-h-0 px-2 py-1 rounded hover:bg-theme-surface hover:text-theme-text transition-colors flex items-center gap-1 cursor-pointer"
               title="Expand all folders"
             >
               <FolderPlus className="w-3 h-3 text-theme-blue" />
@@ -211,7 +211,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
             <span>·</span>
             <button
               onClick={collapseAll}
-              className="px-1.5 py-0.5 rounded hover:bg-theme-surface hover:text-theme-text transition-colors flex items-center gap-1 cursor-pointer"
+              className="min-h-[36px] sm:min-h-0 px-2 py-1 rounded hover:bg-theme-surface hover:text-theme-text transition-colors flex items-center gap-1 cursor-pointer"
               title="Collapse all folders"
             >
               <FolderMinus className="w-3 h-3 text-theme-text-muted" />

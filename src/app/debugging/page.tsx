@@ -31,6 +31,7 @@ export default function DebuggingPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [stackTrace, setStackTrace] = useState("");
+  const [wrapLines, setWrapLines] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -175,19 +176,31 @@ export default function DebuggingPage() {
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
             <label className="text-xs font-mono text-theme-text font-medium">
               Stack Trace / Error Log
             </label>
-            <span className="text-[11px] font-mono text-theme-text-muted">
-              Format: Node/V8, Python tracebacks, Go panics, Rust backtraces
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setWrapLines(!wrapLines)}
+                className="text-[11px] font-mono px-2 py-0.5 rounded bg-theme-surface-alt hover:bg-theme-surface border border-theme-border text-theme-text-muted hover:text-theme-text transition-colors cursor-pointer"
+                title="Toggle monospace line wrapping"
+              >
+                Wrap: {wrapLines ? "ON" : "OFF"}
+              </button>
+              <span className="text-[11px] font-mono text-theme-text-muted hidden sm:inline">
+                Format: Node/V8, Python tracebacks, Go panics, Rust backtraces
+              </span>
+            </div>
           </div>
           <textarea
             rows={5}
             value={stackTrace}
             onChange={(e) => setStackTrace(e.target.value)}
-            className="w-full bg-theme-surface border border-theme-border text-theme-text font-mono text-xs p-3 rounded-lg focus:outline-none focus:border-theme-blue focus:ring-1 focus:ring-linear-accent placeholder:text-theme-text-muted transition-colors"
+            className={`w-full bg-theme-surface border border-theme-border text-theme-text font-mono text-base sm:text-xs p-3 rounded-lg focus:outline-none focus:border-theme-blue focus:ring-1 focus:ring-linear-accent placeholder:text-theme-text-muted transition-colors ${
+              wrapLines ? "whitespace-pre-wrap overflow-x-hidden" : "whitespace-pre overflow-x-auto"
+            }`}
             placeholder="Paste your actual runtime error log or stack trace here (e.g. TypeError: Cannot read properties of undefined...)"
           />
         </div>
@@ -203,6 +216,7 @@ export default function DebuggingPage() {
             isLoading={loading}
             icon={<AlertOctagon className="w-4 h-4" />}
             onClick={handleAnalyze}
+            className="w-full sm:w-auto"
           >
             Investigate Root Cause
           </Button>
@@ -440,12 +454,13 @@ export default function DebuggingPage() {
           )}
 
           {/* Actions: Copy Report & PR draft */}
-          <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-2">
             <Button
               variant="secondary"
               size="sm"
               icon={copied ? <Check className="w-3.5 h-3.5 text-theme-green" /> : <Copy className="w-3.5 h-3.5" />}
               onClick={copyReport}
+              className="w-full sm:w-auto"
             >
               {copied ? "Copied Report!" : "Copy Markdown Report"}
             </Button>
@@ -456,6 +471,7 @@ export default function DebuggingPage() {
                 size="sm"
                 icon={<GitPullRequest className="w-3.5 h-3.5" />}
                 onClick={handleSendToPatchReview}
+                className="w-full sm:w-auto"
               >
                 Send Candidate Patch to Patch Review →
               </Button>

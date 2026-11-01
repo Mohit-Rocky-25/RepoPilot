@@ -705,62 +705,97 @@ function ExploreContent() {
                     No files found matching &quot;{dirSearchQuery}&quot; in this directory.
                   </div>
                 ) : (
-                  <table className="w-full text-left font-mono text-xs">
-                    <thead className="bg-theme-surface-alt text-theme-text-muted text-[11px] border-b border-theme-border sticky top-0">
-                      <tr>
-                        <th className="py-2 px-3 font-medium">File Name</th>
-                        <th className="py-2 px-3 font-medium hidden sm:table-cell">Language</th>
-                        <th className="py-2 px-3 font-medium hidden sm:table-cell text-right">Size</th>
-                        <th className="py-2 px-3 font-medium text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-theme-border">
+                  <>
+                    {/* Mobile View: Stacked Cards below 640px */}
+                    <div className="block sm:hidden divide-y divide-theme-border">
                       {filteredDirFiles.map((file) => {
                         const fileName = file.path.split("/").pop() || file.path;
                         const isCurrent = selectedFile?.path === file.path;
                         return (
-                          <tr
+                          <div
                             key={file.path}
                             onClick={() => handleFileSelect(file)}
-                            className={`hover:bg-theme-surface-alt cursor-pointer transition-colors ${
-                              isCurrent ? "bg-theme-blue/10" : ""
+                            className={`p-3 space-y-1.5 transition-colors cursor-pointer min-h-[44px] ${
+                              isCurrent ? "bg-theme-blue-surface/40" : "hover:bg-theme-surface-alt"
                             }`}
                           >
-                            <td className="py-2.5 px-3">
-                              <div className="flex items-center gap-2">
-                                <FileCode className="w-3.5 h-3.5 text-theme-blue shrink-0" />
-                                <span
-                                  className={`font-medium ${
-                                    isCurrent ? "text-theme-blue" : "text-theme-text"
-                                  }`}
-                                >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 truncate">
+                                <FileCode className="w-4 h-4 text-theme-blue shrink-0" />
+                                <span className={`font-semibold text-xs ${isCurrent ? "text-theme-blue" : "text-theme-text"}`}>
                                   {fileName}
                                 </span>
                               </div>
-                            </td>
-                            <td className="py-2.5 px-3 text-theme-text-muted hidden sm:table-cell">
-                              {file.language || "Plain Text"}
-                            </td>
-                            <td className="py-2.5 px-3 text-theme-text-muted text-right hidden sm:table-cell">
-                              {formatFileSize(file.size || 0)}
-                            </td>
-                            <td className="py-2.5 px-3 text-right">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleFileSelect(file);
-                                }}
-                                className="text-[11px] text-theme-blue hover:underline font-medium cursor-pointer"
-                              >
-                                Inspect →
-                              </button>
-                            </td>
-                          </tr>
+                              <span className="text-theme-blue text-xs font-semibold shrink-0">Inspect →</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] text-theme-text-muted pl-6">
+                              <span>{file.language || "Plain Text"}</span>
+                              <span>·</span>
+                              <span>{formatFileSize(file.size || 0)}</span>
+                            </div>
+                          </div>
                         );
                       })}
-                    </tbody>
-                  </table>
+                    </div>
+
+                    {/* Tablet/Desktop View: Standard Table */}
+                    <table className="hidden sm:table w-full text-left font-mono text-xs">
+                      <thead className="bg-theme-surface-alt text-theme-text-muted text-[11px] border-b border-theme-border sticky top-0">
+                        <tr>
+                          <th className="py-2 px-3 font-medium">File Name</th>
+                          <th className="py-2 px-3 font-medium hidden sm:table-cell">Language</th>
+                          <th className="py-2 px-3 font-medium hidden sm:table-cell text-right">Size</th>
+                          <th className="py-2 px-3 font-medium text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-theme-border">
+                        {filteredDirFiles.map((file) => {
+                          const fileName = file.path.split("/").pop() || file.path;
+                          const isCurrent = selectedFile?.path === file.path;
+                          return (
+                            <tr
+                              key={file.path}
+                              onClick={() => handleFileSelect(file)}
+                              className={`hover:bg-theme-surface-alt cursor-pointer transition-colors ${
+                                isCurrent ? "bg-theme-blue/10" : ""
+                              }`}
+                            >
+                              <td className="py-2.5 px-3">
+                                <div className="flex items-center gap-2">
+                                  <FileCode className="w-3.5 h-3.5 text-theme-blue shrink-0" />
+                                  <span
+                                    className={`font-medium ${
+                                      isCurrent ? "text-theme-blue" : "text-theme-text"
+                                    }`}
+                                  >
+                                    {fileName}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-2.5 px-3 text-theme-text-muted hidden sm:table-cell">
+                                {file.language || "Plain Text"}
+                              </td>
+                              <td className="py-2.5 px-3 text-theme-text-muted text-right hidden sm:table-cell">
+                                {formatFileSize(file.size || 0)}
+                              </td>
+                              <td className="py-2.5 px-3 text-right">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleFileSelect(file);
+                                  }}
+                                  className="text-[11px] text-theme-blue hover:underline font-medium cursor-pointer"
+                                >
+                                  Inspect →
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </>
                 )}
               </div>
             </div>

@@ -90,6 +90,26 @@ export default function AssistantPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSampleMode, setIsSampleMode] = useState(false);
+  const [expandedContexts, setExpandedContexts] = useState<Record<string, boolean>>({});
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+
+  // visualViewport keyboard overlay detection for mobile browsers
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+    const vv = window.visualViewport;
+    const handleViewportChange = () => {
+      const offset = window.innerHeight - vv.height - vv.offsetTop;
+      setKeyboardOffset(Math.max(0, offset));
+    };
+
+    vv.addEventListener("resize", handleViewportChange);
+    vv.addEventListener("scroll", handleViewportChange);
+
+    return () => {
+      vv.removeEventListener("resize", handleViewportChange);
+      vv.removeEventListener("scroll", handleViewportChange);
+    };
+  }, []);
 
   React.useEffect(() => {
     try {
@@ -455,89 +475,96 @@ export default function AssistantPage() {
         </div>
       )}
 
-      {/* Question Form & Quick Actions */}
-      <Card className="p-4 space-y-3 bg-theme-surface border-theme-border">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleAsk(question);
-          }}
-          className="flex flex-col sm:flex-row gap-2"
-        >
-          <div className="flex-1 relative">
-            <Input
-              type="text"
-              placeholder="Ask a question about the repository's architecture, state, or functions..."
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              disabled={loading}
-              autoFocus
-            />
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <Button
-              type="button"
-              variant="secondary"
-              size="md"
-              onClick={handlePasteFromClipboard}
-              icon={<ClipboardPaste className="w-4 h-4" />}
-              title="Paste text from clipboard into query"
-            >
-              Paste
-            </Button>
-
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              isLoading={loading}
-              icon={<Send className="w-4 h-4" />}
-            >
-              Ask Codebase
-            </Button>
-          </div>
-        </form>
-
-        {error && (
-          <p className="text-xs text-theme-danger font-mono pt-1">{error}</p>
-        )}
-
-        {/* Quick Suggestion Chips */}
-        <div className="pt-2 border-t border-theme-border space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono text-theme-text-muted uppercase tracking-wider block font-semibold">
-              Quick Analysis & Visual Diagrams:
-            </span>
-            <Link
-              href="/architecture"
-              className="text-[11px] font-mono text-theme-blue hover:underline inline-flex items-center gap-1"
-            >
-              <span>View 3D Spatial Architecture</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-
-          <div className="flex flex-wrap gap-1.5">
-            {sampleQuestions.map((sq, i) => (
-              <button
-                key={sq}
-                onClick={() => {
-                  setQuestion(sq);
-                  handleAsk(sq);
-                }}
+      {/* Question Form & Quick Actions (Sticky above virtual keyboard on mobile) */}
+      <div
+        className="sticky bottom-14 md:bottom-2 z-20 pb-safe transition-transform bg-theme-bg/95 backdrop-blur-md pt-2"
+        style={{
+          transform: keyboardOffset > 0 ? `translateY(-${keyboardOffset}px)` : undefined
+        }}
+      >
+        <Card className="p-3 sm:p-4 space-y-3 bg-theme-surface border-theme-border shadow-md">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleAsk(question);
+            }}
+            className="flex flex-col sm:flex-row gap-2"
+          >
+            <div className="flex-1 relative">
+              <Input
+                type="text"
+                placeholder="Ask a question about the repository's architecture, state, or functions..."
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
                 disabled={loading}
-                className="px-2.5 py-1 rounded-full bg-theme-surface-alt hover:bg-theme-surface border border-theme-border hover:border-theme-blue/40 text-[11px] font-mono text-theme-text-muted hover:text-theme-text transition-colors text-left flex items-center gap-1.5 cursor-pointer shadow-xs"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                onClick={handlePasteFromClipboard}
+                icon={<ClipboardPaste className="w-4 h-4" />}
+                title="Paste text from clipboard into query"
               >
-                {i === 0 && <GitBranch className="w-3 h-3 text-theme-blue" />}
-                {i === 1 && <FileCode className="w-3 h-3 text-theme-green" />}
-                {i === 2 && <Network className="w-3 h-3 text-theme-blue" />}
-                <span>{sq}</span>
-              </button>
-            ))}
+                Paste
+              </Button>
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                isLoading={loading}
+                icon={<Send className="w-4 h-4" />}
+              >
+                Ask Codebase
+              </Button>
+            </div>
+          </form>
+
+          {error && (
+            <p className="text-xs text-theme-danger font-mono pt-1">{error}</p>
+          )}
+
+          {/* Quick Suggestion Chips */}
+          <div className="pt-2 border-t border-theme-border space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono text-theme-text-muted uppercase tracking-wider block font-semibold">
+                Quick Analysis & Visual Diagrams:
+              </span>
+              <Link
+                href="/architecture"
+                className="text-[11px] font-mono text-theme-blue hover:underline inline-flex items-center gap-1"
+              >
+                <span>View 3D Spatial Architecture</span>
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              {sampleQuestions.map((sq, i) => (
+                <button
+                  key={sq}
+                  onClick={() => {
+                    setQuestion(sq);
+                    handleAsk(sq);
+                  }}
+                  disabled={loading}
+                  className="px-2.5 py-1 rounded-full bg-theme-surface-alt hover:bg-theme-surface border border-theme-border hover:border-theme-blue/40 text-[11px] font-mono text-theme-text-muted hover:text-theme-text transition-colors text-left flex items-center gap-1.5 cursor-pointer shadow-xs min-h-[36px] sm:min-h-0"
+                >
+                  {i === 0 && <GitBranch className="w-3 h-3 text-theme-blue" />}
+                  {i === 1 && <FileCode className="w-3 h-3 text-theme-green" />}
+                  {i === 2 && <Network className="w-3 h-3 text-theme-blue" />}
+                  <span>{sq}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
 
       {/* Q&A Stream */}
       <div className="space-y-4">
@@ -605,7 +632,7 @@ export default function AssistantPage() {
                 </div>
               </div>
 
-              {/* Context Summary Bar */}
+              {/* Context Summary Bar (Collapsible accordion row) */}
               {(item.contextMeta || item.contextSummary) && (
                 (() => {
                   const meta = item.contextMeta || {
@@ -616,37 +643,50 @@ export default function AssistantPage() {
                     filesDropped: item.contextSummary?.filesDropped ?? item.contextSummary?.omittedCount ?? 0
                   };
                   if (meta.filesIncluded === 0 && meta.filesDropped === 0) return null;
+                  const isExpanded = !!expandedContexts[item.id];
                   return (
                     <div className="p-2.5 rounded-lg bg-theme-surface-alt border border-theme-border text-[11px] font-mono text-theme-text-muted space-y-1.5 shadow-xs">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div
+                        onClick={() => setExpandedContexts((prev) => ({ ...prev, [item.id]: !isExpanded }))}
+                        className="flex flex-wrap items-center justify-between gap-2 cursor-pointer select-none"
+                      >
                         <div className="flex items-center gap-1.5 font-semibold text-theme-text">
                           <FileCode className="w-3.5 h-3.5 text-theme-blue" />
                           <span>
                             Context used: {meta.filesIncluded} files, {meta.filesDropped} dropped
                           </span>
                         </div>
-                        <span className="text-[10px] text-theme-text-muted">
-                          Budget: {meta.tokenBudget.toLocaleString()} tokens
-                        </span>
-                      </div>
-                      {meta.includedFiles.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-1 text-[10px]">
-                          <span className="text-theme-text-muted">Included:</span>
-                          {meta.includedFiles.map((f) => (
-                            <span key={f} className="px-1.5 py-0.5 rounded bg-theme-surface border border-theme-border text-theme-blue font-medium">
-                              {f}
-                            </span>
-                          ))}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-theme-text-muted">
+                            Budget: {meta.tokenBudget.toLocaleString()} tokens
+                          </span>
+                          <span className="text-[10px] text-theme-blue font-semibold">
+                            {isExpanded ? "Hide ▲" : "Details ▼"}
+                          </span>
                         </div>
-                      )}
-                      {meta.droppedFiles.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-1 text-[10px]">
-                          <span className="text-theme-warning-text font-medium">Dropped:</span>
-                          {meta.droppedFiles.map((f) => (
-                            <span key={f} className="px-1.5 py-0.5 rounded bg-theme-surface border border-theme-border text-theme-text-muted line-through">
-                              {f}
-                            </span>
-                          ))}
+                      </div>
+                      {isExpanded && (
+                        <div className="space-y-1.5 pt-1.5 border-t border-theme-border/60">
+                          {meta.includedFiles.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1 text-[10px]">
+                              <span className="text-theme-text-muted">Included:</span>
+                              {meta.includedFiles.map((f) => (
+                                <span key={f} className="px-1.5 py-0.5 rounded bg-theme-surface border border-theme-border text-theme-blue font-medium">
+                                  {f}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {meta.droppedFiles.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1 text-[10px]">
+                              <span className="text-theme-warning-text font-medium">Dropped:</span>
+                              {meta.droppedFiles.map((f) => (
+                                <span key={f} className="px-1.5 py-0.5 rounded bg-theme-surface border border-theme-border text-theme-text-muted line-through">
+                                  {f}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -669,8 +709,8 @@ export default function AssistantPage() {
                 </div>
               )}
 
-              {/* Answer Content */}
-              <div className="text-xs text-theme-text font-mono whitespace-pre-wrap leading-relaxed">
+              {/* Answer Content (Wrap words without horizontal overflow) */}
+              <div className="text-xs text-theme-text font-mono whitespace-pre-wrap break-words overflow-x-hidden leading-relaxed">
                 {item.answer}
               </div>
 

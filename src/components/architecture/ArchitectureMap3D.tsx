@@ -99,10 +99,16 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
 
   const typeColors = theme === "dark" ? DARK_TYPE_COLORS : LIGHT_TYPE_COLORS;
 
-  // Default to 2D for repos above 50 relevant modules or nodes
+  // Default to 2D for repos above 50 relevant modules or nodes, or on mobile screens (< 768px)
   const totalModuleCount = summary?.keyModules?.length || graph.nodes.filter((n) => n.type === "dir").length;
   const shouldDefaultTo2D = totalModuleCount > 50 || graph.nodes.length > 50;
   const [is2DMode, setIs2DMode] = useState(shouldDefaultTo2D);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setIs2DMode(true);
+    }
+  }, []);
   const [yaw, setYaw] = useState(0);
   const [pitch, setPitch] = useState(0);
   const [distance, setDistance] = useState(420);
@@ -148,6 +154,27 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
       mq.addEventListener("change", listener);
       return () => mq.removeEventListener("change", listener);
     }
+  }, []);
+
+  // Canvas visibility tracking: pauses rendering when off-screen or tab is hidden
+  const [isCanvasVisible, setIsCanvasVisible] = useState(true);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      setIsCanvasVisible(document.visibilityState === "visible");
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsCanvasVisible(entry.isIntersecting && document.visibilityState === "visible");
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   // Filtered nodes
@@ -291,7 +318,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
 
   // Render loop
   useEffect(() => {
-    if (viewFormat !== "canvas") return;
+    if (viewFormat !== "canvas" || !isCanvasVisible) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -300,7 +327,8 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
 
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
-    const dpr = window.devicePixelRatio || 1;
+    // Cap DPR at 2 to preserve GPU memory on high-density mobile screens
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     canvas.width = width * dpr;
     canvas.height = height * dpr;
@@ -461,7 +489,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
         ctx.fillText(node.name, proj.screenX, proj.screenY + radius + 4);
       }
     });
-  }, [displayNodes, visibleEdges, hoveredNode, selectedNode, distance, is2DMode, project3D, viewFormat, theme, typeColors]);
+  }, [displayNodes, visibleEdges, hoveredNode, selectedNode, distance, is2DMode, project3D, viewFormat, theme, typeColors, isCanvasVisible]);
 
   // Mouse interaction: Hover & Drag
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -545,6 +573,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
 
   // Mobile Touch Gestures
   const touchStartRef = useRef<{ x: number; y: number; dist?: number }>({ x: 0, y: 0 });
+  const lastTapRef = useRef<number>(0);
 
   const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
     if (e.touches.length === 1) {
@@ -597,6 +626,10 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
 
   const handleTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>) => {
     setIsDragging(false);
+    const now = Date.now();
+    const isDoubleTap = now - lastTapRef.current < 320;
+    lastTapRef.current = now;
+
     if (e.changedTouches.length === 1) {
       const touch = e.changedTouches[0];
       const moveDist = Math.hypot(touch.clientX - touchStartRef.current.x, touch.clientY - touchStartRef.current.y);
@@ -610,7 +643,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
         const height = canvas.clientHeight;
 
         let closestNode: ArchitectureGraphNode | null = null;
-        let minDistance = 24;
+        let minDistance = 36; // Enlarged hit area for mobile fingertips
         for (const node of displayNodes) {
           const proj = project3D(node.x || 0, node.y || 0, node.z || 0, width, height);
           if (!proj.visible) continue;
@@ -622,6 +655,17 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
         }
         if (closestNode) {
           setSelectedNode(closestNode);
+          if (isDoubleTap) {
+            // Double-tap to focus on node: center pan & zoom in
+            setPan({ x: -(closestNode.x || 0), y: -(closestNode.y || 0) });
+            setDistance(280);
+          }
+        } else if (isDoubleTap) {
+          // Double-tap on empty canvas: reset camera view
+          setPan({ x: 0, y: 0 });
+          setDistance(420);
+          setYaw(0);
+          setPitch(0);
         }
       }
     }
@@ -949,9 +993,11 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
             </div>
           )}
 
-          {/* Selected Node Details Drawer */}
+          {/* Selected Node Details Drawer / Mobile Bottom Sheet */}
           {selectedNode && (
-            <div className="absolute top-3 right-3 w-80 bg-theme-surface border border-theme-border rounded-xl shadow-xl font-mono text-xs p-4 space-y-3 max-h-[480px] overflow-y-auto">
+            <div className="fixed sm:absolute bottom-0 sm:bottom-auto sm:top-3 left-0 sm:left-auto right-0 sm:right-3 w-full sm:w-80 bg-theme-surface border-t sm:border border-theme-border rounded-t-2xl sm:rounded-xl shadow-2xl font-mono text-xs p-4 space-y-3 max-h-[65vh] sm:max-h-[480px] overflow-y-auto z-40 pb-safe">
+              {/* Mobile drag handle */}
+              <div className="w-10 h-1 bg-theme-border rounded-full mx-auto -mt-1 mb-2 sm:hidden" />
               <div className="flex items-center justify-between border-b border-theme-border pb-2.5">
                 <div className="flex items-center gap-2 truncate">
                   <span
@@ -964,7 +1010,7 @@ export const ArchitectureMap3D: React.FC<Props> = ({ graph, summary }) => {
                 </div>
                 <button
                   onClick={() => setSelectedNode(null)}
-                  className="text-theme-text-muted hover:text-theme-text text-sm font-bold cursor-pointer"
+                  className="flex items-center justify-center min-h-[36px] min-w-[36px] text-theme-text-muted hover:text-theme-text text-sm font-bold cursor-pointer"
                   aria-label="Close details"
                 >
                   ✕
