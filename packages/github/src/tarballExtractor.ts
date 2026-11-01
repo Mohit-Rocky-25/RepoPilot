@@ -1,6 +1,14 @@
 import zlib from "zlib";
 import type { RepositoryFile } from "@repopilot/core";
 
+export interface SkippedFilesReport {
+  totalSkipped: number;
+  tooLarge: number;
+  binary: number;
+  ignoredDirectory: number;
+  overFileCap: number;
+}
+
 export interface TarballExtractionOptions {
   maxArchiveSizeBytes?: number; // default: 25 MB
   maxTotalExtractedBytes?: number; // default: 50 MB
@@ -8,6 +16,7 @@ export interface TarballExtractionOptions {
   maxSingleFileSize?: number; // default: 10 MB (strict abort cap per file)
   maxFileCount?: number; // default: 1500 (strict abort cap)
   maxPathLength?: number; // default: 512 (strict abort cap)
+  subfolder?: string; // optional subfolder filter
 }
 
 export interface ExtractedRepository {
@@ -15,15 +24,17 @@ export interface ExtractedRepository {
   contents: Map<string, string>; // path -> content
   totalFilesExtracted: number;
   totalBytesExtracted: number;
+  skippedReport?: SkippedFilesReport;
 }
 
-const DEFAULT_OPTIONS: Required<TarballExtractionOptions> = {
+const DEFAULT_OPTIONS: Required<Omit<TarballExtractionOptions, "subfolder">> & { subfolder?: string } = {
   maxArchiveSizeBytes: 25 * 1024 * 1024, // 25 MB
   maxTotalExtractedBytes: 50 * 1024 * 1024, // 50 MB
   maxFileSize: 100 * 1024, // 100 KB
   maxSingleFileSize: 10 * 1024 * 1024, // 10 MB
   maxFileCount: 1500,
-  maxPathLength: 512
+  maxPathLength: 512,
+  subfolder: undefined
 };
 
 const IGNORED_PREFIXES = [
@@ -126,7 +137,16 @@ export function extractTarballSafely(
 
   const files: RepositoryFile[] = [];
   const contents = new Map<string, string>();
+  const skippedReport: SkippedFilesReport = {
+    totalSkipped: 0,
+    tooLarge: 0,
+    binary: 0,
+    ignoredDirectory: 0,
+    overFileCap: 0
+  };
   let totalBytes = 0;
+
+  const cleanSubfolder = opts.subfolder ? opts.subfolder.trim().replace(/^\/+|\/+$/g, "") : null;
 
   let offset = 0;
   let nextOverrideName: string | null = null;
@@ -251,13 +271,22 @@ export function extractTarballSafely(
       );
     }
 
-    // Skip ignored directories
+    // Subfolder filtering if requested
+    if (cleanSubfolder && !relativePath.startsWith(cleanSubfolder + "/") && relativePath !== cleanSubfolder) {
+      continue;
+    }
+
+    // Skip ignored directories and track in skipped report
     if (IGNORED_PREFIXES.some((p) => relativePath.startsWith(p) || relativePath.includes("/" + p))) {
+      skippedReport.ignoredDirectory += 1;
+      skippedReport.totalSkipped += 1;
       continue;
     }
 
     // Abort if exceeding max file count cap
     if (files.length >= opts.maxFileCount) {
+      skippedReport.overFileCap += 1;
+      skippedReport.totalSkipped += 1;
       throw new Error(
         `Security Violation: Repository exceeds maximum file count limit of ${opts.maxFileCount}.`
       );
@@ -266,6 +295,15 @@ export function extractTarballSafely(
     const ext = relativePath.includes(".") ? relativePath.split(".").pop()?.toLowerCase() : undefined;
     const isBinary = ext ? BINARY_EXTENSIONS.has(ext) : false;
     const language = detectLanguage(ext, relativePath);
+
+    // Track skipped binary or oversized text files
+    if (isBinary) {
+      skippedReport.binary += 1;
+      skippedReport.totalSkipped += 1;
+    } else if (fileSize > opts.maxFileSize) {
+      skippedReport.tooLarge += 1;
+      skippedReport.totalSkipped += 1;
+    }
 
     totalBytes += fileSize;
     if (totalBytes > opts.maxTotalExtractedBytes) {
@@ -294,6 +332,7 @@ export function extractTarballSafely(
     files,
     contents,
     totalFilesExtracted: files.length,
-    totalBytesExtracted: totalBytes
+    totalBytesExtracted: totalBytes,
+    skippedReport
   };
 }

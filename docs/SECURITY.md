@@ -55,3 +55,19 @@ RepoPilot is designed around strict credential minimization:
 - **X-Frame-Options**: `DENY` & **frame-ancestors**: `'none'` (prevents clickjacking)
 - **Permissions-Policy**: `camera=(), microphone=(), geolocation=()` (disables hardware APIs)
 - **SVG / Mermaid Rendering**: Compatible with CSP via deterministic client-side DOM rendering and SVG tag attribute sanitization (`sanitizeSvg`).
+
+---
+
+## Serverless Limits & Deployment Alternatives
+
+### Serverless Runtime Guardrails
+- **Execution Timeout**: Configured with `maxDuration = 60` seconds on all intensive API route handlers (`/api/github/import`, `/api/ai/ask`).
+- **Archive Cap**: Ingestion enforces strict 25 MB archive size cap and 1,500 max file count cap. Archives exceeding limits abort immediately with HTTP 400 before runtime timeout.
+- **Decompressed Cap & Zip-Bomb Protection**: Aborts decompression at 50 MB to prevent memory exhaustion attacks.
+- **Skipped-Files Auditing**: Reports all skipped files in the UI by category (too large, binary, ignored directories, over file cap), with support for sub-folder scoped ingestion.
+
+### Hosting Terms & Non-Commercial Notice
+> **Important Hosting Notice**: The **Vercel Hobby plan is strictly for personal, non-commercial use**. For commercial deployments, internal team infrastructure, or repositories exceeding serverless memory/timeout boundaries, consider these self-hosted alternatives:
+> - **Docker Container**: Build and deploy the provided standalone `Dockerfile` (`docker build -t repopilot . && docker run -p 3000:3000 repopilot`).
+> - **Self-Hosted Node.js / Linux Server**: Run `npm run build && npm run start` on AWS EC2, DigitalOcean Droplet, Hetzner, or bare metal.
+> - **Container Platforms**: Deploy as a containerized service on **Railway**, **Fly.io**, **Render**, or **AWS ECS/Fargate** with persistent memory and uncapped execution timeouts.

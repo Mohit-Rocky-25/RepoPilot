@@ -19,6 +19,8 @@ RepoPilot is built with Next.js 14 App Router and is designed for zero-configura
 
 ## Option 1: Vercel (Recommended — Fastest)
 
+> **License & Usage Notice**: The Vercel Hobby plan is strictly for personal, non-commercial use. For commercial applications, team deployments, or repositories requiring execution times beyond serverless limits, see the alternatives below (Docker, Railway, or Self-Hosted Node.js).
+
 Because RepoPilot is a standard Next.js 14 application, it deploys seamlessly to Vercel without custom build scripts.
 
 ### Steps:

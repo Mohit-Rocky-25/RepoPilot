@@ -4,8 +4,12 @@ import { enforceRateLimit } from "@/lib/rateLimiter";
 import { sanitizeErrorMessage } from "@/lib/security";
 import { z } from "zod";
 
+// Configures maximum execution budget for serverless runtimes (60 seconds)
+export const maxDuration = 60;
+
 const ImportRequestSchema = z.object({
-  url: z.string().trim().min(1).max(256)
+  url: z.string().trim().min(1).max(256),
+  subfolder: z.string().trim().max(256).optional()
 });
 
 export async function POST(req: NextRequest) {
@@ -17,7 +21,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { url } = ImportRequestSchema.parse(body);
+    const { url, subfolder } = ImportRequestSchema.parse(body);
 
     const { owner, repo } = parseGitHubUrl(url);
 
@@ -36,6 +40,31 @@ export async function POST(req: NextRequest) {
     // 2. Fetch Repository Tree
     const tree = await client.fetchTree(owner, repo, revision.treeSha);
 
+    // 3. Compute skipped files report & filter by subfolder if requested
+    const cleanSubfolder = subfolder ? subfolder.trim().replace(/^\/+|\/+$/g, "") : null;
+    let filteredTree = tree;
+    if (cleanSubfolder) {
+      filteredTree = tree.filter(
+        (f) => f.path === cleanSubfolder || f.path.startsWith(cleanSubfolder + "/")
+      );
+    }
+
+    // Categorize skipped files
+    let binaryCount = 0;
+    let tooLargeCount = 0;
+    for (const f of filteredTree) {
+      if (f.isBinary) binaryCount++;
+      if (f.size > 100 * 1024) tooLargeCount++;
+    }
+
+    const skippedReport = {
+      totalSkipped: binaryCount + tooLargeCount,
+      tooLarge: tooLargeCount,
+      binary: binaryCount,
+      ignoredDirectory: 0,
+      overFileCap: Math.max(0, tree.length - 1500)
+    };
+
     return NextResponse.json({
       success: true,
       repository: {
@@ -43,7 +72,8 @@ export async function POST(req: NextRequest) {
         selectedRevision: revision.commitSha
       },
       revision,
-      tree,
+      tree: filteredTree,
+      skippedReport,
       rateLimit: client.lastRateLimit
     });
   } catch (error: any) {

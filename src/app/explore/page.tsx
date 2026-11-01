@@ -69,6 +69,15 @@ function ExploreContent() {
   const [activeMobileTab, setActiveMobileTab] = useState<"tree" | "code">(
     fileParam || dirParam ? "code" : "tree"
   );
+  const [skippedReport, setSkippedReport] = useState<{
+    totalSkipped: number;
+    tooLarge: number;
+    binary: number;
+    ignoredDirectory: number;
+    overFileCap: number;
+  } | null>(null);
+  const [subfolderInput, setSubfolderInput] = useState("");
+  const [filteringSubfolder, setFilteringSubfolder] = useState(false);
 
   // If query params specify owner & repo, auto-connect if different from currentRepo
   useEffect(() => {
@@ -104,6 +113,9 @@ function ExploreContent() {
           }
           if (data.repository) {
             setCurrentRepo(data.repository);
+          }
+          if (data.skippedReport) {
+            setSkippedReport(data.skippedReport);
           }
         })
         .catch(() => setError("Failed to load file tree."))
@@ -440,6 +452,57 @@ function ExploreContent() {
             </span>
           )}
         </div>
+      </div>
+
+      {/* Skipped-Files Ingestion Report & Subfolder Picker */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2 bg-[#121316] border border-[#23252A] rounded-lg text-xs">
+        <div className="flex items-center gap-2 flex-wrap text-xs font-mono">
+          <span className="font-semibold text-[#F7F8F8]">Ingestion Report:</span>
+          <span className="text-[#27A644] font-medium">{files.length} indexed</span>
+          <span className="text-[#62666D]">·</span>
+          <span className="text-[#E5A000]">
+            {skippedReport ? skippedReport.totalSkipped : 0} skipped
+          </span>
+          <span className="text-[#8A8F98]">
+            ({skippedReport ? skippedReport.ignoredDirectory : 0} ignored dirs,{" "}
+            {skippedReport ? skippedReport.binary : 0} binary,{" "}
+            {skippedReport ? skippedReport.tooLarge : 0} &gt;100KB,{" "}
+            {skippedReport ? skippedReport.overFileCap : 0} over cap)
+          </span>
+        </div>
+        {!currentRepo.isLocal && (
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Pick sub-folder (e.g. packages/core)..."
+              value={subfolderInput}
+              onChange={(e) => setSubfolderInput(e.target.value)}
+              className="bg-[#0B0C0E] border border-[#23252A] rounded px-2.5 py-1 text-xs text-[#F7F8F8] placeholder-[#62666D] focus:outline-none focus:border-[#5E6AD2] font-mono min-w-[200px]"
+            />
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={filteringSubfolder}
+              onClick={() => {
+                if (!currentRepo) return;
+                setFilteringSubfolder(true);
+                clientFetch("/api/github/import", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ url: currentRepo.url, subfolder: subfolderInput })
+                })
+                  .then((r) => r.json())
+                  .then((d) => {
+                    if (d.tree) setFiles(d.tree);
+                    if (d.skippedReport) setSkippedReport(d.skippedReport);
+                  })
+                  .finally(() => setFilteringSubfolder(false));
+              }}
+            >
+              {filteringSubfolder ? <Loader2 className="w-3 h-3 animate-spin" /> : "Ingest Sub-folder"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Mobile Tab Switcher */}
