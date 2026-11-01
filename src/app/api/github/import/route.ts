@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { parseGitHubUrl, GitHubClient } from "@repopilot/github";
 import { enforceRateLimit } from "@/lib/rateLimiter";
 import { sanitizeErrorMessage } from "@/lib/security";
+import { serverIndexCache } from "@/lib/serverIndexCache";
 import { z } from "zod";
 
 // Configures maximum execution budget for serverless runtimes (60 seconds)
@@ -9,6 +10,7 @@ export const maxDuration = 60;
 
 const ImportRequestSchema = z.object({
   url: z.string().trim().min(1).max(256),
+  sha: z.string().trim().max(128).optional(),
   subfolder: z.string().trim().max(256).optional()
 });
 
@@ -21,27 +23,65 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { url, subfolder } = ImportRequestSchema.parse(body);
+    const { url, sha, subfolder } = ImportRequestSchema.parse(body);
 
     const { owner, repo } = parseGitHubUrl(url);
+
+    // Fast-path: Check server index cache if explicit commit SHA was provided
+    if (sha) {
+      const cached = serverIndexCache.get(owner, repo, sha, subfolder);
+      if (cached) {
+        return NextResponse.json({
+          success: true,
+          repository: cached.repository,
+          revision: cached.revision,
+          tree: cached.tree,
+          skippedReport: cached.skippedReport,
+          cached: true
+        });
+      }
+    }
 
     const token = req.headers.get("x-github-token") || process.env.GITHUB_TOKEN;
     const client = new GitHubClient({ token });
 
     // 1. Fetch Repository Metadata and Head Revision concurrently
-    const [repository, headRevision] = await Promise.all([
+    const [repository, targetRevision] = await Promise.all([
       client.fetchRepository(owner, repo),
-      client.resolveRevision(owner, repo, "HEAD").catch(() => null)
+      sha
+        ? client.resolveRevision(owner, repo, sha).catch(() => null)
+        : client.resolveRevision(owner, repo, "HEAD").catch(() => null)
     ]);
 
-    // If HEAD resolution did not succeed, resolve using repository's default branch
-    const revision = headRevision || (await client.resolveRevision(owner, repo, repository.defaultBranch));
+    // If revision resolution did not succeed, resolve using repository's default branch
+    const revision =
+      targetRevision ||
+      (await client.resolveRevision(owner, repo, sha || repository.defaultBranch));
+
+    // Check server index cache with resolved commit SHA
+    const cleanSubfolder = subfolder ? subfolder.trim().replace(/^\/+|\/+$/g, "") : null;
+    const cachedBySha = serverIndexCache.get(
+      owner,
+      repo,
+      revision.commitSha,
+      cleanSubfolder || undefined
+    );
+    if (cachedBySha) {
+      return NextResponse.json({
+        success: true,
+        repository: cachedBySha.repository,
+        revision: cachedBySha.revision,
+        tree: cachedBySha.tree,
+        skippedReport: cachedBySha.skippedReport,
+        rateLimit: client.lastRateLimit,
+        cached: true
+      });
+    }
 
     // 2. Fetch Repository Tree
     const tree = await client.fetchTree(owner, repo, revision.treeSha);
 
     // 3. Compute skipped files report & filter by subfolder if requested
-    const cleanSubfolder = subfolder ? subfolder.trim().replace(/^\/+|\/+$/g, "") : null;
     let filteredTree = tree;
     if (cleanSubfolder) {
       filteredTree = tree.filter(
@@ -65,16 +105,30 @@ export async function POST(req: NextRequest) {
       overFileCap: Math.max(0, tree.length - 1500)
     };
 
-    return NextResponse.json({
-      success: true,
+    const repoData = {
       repository: {
         ...repository,
         selectedRevision: revision.commitSha
       },
       revision,
       tree: filteredTree,
-      skippedReport,
-      rateLimit: client.lastRateLimit
+      skippedReport
+    };
+
+    // Store in server-side index cache
+    serverIndexCache.set(
+      owner,
+      repo,
+      revision.commitSha,
+      repoData,
+      cleanSubfolder || undefined
+    );
+
+    return NextResponse.json({
+      success: true,
+      ...repoData,
+      rateLimit: client.lastRateLimit,
+      cached: false
     });
   } catch (error: any) {
     return NextResponse.json(

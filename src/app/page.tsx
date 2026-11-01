@@ -41,7 +41,7 @@ import { clientFetch } from "@/lib/api";
 
 export default function HomePage() {
   const router = useRouter();
-  const { currentRepo, setIsImportModalOpen, saveRecentRepo } = useRepository();
+  const { currentRepo, setIsImportModalOpen, saveRecentRepo, recentRepos } = useRepository();
   const [repoUrl, setRepoUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -30,7 +30,8 @@ import { extractSymbols } from "@repopilot/indexer";
 import { ArchitectureAnalyzer } from "@repopilot/analysis";
 import { clientFetch } from "@/lib/api";
 import { generateMarkdownReport, downloadMarkdownReport } from "@/lib/reportGenerator";
-import { Download, ShieldCheck } from "lucide-react";
+import { Download, ShieldCheck, Share2, Check } from "lucide-react";
+import { getIndexFromIndexedDB, saveIndexToIndexedDB } from "@/lib/browserIndexCache";
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -48,6 +49,9 @@ function ExploreContent() {
   const searchParams = useSearchParams();
   const fileParam = searchParams.get("file");
   const dirParam = searchParams.get("dir");
+  const shaParam = searchParams.get("sha");
+  const [cacheHit, setCacheHit] = useState<"indexeddb" | "server" | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
   const initialLine = searchParams.get("line") ? parseInt(searchParams.get("line")!, 10) : undefined;
   const ownerParam = searchParams.get("owner");
   const repoParam = searchParams.get("repo");
@@ -82,46 +86,94 @@ function ExploreContent() {
   // If query params specify owner & repo, auto-connect if different from currentRepo
   useEffect(() => {
     if (ownerParam && repoParam) {
-      if (!currentRepo || currentRepo.owner !== ownerParam || currentRepo.repo !== repoParam) {
+      if (
+        !currentRepo ||
+        currentRepo.owner !== ownerParam ||
+        currentRepo.repo !== repoParam ||
+        (shaParam && currentRepo.selectedRevision !== shaParam)
+      ) {
         saveRecentRepo({
           owner: ownerParam,
           repo: repoParam,
           fullName: `${ownerParam}/${repoParam}`,
           url: `https://github.com/${ownerParam}/${repoParam}`,
           defaultBranch: "main",
+          selectedRevision: shaParam || undefined,
           stars: 0,
           forks: 0,
           openIssuesCount: 0
         });
       }
     }
-  }, [ownerParam, repoParam, currentRepo, saveRecentRepo]);
+  }, [ownerParam, repoParam, shaParam, currentRepo, saveRecentRepo]);
 
   // Load tree if repo is active but files are not in memory yet
   useEffect(() => {
     if (currentRepo && !currentRepo.isLocal && files.length === 0) {
       setLoadingTree(true);
-      clientFetch("/api/github/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: currentRepo.url })
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.tree) {
-            setFiles(data.tree);
-          }
-          if (data.repository) {
-            setCurrentRepo(data.repository);
-          }
-          if (data.skippedReport) {
-            setSkippedReport(data.skippedReport);
-          }
+      const effectiveSha = shaParam || currentRepo.selectedRevision;
+
+      const fetchFromApi = (shaToFetch?: string) => {
+        clientFetch("/api/github/import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: currentRepo.url,
+            sha: shaToFetch
+          })
         })
-        .catch(() => setError("Failed to load file tree."))
-        .finally(() => setLoadingTree(false));
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.tree) {
+              setFiles(data.tree);
+              const commitSha = data.revision?.commitSha || data.repository?.selectedRevision;
+              if (commitSha) {
+                saveIndexToIndexedDB(currentRepo.owner, currentRepo.repo, commitSha, {
+                  repository: data.repository || currentRepo,
+                  tree: data.tree,
+                  skippedReport: data.skippedReport
+                });
+              }
+            }
+            if (data.repository) {
+              setCurrentRepo(data.repository);
+            }
+            if (data.skippedReport) {
+              setSkippedReport(data.skippedReport);
+            }
+            if (data.cached) {
+              setCacheHit("server");
+            }
+          })
+          .catch(() => setError("Failed to load file tree."))
+          .finally(() => setLoadingTree(false));
+      };
+
+      if (effectiveSha) {
+        getIndexFromIndexedDB(currentRepo.owner, currentRepo.repo, effectiveSha)
+          .then((cached) => {
+            if (cached && cached.tree && cached.tree.length > 0) {
+              setFiles(cached.tree);
+              if (cached.repository) {
+                setCurrentRepo(cached.repository);
+              }
+              if (cached.skippedReport) {
+                setSkippedReport(cached.skippedReport);
+              }
+              setCacheHit("indexeddb");
+              setLoadingTree(false);
+            } else {
+              fetchFromApi(effectiveSha);
+            }
+          })
+          .catch(() => {
+            fetchFromApi(effectiveSha);
+          });
+      } else {
+        fetchFromApi();
+      }
     }
-  }, [currentRepo, files.length, setFiles]);
+  }, [currentRepo, files.length, setFiles, shaParam]);
 
   // Resolve target file or directory whenever files or search params change
   useEffect(() => {
