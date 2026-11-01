@@ -472,6 +472,14 @@ function ExploreContent() {
             {skippedReport ? skippedReport.tooLarge : 0} &gt;100KB,{" "}
             {skippedReport ? skippedReport.overFileCap : 0} over cap)
           </span>
+
+          {/* Tree-Sitter WASM Progress Indicator on slow networks */}
+          {wasmState.status === "warming" && (
+            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-theme-blue-surface text-theme-blue font-medium text-[11px] animate-pulse">
+              <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+              <span>Loading {wasmState.language || "AST"} WASM...</span>
+            </span>
+          )}
         </div>
         {!currentRepo.isLocal && (
           <div className="flex items-center gap-2">

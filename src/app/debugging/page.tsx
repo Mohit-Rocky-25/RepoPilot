@@ -20,6 +20,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import { copyToClipboard } from "@/lib/clipboard";
 import type { BugHypothesis, PatchProposal } from "@repopilot/core";
 import type { ParsedTrace, StackFrame } from "@repopilot/debugging";
 import { clientFetch } from "@/lib/api";
@@ -75,9 +76,9 @@ export default function DebuggingPage() {
     }
   };
 
-  const copyReport = () => {
+  const copyReport = async () => {
     if (analysisResult?.reproducibleReport) {
-      navigator.clipboard.writeText(analysisResult.reproducibleReport);
+      await copyToClipboard(analysisResult.reproducibleReport);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }

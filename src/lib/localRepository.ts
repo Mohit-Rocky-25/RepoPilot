@@ -66,7 +66,9 @@ const EXTENSION_LANGUAGE_MAP: Record<string, string> = {
   dockerfile: "Dockerfile"
 };
 
-const MAX_FILE_SIZE_BYTES = 1.5 * 1024 * 1024; // 1.5 MB
+const MAX_FILE_SIZE_BYTES = 1.5 * 1024 * 1024; // 1.5 MB desktop
+const MOBILE_MAX_FILE_SIZE_BYTES = 500 * 1024; // 500 KB on mobile to preserve heap memory
+const MOBILE_MAX_TOTAL_FILES = 250; // Safeguard file cap on mobile browsers
 
 /**
  * Deterministic fast 32-bit hash converted to hex string for reproducible pseudo-SHAs
@@ -167,18 +169,27 @@ export async function parseLocalFolder(
     throw new Error("No readable source files found in directory (non-code / ignored files excluded).");
   }
 
+  // Memory safeguard: Cap files on mobile to prevent browser tab crash
+  const isMobile =
+    typeof window !== "undefined" &&
+    (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768);
+  const effectiveMaxFileSize = isMobile ? MOBILE_MAX_FILE_SIZE_BYTES : MAX_FILE_SIZE_BYTES;
+  const targetFiles = isMobile && validFiles.length > MOBILE_MAX_TOTAL_FILES
+    ? validFiles.slice(0, MOBILE_MAX_TOTAL_FILES)
+    : validFiles;
+
   const parsedFiles: RepositoryFile[] = [];
   const langCounts = new Map<string, number>();
 
-  const BATCH_SIZE = 40;
-  for (let i = 0; i < validFiles.length; i += BATCH_SIZE) {
-    const chunk = validFiles.slice(i, i + BATCH_SIZE);
+  const BATCH_SIZE = isMobile ? 20 : 40;
+  for (let i = 0; i < targetFiles.length; i += BATCH_SIZE) {
+    const chunk = targetFiles.slice(i, i + BATCH_SIZE);
 
     await Promise.all(
       chunk.map(async ({ file, repoPath }) => {
         const { extension, language } = detectLanguageFromExtension(repoPath);
         const isBinary = BINARY_EXTENSIONS.has(extension);
-        const isTooLarge = file.size > MAX_FILE_SIZE_BYTES;
+        const isTooLarge = file.size > effectiveMaxFileSize;
 
         let content: string | undefined = undefined;
         let lineCount: number | undefined = undefined;

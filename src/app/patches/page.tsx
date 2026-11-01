@@ -21,20 +21,21 @@ import { useRepository } from "@/context/RepositoryContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { copyToClipboard } from "@/lib/clipboard";
 
 export default function PatchesPage() {
   const { currentRepo, activeInvestigation, setActiveInvestigation, setIsImportModalOpen } = useRepository();
   const [copiedDiff, setCopiedDiff] = useState(false);
   const [copiedPR, setCopiedPR] = useState(false);
 
-  const copyDiff = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const copyDiff = async (text: string) => {
+    await copyToClipboard(text);
     setCopiedDiff(true);
     setTimeout(() => setCopiedDiff(false), 2000);
   };
 
-  const copyPRMarkdown = (markdown: string) => {
-    navigator.clipboard.writeText(markdown);
+  const copyPRMarkdown = async (markdown: string) => {
+    await copyToClipboard(markdown);
     setCopiedPR(true);
     setTimeout(() => setCopiedPR(false), 2000);
   };
