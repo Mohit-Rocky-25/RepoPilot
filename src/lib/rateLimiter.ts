@@ -28,6 +28,17 @@ export const ROUTE_CLASS_LIMITS: Record<RouteClass, { limit: number; windowMs: n
 };
 
 /**
+ * Stricter fallback rate limits applied in production when Upstash Redis is unconfigured
+ */
+export const STRICT_FALLBACK_LIMITS: Record<RouteClass, { limit: number; windowMs: number }> = {
+  general: { limit: 30, windowMs: 60000 }, // 30 req/min
+  ingest: { limit: 5, windowMs: 60000 },   // 5 req/min (expensive tarball/tree ingestion)
+  ai: { limit: 5, windowMs: 60000 },       // 5 req/min (assistant queries)
+  debug: { limit: 10, windowMs: 60000 },   // 10 req/min (debugging engine)
+  hosted_free_tier: { limit: 2, windowMs: 3600000 } // 2 req/hr per IP
+};
+
+/**
  * Derives client IP securely.
  * On Vercel, x-vercel-forwarded-for cannot be spoofed by the client.
  * Does NOT blindly trust client-controlled x-forwarded-for.
@@ -195,11 +206,13 @@ export class CompositeRateLimiter implements IRateLimiter {
   public readonly inMemory: InMemoryRateLimiter;
   public readonly upstash: UpstashRateLimiter | null = null;
   public readonly activeProvider: "upstash" | "in-memory";
+  public readonly isStrictFallbackActive: boolean;
 
   constructor(options?: {
     clock?: () => number;
     redisUrl?: string;
     redisToken?: string;
+    nodeEnv?: string;
   }) {
     this.inMemory = new InMemoryRateLimiter(options?.clock);
 
@@ -209,12 +222,24 @@ export class CompositeRateLimiter implements IRateLimiter {
     const token =
       options?.redisToken ||
       (typeof process !== "undefined" ? process.env.UPSTASH_REDIS_REST_TOKEN : undefined);
+    const nodeEnv =
+      options?.nodeEnv ||
+      (typeof process !== "undefined" ? process.env.NODE_ENV : undefined);
 
     if (url && token) {
       this.upstash = new UpstashRateLimiter(url, token, this.inMemory);
       this.activeProvider = "upstash";
+      this.isStrictFallbackActive = false;
     } else {
       this.activeProvider = "in-memory";
+      if (nodeEnv === "production") {
+        this.isStrictFallbackActive = true;
+        console.warn(
+          "[SECURITY WARNING] Upstash Redis environment variables (UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN) are missing in production! Distributed rate limiting is disabled. Applying stricter in-memory limits to protect infrastructure."
+        );
+      } else {
+        this.isStrictFallbackActive = false;
+      }
     }
   }
 
@@ -267,7 +292,8 @@ export async function enforceRateLimit(
   customKeySuffix?: string
 ): Promise<{ allowed: boolean; result: RateLimitResult; response?: NextResponse }> {
   const clientIp = getClientIp(req);
-  const cfg = ROUTE_CLASS_LIMITS[routeClass] || ROUTE_CLASS_LIMITS.general;
+  const baseLimits = rateLimiter.isStrictFallbackActive ? STRICT_FALLBACK_LIMITS : ROUTE_CLASS_LIMITS;
+  const cfg = baseLimits[routeClass] || baseLimits.general;
   const key = `rl:${routeClass}:${clientIp}${customKeySuffix ? `:${customKeySuffix}` : ""}`;
 
   const result = await rateLimiter.check(key, cfg.limit, cfg.windowMs);
