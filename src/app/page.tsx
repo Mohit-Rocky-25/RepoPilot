@@ -282,6 +282,14 @@ export default function HomePage() {
                   🚀 gin-gonic/gin <span className="text-cyan-400">(Go)</span>
                 </button>
                 <Link
+                  href="/assistant?mode=sample"
+                  className="px-2.5 py-1 rounded-md bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-[11px] font-mono text-amber-300 transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3 h-3 text-amber-400" />
+                  <span>Sample Analysis</span>
+                  <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-200">Pre-recorded example</span>
+                </Link>
+                <Link
                   href="/examples"
                   className="px-2 py-1 rounded-md text-[11px] font-mono text-linear-accent hover:text-linear-accent-hover font-semibold transition-colors"
                 >

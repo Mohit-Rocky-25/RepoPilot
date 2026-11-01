@@ -369,10 +369,15 @@ export default function ExamplesPage() {
           <div className="space-y-4">
             {currentRepo.sampleQA.map((qa, idx) => (
               <div key={idx} className="p-4 rounded-xl bg-linear-surface-2 border border-linear-border-1 space-y-2.5">
-                <h3 className="text-xs font-mono font-semibold text-linear-text-main flex items-center gap-2">
-                  <span className="text-linear-accent">Q:</span>
-                  <span>{qa.question}</span>
-                </h3>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-xs font-mono font-semibold text-linear-text-main flex items-center gap-2">
+                    <span className="text-linear-accent">Q:</span>
+                    <span>{qa.question}</span>
+                  </h3>
+                  <Badge variant="neutral" className="bg-amber-500/10 text-amber-300 border-amber-500/30 text-[10px] font-mono shrink-0">
+                    Pre-recorded example
+                  </Badge>
+                </div>
                 <p className="text-xs text-linear-text-muted leading-relaxed pl-5 border-l-2 border-linear-border-2">
                   {qa.answer}
                 </p>

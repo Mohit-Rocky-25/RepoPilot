@@ -34,7 +34,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
-import type { SourceReference } from "@repopilot/core";
+import type { SourceReference, RepositoryReference } from "@repopilot/core";
 import type { ParsedCitation, UncitedClaim } from "@repopilot/ai";
 import { clientFetch } from "@/lib/api";
 
@@ -67,10 +67,21 @@ interface QAItem {
     filesDropped: number;
   };
   refused?: boolean;
+  isSampleAnalysis?: boolean;
+  sampleBadge?: string;
 }
 
+const SAMPLE_SWR_REPO: RepositoryReference = {
+  owner: "vercel",
+  repo: "swr",
+  fullName: "vercel/swr",
+  url: "https://github.com/vercel/swr",
+  defaultBranch: "main",
+  selectedRevision: "5d80486fa0d15e2193b2169ebbb0829cb250bf59"
+};
+
 export default function AssistantPage() {
-  const { currentRepo, aiConfig, setIsImportModalOpen } = useRepository();
+  const { currentRepo, setCurrentRepo, saveRecentRepo, aiConfig, setIsImportModalOpen } = useRepository();
 
   const [providerMode, setProviderMode] = useState<"ollama" | "openai-compatible" | "offline">("offline");
   const [contextTokenBudget, setContextTokenBudget] = useState<number>(4000);
@@ -78,6 +89,20 @@ export default function AssistantPage() {
   const [history, setHistory] = useState<QAItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSampleMode, setIsSampleMode] = useState(false);
+
+  React.useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("mode") === "sample" || urlParams.get("sample") === "true") {
+        setIsSampleMode(true);
+        if (!currentRepo) {
+          setCurrentRepo(SAMPLE_SWR_REPO);
+          saveRecentRepo(SAMPLE_SWR_REPO);
+        }
+      }
+    } catch {}
+  }, []);
 
   React.useEffect(() => {
     try {
@@ -150,7 +175,8 @@ export default function AssistantPage() {
           question: qText.trim(),
           baseUrl: aiConfig.baseUrl,
           model: aiConfig.modelName,
-          contextTokenBudget: contextTokenBudget
+          contextTokenBudget: contextTokenBudget,
+          isSampleAnalysis: isSampleMode
         })
       });
 
@@ -172,7 +198,9 @@ export default function AssistantPage() {
         citationWarning: data.citationWarning,
         contextSummary: data.contextSummary,
         contextMeta: data.contextMeta,
-        refused: data.refused
+        refused: data.refused,
+        isSampleAnalysis: Boolean(data.isSampleAnalysis || isSampleMode),
+        sampleBadge: data.sampleBadge || (isSampleMode ? "Pre-recorded example" : undefined)
       };
 
       setHistory((prev) => [newItem, ...prev]);
@@ -228,12 +256,24 @@ export default function AssistantPage() {
             Import a public GitHub repository to ask questions grounded directly in indexed code files with exact citations.
           </p>
         </div>
-        <div className="flex items-center justify-center gap-3 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Link href="/">
             <Button variant="secondary" size="md">
               Go Home
             </Button>
           </Link>
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={() => {
+              setIsSampleMode(true);
+              setCurrentRepo(SAMPLE_SWR_REPO);
+              saveRecentRepo(SAMPLE_SWR_REPO);
+            }}
+            className="border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
+          >
+            Sample Analysis (Pre-recorded)
+          </Button>
           <Button
             variant="primary"
             size="md"
@@ -310,6 +350,29 @@ export default function AssistantPage() {
               <option value={16000} className="bg-[#141516] text-white">16,000 tokens (Max)</option>
             </select>
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              const next = !isSampleMode;
+              setIsSampleMode(next);
+              if (next && (!currentRepo || currentRepo.repo !== "swr")) {
+                setCurrentRepo(SAMPLE_SWR_REPO);
+                saveRecentRepo(SAMPLE_SWR_REPO);
+              }
+            }}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-mono transition-all cursor-pointer ${
+              isSampleMode
+                ? "bg-amber-500/20 border-amber-500/50 text-amber-300 font-semibold shadow-xs"
+                : "bg-[#141516] border-[#23252A] text-linear-text-muted hover:text-white"
+            }`}
+            title="Toggle sample analysis on vercel/swr (Pre-recorded example, zero key required)"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>{isSampleMode ? "Sample Active" : "Sample Analysis"}</span>
+            <Badge variant="neutral" size="sm" className="text-[9px] bg-amber-500/10 text-amber-300 border-amber-500/30">
+              Pre-recorded example
+            </Badge>
+          </button>
           <Link href="/architecture">
             <Button variant="secondary" size="sm" icon={<Network className="w-3.5 h-3.5 text-[#828FFF]" />}>
               3D Spatial Map
@@ -322,6 +385,29 @@ export default function AssistantPage() {
           </Link>
         </div>
       </div>
+
+      {/* Sample Analysis Mode Active Banner */}
+      {isSampleMode && (
+        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono text-amber-300 shadow-xs">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>
+              <strong>Sample Analysis Mode Active:</strong> Viewing pre-recorded grounded Q&amp;A on <code>vercel/swr</code> (pinned SHA: <code>5d80486</code>). Full citations without an API key.
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="neutral" size="sm" className="bg-amber-500/20 text-amber-200 border-amber-500/40">
+              Pre-recorded example
+            </Badge>
+            <button
+              onClick={() => setIsSampleMode(false)}
+              className="text-[11px] text-amber-400 hover:text-white underline cursor-pointer"
+            >
+              Exit Sample
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Ollama Offline Guidance Banner with 1-Click Copy & Dismiss */}
       {!aiConfig.isAvailable && !hideOllamaBanner && (
@@ -492,6 +578,11 @@ export default function AssistantPage() {
                   <span>{item.question}</span>
                 </span>
                 <div className="flex items-center gap-2">
+                  {(item.isSampleAnalysis || item.sampleBadge || isSampleMode) && (
+                    <Badge variant="neutral" size="sm" className="bg-amber-500/10 text-amber-300 border-amber-500/30 font-mono">
+                      Pre-recorded example
+                    </Badge>
+                  )}
                   {item.modelUsed && (
                     <Badge variant="primary" size="sm">
                       {item.modelUsed}

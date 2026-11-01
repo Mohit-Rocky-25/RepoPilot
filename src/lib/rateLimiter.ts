@@ -17,13 +17,14 @@ export interface IRateLimiter {
   ): Promise<RateLimitResult> | RateLimitResult;
 }
 
-export type RouteClass = "general" | "ai" | "ingest" | "debug";
+export type RouteClass = "general" | "ai" | "ingest" | "debug" | "hosted_free_tier";
 
 export const ROUTE_CLASS_LIMITS: Record<RouteClass, { limit: number; windowMs: number }> = {
   general: { limit: 60, windowMs: 60000 }, // 60 req/min
   ingest: { limit: 15, windowMs: 60000 },  // 15 req/min (tarball & tree downloads)
   ai: { limit: 10, windowMs: 60000 },      // 10 req/min (compute-heavy model generation)
-  debug: { limit: 20, windowMs: 60000 }    // 20 req/min (stack-trace analysis & hypotheses)
+  debug: { limit: 20, windowMs: 60000 },   // 20 req/min (stack-trace analysis & hypotheses)
+  hosted_free_tier: { limit: 3, windowMs: 3600000 } // Strict limit: 3 req/hr per IP (server-side hosted demo)
 };
 
 /**
