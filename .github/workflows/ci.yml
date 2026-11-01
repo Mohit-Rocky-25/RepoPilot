@@ -43,5 +43,11 @@ jobs:
       - name: Run Retrieval Benchmark Eval
         run: npm run eval
 
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright End-to-End Tests
+        run: npm run test:e2e
+
       - name: Run Next.js Production Build
         run: npm run build

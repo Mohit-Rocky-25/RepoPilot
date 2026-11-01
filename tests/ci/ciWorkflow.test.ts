@@ -27,4 +27,11 @@ describe("Task 7: CI Workflow Configuration", () => {
 
     expect(content).toMatch(/npm audit --audit-level=high/i);
   });
+
+  it("configures Playwright browser installation and end-to-end tests", () => {
+    const content = fs.readFileSync(workflowPath, "utf-8");
+
+    expect(content).toMatch(/playwright install/i);
+    expect(content).toMatch(/npm run test:e2e/i);
+  });
 });

@@ -17,6 +17,7 @@
     "start": "next start -p 3000",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
     "lint": "next lint",
     "docs:pdf": "node scripts/generate_readme_pdf.js",
@@ -48,6 +49,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@types/node": "^22.7.5",
     "@types/pdfkit": "^0.17.6",
     "@types/react": "^18.3.11",
