@@ -2,6 +2,10 @@
  * Centralized Application Security and Defensive Validation Module
  * Enforces strict input validation, SSRF prevention, path traversal defense, and XSS sanitization.
  */
+import http from "node:http";
+import https from "node:https";
+import dns from "node:dns";
+
 export { sanitizeSvg } from "./svgSanitizer";
 
 // Strict GitHub owner/repo identifier regex: alphanumeric, underscores, hyphens, periods (1-100 chars)
@@ -407,4 +411,208 @@ export function validateOllamaEndpoint(urlStr: unknown): { valid: boolean; reaso
   } catch {
     return { valid: false, reason: "Malformed URL format." };
   }
+}
+
+/**
+ * Strict allowlist of hosts permitted for outbound GitHub requests.
+ * All other external hosts are rejected before any network call.
+ */
+export const ALLOWED_GITHUB_HOSTS = new Set<string>([
+  "github.com",
+  "api.github.com",
+  "codeload.github.com"
+]);
+
+/**
+ * Validates if a hostname or URL belongs to the allowed GitHub hosts.
+ */
+export function isAllowedGitHubHost(hostOrUrl: string): boolean {
+  if (!hostOrUrl || typeof hostOrUrl !== "string") return false;
+  let hostname = hostOrUrl.trim().toLowerCase();
+  try {
+    if (hostname.includes("://")) {
+      hostname = new URL(hostname).hostname.toLowerCase();
+    }
+  } catch {
+    return false;
+  }
+  return ALLOWED_GITHUB_HOSTS.has(hostname);
+}
+
+export interface SafeFetchOptions extends RequestInit {
+  timeoutMs?: number;
+  maxRedirects?: number;
+  allowedHosts?: Set<string>;
+  dnsLookup?: (hostname: string) => Promise<Array<{ address: string; family: number }>>;
+  allowHttpForTesting?: boolean;
+  customTransport?: (url: string, init?: SafeFetchOptions) => Promise<Response>;
+}
+
+/**
+ * Outbound fetch wrapper enforcing:
+ * 1. Strict Host allowlist (github.com, api.github.com, codeload.github.com).
+ * 2. DNS resolution check with private/reserved IP blocklist (SSRF layer 2).
+ * 3. Connection pinning to resolved IP with original Host/SNI (Anti-DNS Rebinding).
+ * 4. Manual redirect validation: max 3 hops, re-validating host allowlist and IP at every hop.
+ */
+export async function safeGitHubFetch(
+  inputUrl: string,
+  init?: SafeFetchOptions,
+  defaultTimeoutMs = 20000
+): Promise<Response> {
+  const maxRedirects = init?.maxRedirects ?? 3;
+  const timeoutMs = init?.timeoutMs ?? defaultTimeoutMs;
+  let currentUrl = inputUrl;
+  let redirectCount = 0;
+
+  while (true) {
+    let parsed: URL;
+    try {
+      parsed = new URL(currentUrl);
+    } catch {
+      throw new Error(`SSRF Violation: Malformed URL "${currentUrl}".`);
+    }
+
+    const isHttp = parsed.protocol === "http:";
+    const isHttps = parsed.protocol === "https:";
+
+    if (!isHttps && !(init?.allowHttpForTesting && isHttp)) {
+      throw new Error(`SSRF Violation: Protocol "${parsed.protocol}" is not allowed. Only https: is permitted.`);
+    }
+
+    const hostname = parsed.hostname.toLowerCase();
+
+    // 1. Host allowlist check (BEFORE any network call)
+    const allowedHosts = init?.allowedHosts ?? ALLOWED_GITHUB_HOSTS;
+    if (!allowedHosts.has(hostname)) {
+      throw new Error(
+        `SSRF Violation: Host "${hostname}" is not in the allowlist. Only [${Array.from(allowedHosts).join(", ")}] are permitted.`
+      );
+    }
+
+    // 2. DNS resolution check (resolve once)
+    let addresses: Array<{ address: string; family: number }> = [];
+    if (init?.dnsLookup) {
+      addresses = await init.dnsLookup(hostname);
+    } else {
+      addresses = await dns.promises.lookup(hostname, { all: true });
+    }
+
+    if (!addresses || addresses.length === 0) {
+      throw new Error(`DNS Resolution Failure: Could not resolve IP for host "${hostname}".`);
+    }
+
+    // 3. IP blocklist check (layer 2)
+    for (const addr of addresses) {
+      if (isPrivateOrReservedIp(addr.address)) {
+        throw new Error(
+          `SSRF Violation: Host "${hostname}" resolved to restricted IP (${addr.address}). Request blocked.`
+        );
+      }
+    }
+
+    const pinnedIp = addresses[0].address;
+    const pinnedFamily = addresses[0].family;
+
+    // 4. Connect to pinned IP with original Host & SNI (or customTransport in tests)
+    let response: Response;
+    if (init?.customTransport) {
+      response = await init.customTransport(currentUrl, init);
+    } else {
+      response = await executePinnedRequest(parsed, pinnedIp, pinnedFamily, init, timeoutMs);
+    }
+
+    // 5. Manual redirect handling (max 3 hops)
+    const isRedirect = [301, 302, 303, 307, 308].includes(response.status);
+    if (isRedirect && init?.redirect !== "manual") {
+      redirectCount++;
+      if (redirectCount > maxRedirects) {
+        throw new Error(`SSRF Violation: Maximum redirect limit (${maxRedirects}) exceeded.`);
+      }
+
+      const location = response.headers.get("location");
+      if (!location) {
+        throw new Error("HTTP Redirect error: Missing Location header.");
+      }
+
+      currentUrl = new URL(location, currentUrl).toString();
+      continue;
+    }
+
+    return response;
+  }
+}
+
+function executePinnedRequest(
+  parsedUrl: URL,
+  pinnedIp: string,
+  pinnedFamily: number,
+  init?: SafeFetchOptions,
+  timeoutMs = 20000
+): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    const isHttps = parsedUrl.protocol === "https:";
+    const transport = isHttps ? https : http;
+
+    const requestHeaders: Record<string, string> = {
+      Host: parsedUrl.host,
+      ...(init?.headers as Record<string, string>)
+    };
+
+    const reqOptions: https.RequestOptions = {
+      protocol: parsedUrl.protocol,
+      hostname: parsedUrl.hostname,
+      port: parsedUrl.port || (isHttps ? 443 : 80),
+      path: parsedUrl.pathname + parsedUrl.search,
+      method: init?.method || "GET",
+      headers: requestHeaders,
+      servername: parsedUrl.hostname, // Preserves SNI
+      lookup: (_h, o, cb) => {
+        const callback = typeof o === "function" ? o : cb;
+        const isAll = typeof o === "object" && o?.all;
+        if (isAll) {
+          callback(null, [{ address: pinnedIp, family: pinnedFamily }]);
+        } else {
+          callback(null, pinnedIp, pinnedFamily);
+        }
+      }
+    };
+
+    const req = transport.request(reqOptions, (res) => {
+      const chunks: Buffer[] = [];
+      res.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+      res.on("end", () => {
+        const bodyBuffer = Buffer.concat(chunks);
+        const headers = new Headers();
+        for (const [key, val] of Object.entries(res.headers)) {
+          if (Array.isArray(val)) {
+            val.forEach((v) => headers.append(key, v));
+          } else if (val !== undefined) {
+            headers.set(key, val);
+          }
+        }
+        const webResponse = new Response(bodyBuffer, {
+          status: res.statusCode || 200,
+          statusText: res.statusMessage || "OK",
+          headers
+        });
+        resolve(webResponse);
+      });
+    });
+
+    req.on("error", reject);
+
+    const timer = setTimeout(() => {
+      req.destroy(new Error(`Request timed out after ${timeoutMs}ms while accessing ${parsedUrl.hostname}`));
+    }, timeoutMs);
+
+    req.on("close", () => clearTimeout(timer));
+
+    if (init?.body) {
+      if (typeof init.body === "string" || Buffer.isBuffer(init.body)) {
+        req.write(init.body);
+      }
+    }
+    req.end();
+  });
 }

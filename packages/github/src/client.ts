@@ -7,6 +7,7 @@ import type {
 import { gitHubCache } from "./cache";
 import { extractTarballSafely, type ExtractedRepository } from "./tarballExtractor";
 import { globalRepoCache } from "./repoCache";
+import { safeGitHubFetch } from "./safeFetch";
 
 const GITHUB_API_BASE = "https://api.github.com";
 
@@ -64,22 +65,14 @@ export class GitHubClient {
     }
 
     const ms = timeoutMs || this.defaultTimeoutMs;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), ms);
-
     try {
-      const response = await fetch(url, {
-        ...init,
-        signal: controller.signal
-      });
+      const response = await safeGitHubFetch(url, init, ms);
       return response;
     } catch (err: any) {
-      if (err.name === "AbortError") {
+      if (err.name === "AbortError" || err.message?.includes("timed out")) {
         throw new Error(`Request timed out after ${ms}ms while accessing: ${url.replace(/([?&])token=[^&]*/, "")}`);
       }
       throw err;
-    } finally {
-      clearTimeout(timer);
     }
   }
 
@@ -407,26 +400,7 @@ export class GitHubClient {
     const cached = gitHubCache.get<string>(cacheKey);
     if (cached !== null) return cached;
 
-    // Strategy 1: Fast CDN raw.githubusercontent.com
-    try {
-      const rawUrl = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(commitSha)}/${path}`;
-      const headers: Record<string, string> = { "User-Agent": "RepoPilot-OSS-Client/1.0" };
-      if (this.token) {
-        headers["Authorization"] = `token ${this.token}`;
-      }
-
-      const res = await this.fetchWithTimeout(rawUrl, { headers }, 4000);
-      if (res.ok) {
-        const text = await res.text();
-        const safeText = text.slice(0, 2 * 1024 * 1024);
-        gitHubCache.set(cacheKey, safeText, 600);
-        return safeText;
-      }
-    } catch {
-      // Fall through to Strategy 2
-    }
-
-    // Strategy 2: Official GitHub REST API contents endpoint
+    // Official GitHub REST API contents endpoint (strictly allowlisted api.github.com)
     try {
       const apiUrl = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(commitSha)}`;
       const res = await this.fetchWithTimeout(apiUrl, { headers: this.getHeaders() }, 6000);
