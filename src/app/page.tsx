@@ -39,6 +39,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { FourDots, AccentCard } from "@/components/ui/signature";
+import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { clientFetch } from "@/lib/api";
 
 export default function HomePage() {
@@ -82,12 +83,19 @@ export default function HomePage() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[360px] bg-theme-blue/5 blur-[120px] pointer-events-none rounded-full" />
 
         <div className="max-w-5xl mx-auto text-center space-y-6 relative z-10">
-          {/* Badge with Google/GDG signature 4-dot motif */}
-          <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-theme-surface border border-theme-border text-theme-text text-xs font-mono shadow-xs">
-            <FourDots size="xs" animated />
-            <span className="font-semibold text-theme-text">RepoPilot v1.0</span>
-            <span className="text-theme-border">|</span>
-            <span className="text-theme-text-muted">Evidence-First Codebase Intelligence</span>
+          {/* Badge with Google/GDG signature 4-dot motif & Landing Page Theme Switcher */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-theme-surface border border-theme-border text-theme-text text-xs font-mono shadow-xs">
+              <FourDots size="xs" animated />
+              <span className="font-semibold text-theme-text">RepoPilot v1.0</span>
+              <span className="text-theme-border">|</span>
+              <span className="text-theme-text-muted">Evidence-First Codebase Intelligence</span>
+            </div>
+
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-theme-surface border border-theme-border text-xs font-mono shadow-xs">
+              <span className="text-[11px] text-theme-text-muted font-medium">Theme:</span>
+              <ThemeSwitcher size="sm" showLabels />
+            </div>
           </div>
 
           {/* Editorial Headline */}
@@ -758,6 +766,11 @@ export default function HomePage() {
             <span>Zero Mandatory Cloud AI</span>
             <span>·</span>
             <span>Grounded In Pinned Commits</span>
+            <span>·</span>
+            <div className="flex items-center gap-2">
+              <span className="text-theme-text-muted">Theme:</span>
+              <ThemeSwitcher size="sm" showLabels />
+            </div>
             <span>·</span>
             <span>Independent Open-Source · Not affiliated with GitHub, Inc.</span>
           </div>
