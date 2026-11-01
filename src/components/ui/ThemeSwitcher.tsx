@@ -88,6 +88,26 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
     setStoredThemePreference(pref);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    let nextIndex = index;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      nextIndex = (index + 1) % options.length;
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      nextIndex = (index - 1 + options.length) % options.length;
+    }
+
+    if (nextIndex !== index) {
+      const nextPref = options[nextIndex].value;
+      handleSelect(nextPref);
+      const buttons = e.currentTarget.parentElement?.querySelectorAll('button[role="radio"]');
+      if (buttons && buttons[nextIndex]) {
+        (buttons[nextIndex] as HTMLButtonElement).focus();
+      }
+    }
+  };
+
   const options: { value: ThemePreference; label: string; icon: React.ReactNode }[] = [
     {
       value: "light",
@@ -109,10 +129,10 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
   return (
     <div
       role="radiogroup"
-      aria-label="Theme preference switcher"
+      aria-label="Theme selection"
       className={`inline-flex items-center p-0.5 rounded-lg bg-theme-surface-alt border border-theme-border text-xs font-mono select-none ${className}`}
     >
-      {options.map((opt) => {
+      {options.map((opt, idx) => {
         const isSelected = mounted ? preference === opt.value : opt.value === "light";
         return (
           <button
@@ -123,6 +143,7 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
             title={`${opt.label} theme`}
             tabIndex={0}
             onClick={() => handleSelect(opt.value)}
+            onKeyDown={(e) => handleKeyDown(e, idx)}
             className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-blue cursor-pointer ${
               isSelected
                 ? "bg-theme-surface text-theme-text font-medium shadow-xs border border-theme-border"

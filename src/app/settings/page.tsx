@@ -268,7 +268,7 @@ export default function GeneralSettingsPage() {
         </div>
 
         <p className="text-xs text-theme-text-muted leading-relaxed font-mono">
-          RepoPilot defaults to a Google/GDG-style Light theme for optimal readability, contrast, and calm presentation. You can also select Dark mode or have it track your operating system.
+          RepoPilot defaults to a Google/GDG-style Light theme. Choose between Google developer-light, Obsidian Dark, or System mode for optimal readability, contrast, and calm presentation.
         </p>
 
         <div className="pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 rounded-lg bg-theme-surface-alt border border-theme-border">

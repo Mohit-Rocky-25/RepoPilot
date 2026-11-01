@@ -1,10 +1,14 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { ImportModal } from "@/components/modals/ImportModal";
 import { TopColorBar } from "@/components/ui/signature/TopColorBar";
+import { FourDots } from "@/components/ui/signature/FourDots";
+import { Button } from "@/components/ui/Button";
+import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { useRepository } from "@/context/RepositoryContext";
 import { usePathname } from "next/navigation";
 
@@ -21,9 +25,48 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
 
   if (isLandingPage) {
     return (
-      <div className="min-h-screen w-full bg-theme-bg text-theme-text font-sans antialiased selection:bg-theme-blue/20 selection:text-theme-blue">
+      <div className="min-h-screen w-full bg-theme-bg text-theme-text font-sans antialiased selection:bg-theme-blue/20 selection:text-theme-blue flex flex-col">
         <TopColorBar />
-        {children}
+        {/* Landing Top Navigation Bar */}
+        <header className="h-14 bg-theme-surface border-b border-theme-border px-4 sm:px-6 flex items-center justify-between shrink-0 select-none shadow-xs">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-2">
+              <FourDots size="xs" />
+              <span className="font-bold text-sm tracking-tight text-theme-text font-mono">
+                RepoPilot
+              </span>
+            </Link>
+            <nav className="hidden sm:flex items-center gap-1 ml-4 text-xs font-mono text-theme-text-muted">
+              <Link href="/explore" className="px-2.5 py-1 rounded hover:text-theme-text hover:bg-theme-surface-alt transition-colors">
+                Explorer
+              </Link>
+              <Link href="/architecture" className="px-2.5 py-1 rounded hover:text-theme-text hover:bg-theme-surface-alt transition-colors">
+                Architecture
+              </Link>
+              <Link href="/docs" className="px-2.5 py-1 rounded hover:text-theme-text hover:bg-theme-surface-alt transition-colors">
+                Docs
+              </Link>
+              <Link href="/settings" className="px-2.5 py-1 rounded hover:text-theme-text hover:bg-theme-surface-alt transition-colors">
+                Settings
+              </Link>
+            </nav>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <ThemeSwitcher size="sm" />
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsImportModalOpen(true)}
+            >
+              Connect Repo
+            </Button>
+          </div>
+        </header>
+
+        <div className="flex-1">
+          {children}
+        </div>
         <ImportModal />
       </div>
     );
