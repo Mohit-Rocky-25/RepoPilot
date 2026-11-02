@@ -15,3 +15,4 @@
 | **Inline Code References** | `/docs`, Assistant answer copy | Fluid text height | Standard inline text links wrapped in paragraph flow (`WCAG 2.5.5 Inline Exception`). |
 | **File Tree Indentation Spacers** | `/explore`, `FileTree.tsx` | 14px indentation guide | Visual tree hierarchy spacers; the parent row container provides the full `>= 44px` touch hit area. |
 | **Footer External Attribution Links** | Landing page footer, modal credits | 24px height | Informational secondary links placed in loose footer layout with `> 16px` surrounding spacing. |
+

@@ -3,6 +3,7 @@ import React from "react";
 import type { Metadata, Viewport } from "next";
 import { Roboto, Roboto_Mono } from "next/font/google";
 import { RepositoryProvider } from "@/context/RepositoryContext";
+import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import { ShellLayout } from "@/components/layout/ShellLayout";
 
 const roboto = Roboto({
@@ -174,7 +175,9 @@ export default function RootLayout({
       </head>
       <body className={`${roboto.variable} ${robotoMono.variable} font-sans bg-theme-bg text-theme-text antialiased min-h-screen transition-colors duration-150`}>
         <RepositoryProvider>
-          <ShellLayout>{children}</ShellLayout>
+          <WorkspaceProvider>
+            <ShellLayout>{children}</ShellLayout>
+          </WorkspaceProvider>
         </RepositoryProvider>
       </body>
     </html>

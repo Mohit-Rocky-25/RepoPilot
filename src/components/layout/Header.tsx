@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   GitBranch,
+  FolderArchive,
   GitCommit,
   Plus,
   ArrowLeft,
@@ -69,6 +70,8 @@ const getSectionDetails = (path: string) => {
       return path.includes("/ai")
         ? { name: "Local AI (Ollama)", href: "/settings/ai" }
         : { name: "Settings", href: "/settings" };
+    case "history":
+      return { name: "Saved Workspaces", href: "/history" };
     case "docs":
       return { name: "Documentation", href: "/docs" };
     default:
@@ -83,7 +86,8 @@ const DRAWER_NAV_SECTIONS = [
       { name: "Home / Overview", href: "/", icon: Home },
       { name: "Code Explorer", href: "/explore", icon: FolderTree },
       { name: "Search & Symbols", href: "/search", icon: Search },
-      { name: "Architecture & 3D Map", href: "/architecture", icon: Cpu }
+      { name: "Architecture & 3D Map", href: "/architecture", icon: Cpu },
+      { name: "Saved Workspaces", href: "/history", icon: FolderArchive }
     ]
   },
   {
@@ -298,6 +302,16 @@ export const Header: React.FC<HeaderProps> = ({
               {aiStatus === "ready" ? "Ollama Online" : "Deterministic"}
             </span>
           </div>
+
+          {/* Saved Workspaces Link (Desktop/Tablet) */}
+          <Link
+            href="/history"
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-theme-surface-alt hover:bg-theme-surface border border-theme-border text-xs font-mono transition-colors text-theme-text-muted hover:text-theme-text"
+            title="View saved workspaces & investigation history"
+          >
+            <FolderArchive className="w-3.5 h-3.5 text-theme-blue" />
+            <span>Workspaces</span>
+          </Link>
 
           {/* GitHub API Rate Limit & Auth status (Desktop/Tablet) */}
           <Link

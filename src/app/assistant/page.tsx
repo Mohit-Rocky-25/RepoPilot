@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import {
   Bot,
+  Bookmark,
   Send,
   Sparkles,
   FileCode,
@@ -37,6 +38,7 @@ import { Badge } from "@/components/ui/Badge";
 import type { SourceReference, RepositoryReference } from "@repopilot/core";
 import type { ParsedCitation, UncitedClaim } from "@repopilot/ai";
 import { clientFetch } from "@/lib/api";
+import { SaveSnapshotModal } from "@/components/modals/SaveSnapshotModal";
 
 interface QAItem {
   id: string;
@@ -157,6 +159,7 @@ export default function AssistantPage() {
   const [hideOllamaBanner, setHideOllamaBanner] = useState(false);
   const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
   const [copiedMermaidId, setCopiedMermaidId] = useState<string | null>(null);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
   const sampleQuestions = [
     "Generate a GitHub Mermaid architecture diagram for this repository",
@@ -398,6 +401,15 @@ export default function AssistantPage() {
               3D Spatial Map
             </Button>
           </Link>
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<Bookmark className="w-3.5 h-3.5 text-theme-blue" />}
+            onClick={() => setIsSaveModalOpen(true)}
+            title="Save conversation and citations to workspaces"
+          >
+            Save Snapshot
+          </Button>
           <Link href="/settings/ai">
             <Button variant="secondary" size="sm" icon={<Cpu className="w-3.5 h-3.5 text-theme-blue" />}>
               Choose AI Setup
@@ -833,6 +845,11 @@ export default function AssistantPage() {
           );
         })}
       </div>
+
+      <SaveSnapshotModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+      />
     </div>
   );
 }

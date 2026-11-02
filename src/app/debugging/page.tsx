@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import {
   Bug,
+  Bookmark,
   AlertOctagon,
   FileCode,
   ArrowRight,
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { copyToClipboard } from "@/lib/clipboard";
+import { SaveSnapshotModal } from "@/components/modals/SaveSnapshotModal";
 import type { BugHypothesis, PatchProposal } from "@repopilot/core";
 import type { ParsedTrace, StackFrame } from "@repopilot/debugging";
 import { clientFetch } from "@/lib/api";
@@ -36,6 +38,7 @@ export default function DebuggingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
   const [analysisResult, setAnalysisResult] = useState<{
     parsedTrace: ParsedTrace;
@@ -466,6 +469,17 @@ export default function DebuggingPage() {
               {copied ? "Copied Report!" : "Copy Markdown Report"}
             </Button>
 
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Bookmark className="w-3.5 h-3.5 text-theme-blue" />}
+              onClick={() => setIsSaveModalOpen(true)}
+              className="w-full sm:w-auto"
+              title="Save investigation snapshot with stack trace and candidate patch"
+            >
+              Save Snapshot
+            </Button>
+
             {analysisResult.candidatePatch && (
               <Button
                 variant="primary"
@@ -480,6 +494,10 @@ export default function DebuggingPage() {
           </div>
         </div>
       )}
+      <SaveSnapshotModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+      />
     </div>
   );
 }

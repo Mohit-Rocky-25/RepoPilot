@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   FolderTree,
+  Bookmark,
   Folder,
   FileCode,
   ExternalLink,
@@ -48,6 +49,7 @@ import type { RepositoryFile, IndexedSymbol } from "@repopilot/core";
 import { extractSymbols, preloadGrammarForLanguage, onWasmStatusChange, type WasmState } from "@repopilot/indexer";
 import { ArchitectureAnalyzer } from "@repopilot/analysis";
 import { clientFetch } from "@/lib/api";
+import { SaveSnapshotModal } from "@/components/modals/SaveSnapshotModal";
 import { generateMarkdownReport, downloadMarkdownReport } from "@/lib/reportGenerator";
 import { getIndexFromIndexedDB, saveIndexToIndexedDB } from "@/lib/browserIndexCache";
 
@@ -101,6 +103,7 @@ function ExploreContent() {
   } | null>(null);
   const [subfolderInput, setSubfolderInput] = useState("");
   const [filteringSubfolder, setFilteringSubfolder] = useState(false);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
   // If query params specify owner & repo, auto-connect if different from currentRepo
   useEffect(() => {
@@ -438,6 +441,16 @@ function ExploreContent() {
             title="Download complete Markdown audit report"
           >
             Export Audit (.md)
+          </Button>
+
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<Bookmark className="w-3.5 h-3.5 text-theme-blue" />}
+            onClick={() => setIsSaveModalOpen(true)}
+            title="Save workspace snapshot to local history"
+          >
+            Save Snapshot
           </Button>
 
           <Button
@@ -921,6 +934,13 @@ function ExploreContent() {
           )}
         </div>
       </div>
+
+      <SaveSnapshotModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        activeFile={selectedFile?.path}
+        activeLine={highlightRange ? highlightRange[0] : undefined}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   FolderTree,
+  FolderArchive,
   Search,
   Cpu,
   Bug,
@@ -51,6 +52,11 @@ export const Sidebar: React.FC = () => {
           name: "Architecture & 3D Map",
           href: "/architecture",
           icon: <Cpu className="w-4 h-4" />
+        },
+        {
+          name: "Saved Workspaces",
+          href: "/history",
+          icon: <FolderArchive className="w-4 h-4" />
         }
       ]
     },
