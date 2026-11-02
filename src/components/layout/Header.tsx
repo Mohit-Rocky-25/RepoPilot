@@ -283,7 +283,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Global Actions: Google Login / User Profile, Theme Switcher & Status Badges */}
         <div className="flex items-center gap-2 sm:gap-2.5">
           {/* Stylish Google User Nav & Login Button */}
-          <GoogleUserNav size="sm" />
+          <GoogleUserNav size="md" />
 
           {/* Theme Switcher Segmented Control (Always reachable on mobile & desktop) */}
           <ThemeSwitcher size="sm" />

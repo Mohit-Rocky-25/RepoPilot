@@ -26,29 +26,46 @@ export const GoogleUserNav: React.FC<GoogleUserNavProps> = ({
 }) => {
   const pathname = usePathname();
   const { snapshots } = useWorkspace();
-  const [user, setUser] = useState<GoogleUser | null>(null);
-  const [loading, setLoading] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch session on mount
+  // Synchronously initialize user from sessionStorage to eliminate any loading flash
+  const [user, setUser] = useState<GoogleUser | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("REPOPILOT_GOOGLE_USER");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return null;
+  });
+
+  // Verify server-side session in background without hiding the button
   useEffect(() => {
     let isMounted = true;
-    const fetchSession = async () => {
+    const verifySession = async () => {
       try {
         const res = await fetch("/api/auth/google/session");
         const data = await res.json();
         if (isMounted) {
-          setUser(data.user || null);
+          if (data.authenticated && data.user) {
+            setUser(data.user);
+            try {
+              sessionStorage.setItem("REPOPILOT_GOOGLE_USER", JSON.stringify(data.user));
+            } catch {}
+          } else {
+            setUser(null);
+            try {
+              sessionStorage.removeItem("REPOPILOT_GOOGLE_USER");
+            } catch {}
+          }
         }
       } catch {
-        if (isMounted) setUser(null);
-      } finally {
-        if (isMounted) setLoading(false);
+        // Fallback to existing client state
       }
     };
 
-    fetchSession();
+    verifySession();
 
     return () => {
       isMounted = false;
@@ -97,27 +114,19 @@ export const GoogleUserNav: React.FC<GoogleUserNavProps> = ({
 
   const loginUrl = `/api/auth/google/login?returnUrl=${encodeURIComponent(pathname || "/")}`;
 
-  if (loading) {
-    return (
-      <div className={`h-8 w-24 rounded-lg bg-theme-surface-alt animate-pulse ${className}`} />
-    );
-  }
-
-  // 1. SIGNED OUT: Stylish "Sign in with Google" pill button
+  // 1. SIGNED OUT: Stylish, eye-catching Google Sign-In Button (Always rendered immediately)
   if (!user) {
     return (
       <a
         href={loginUrl}
         title="Sign in with your Google Account"
-        className={`inline-flex items-center gap-2 rounded-lg font-medium text-xs transition-all duration-200 select-none shadow-xs group cursor-pointer border ${
-          size === "sm"
-            ? "px-2.5 py-1.5 bg-theme-surface hover:bg-theme-surface-alt border-theme-border hover:border-theme-blue/40 text-theme-text"
-            : "px-3 py-1.5 bg-theme-surface hover:bg-theme-surface-alt border-theme-border hover:border-theme-blue/50 text-theme-text"
+        className={`inline-flex items-center gap-2 rounded-lg font-medium text-xs select-none transition-all duration-200 cursor-pointer shadow-xs border bg-theme-surface hover:bg-theme-surface-alt border-theme-border hover:border-theme-blue/50 hover:shadow-sm group shrink-0 ${
+          size === "sm" ? "px-2.5 py-1.5" : "px-3 py-1.5"
         } ${className}`}
       >
-        {/* Google 4-color "G" SVG Emblem */}
+        {/* Google 4-Color "G" Emblem */}
         <div className="w-4 h-4 shrink-0 flex items-center justify-center">
-          <svg className="w-3.5 h-3.5 transition-transform group-hover:scale-105" viewBox="0 0 24 24" fill="none">
+          <svg className="w-3.5 h-3.5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
               className="fill-theme-blue"
@@ -136,7 +145,9 @@ export const GoogleUserNav: React.FC<GoogleUserNavProps> = ({
             />
           </svg>
         </div>
-        <span className="group-hover:text-theme-blue transition-colors font-medium">
+
+        {/* Text */}
+        <span className="text-theme-text group-hover:text-theme-blue transition-colors font-medium">
           <span className="hidden sm:inline">Sign in with </span>Google
         </span>
       </a>
@@ -147,13 +158,13 @@ export const GoogleUserNav: React.FC<GoogleUserNavProps> = ({
   const firstName = user.givenName || user.name.split(" ")[0];
 
   return (
-    <div className={`relative inline-block text-left ${className}`} ref={dropdownRef}>
+    <div className={`relative inline-block text-left shrink-0 ${className}`} ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setDropdownOpen((prev) => !prev)}
         aria-expanded={dropdownOpen}
         aria-haspopup="true"
-        className="inline-flex items-center gap-2 px-2 py-1 rounded-lg bg-theme-surface hover:bg-theme-surface-alt border border-theme-border hover:border-theme-blue/40 transition-all cursor-pointer shadow-xs group"
+        className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-theme-surface hover:bg-theme-surface-alt border border-theme-border hover:border-theme-blue/40 transition-all cursor-pointer shadow-xs group"
       >
         {/* User Avatar with Online Dot */}
         <div className="relative w-6 h-6 shrink-0">

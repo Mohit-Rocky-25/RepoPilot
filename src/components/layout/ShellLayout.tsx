@@ -59,7 +59,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
           </div>
 
           <div className="flex items-center gap-2 sm:gap-2.5">
-            <GoogleUserNav size="sm" />
+            <GoogleUserNav size="md" />
             <ThemeSwitcher size="sm" />
             <Button
               variant="primary"
