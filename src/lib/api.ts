@@ -35,17 +35,21 @@ export async function clientFetch(input: RequestInfo | URL, init?: RequestInit):
       const byoModel = sessionStorage.getItem("REPOPILOT_BYO_AI_MODEL");
       const aiProvider = sessionStorage.getItem("REPOPILOT_AI_PROVIDER");
 
-      if (byoKey && !headers.has("x-ai-key")) {
-        headers.set("x-ai-key", byoKey.trim());
-      }
-      if (byoBaseUrl && !headers.has("x-ai-base-url")) {
-        headers.set("x-ai-base-url", byoBaseUrl.trim());
-      }
-      if (byoModel && !headers.has("x-ai-model")) {
-        headers.set("x-ai-model", byoModel.trim());
-      }
       if (aiProvider && !headers.has("x-ai-provider")) {
         headers.set("x-ai-provider", aiProvider.trim());
+      }
+
+      // Only inject custom hosted API keys when not in local Ollama mode
+      if (aiProvider !== "ollama") {
+        if (byoKey && !headers.has("x-ai-key")) {
+          headers.set("x-ai-key", byoKey.trim());
+        }
+        if (byoBaseUrl && !headers.has("x-ai-base-url")) {
+          headers.set("x-ai-base-url", byoBaseUrl.trim());
+        }
+        if (byoModel && !headers.has("x-ai-model")) {
+          headers.set("x-ai-model", byoModel.trim());
+        }
       }
     } catch {
       // SessionStorage restricted

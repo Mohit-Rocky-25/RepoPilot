@@ -120,5 +120,17 @@ describe("ModelProvider Abstraction & BYO-Key Security", () => {
       expect(status.available).toBe(false);
       expect(status.error).toContain("API key is required");
     });
+
+    it("allows local loopback endpoint http://localhost:11434 when allowLoopbackOllama is true", async () => {
+      const { validateAiEndpoint } = await import("../../src/lib/security");
+      const validation = await validateAiEndpoint("http://localhost:11434", { allowLoopbackOllama: true });
+      expect(validation.valid).toBe(true);
+    });
+
+    it("allows 127.0.0.1:11434 for local Ollama", async () => {
+      const { validateAiEndpoint } = await import("../../src/lib/security");
+      const validation = await validateAiEndpoint("http://127.0.0.1:11434", { allowLoopbackOllama: true });
+      expect(validation.valid).toBe(true);
+    });
   });
 });

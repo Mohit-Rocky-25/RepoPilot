@@ -196,8 +196,9 @@ export default function AssistantPage() {
           repo: currentRepo.repo,
           sha: currentRepo.selectedRevision,
           question: qText.trim(),
-          baseUrl: aiConfig.baseUrl,
-          model: aiConfig.modelName,
+          providerType: aiConfig.provider || (aiConfig.baseUrl?.includes(":11434") ? "ollama" : "openai-compatible"),
+          baseUrl: aiConfig.baseUrl || "http://localhost:11434",
+          model: aiConfig.modelName || "qwen2.5-coder:7b",
           contextTokenBudget: contextTokenBudget,
           isSampleAnalysis: isSampleMode
         })

@@ -153,9 +153,13 @@ export default function AISettingsPage() {
 
   const saveOllamaSettings = () => {
     sessionStorage.setItem("REPOPILOT_AI_PROVIDER", "ollama");
+    sessionStorage.removeItem("REPOPILOT_BYO_AI_KEY");
+    sessionStorage.removeItem("REPOPILOT_BYO_AI_BASE_URL");
+    sessionStorage.removeItem("REPOPILOT_BYO_AI_MODEL");
     setActiveMode("ollama");
     const updated = {
       ...aiConfig,
+      provider: "ollama" as const,
       baseUrl: ollamaUrl,
       modelName: ollamaModel
     };

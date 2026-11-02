@@ -228,11 +228,28 @@ export async function POST(req: NextRequest) {
       sha,
       question,
       targetFilePath,
-      baseUrl = headerBaseUrl || process.env.OLLAMA_BASE_URL || "http://localhost:11434",
-      model = headerModel || process.env.DEFAULT_MODEL || "qwen2.5-coder:7b",
-      providerType = headerProvider || (customApiKey ? "openai-compatible" : "ollama"),
       contextTokenBudget = body.contextTokenBudget || body.maxContextTokens
     } = body;
+
+    const rawBaseUrl = body.baseUrl || headerBaseUrl || process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+    const rawModel = body.model || headerModel || process.env.DEFAULT_MODEL || "qwen2.5-coder:7b";
+    const rawProvider = body.providerType || body.provider || headerProvider;
+
+    // Detect if the target is local Ollama (port 11434 or loopback host)
+    const isLoopbackTarget = typeof rawBaseUrl === "string" && (
+      rawBaseUrl.includes("localhost:11434") ||
+      rawBaseUrl.includes("127.0.0.1:11434") ||
+      rawBaseUrl.includes("[::1]:11434") ||
+      rawBaseUrl.includes("0.0.0.0:11434") ||
+      rawBaseUrl.endsWith(":11434") ||
+      rawBaseUrl.includes("localhost") ||
+      rawBaseUrl.includes("127.0.0.1")
+    );
+
+    const isLocalOllama = rawProvider === "ollama" || isLoopbackTarget || (!rawProvider && !customApiKey);
+    const providerType = isLocalOllama ? "ollama" : (rawProvider || (customApiKey ? "openai-compatible" : "ollama"));
+    const baseUrl = rawBaseUrl;
+    const model = rawModel;
 
     const resolvedBudget = PromptBuilder.resolveTokenBudget(contextTokenBudget);
 
@@ -296,7 +313,6 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. SSRF Protection: Validate baseUrl
-    const isLocalOllama = providerType === "ollama";
     const endpointValidation = await validateAiEndpoint(baseUrl, { allowLoopbackOllama: isLocalOllama });
     if (!endpointValidation.valid) {
       return NextResponse.json(
@@ -358,7 +374,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 6. Select Model Provider
-    let activeApiKey = customApiKey;
+    let activeApiKey = isLocalOllama ? undefined : customApiKey;
     let activeBaseUrl = baseUrl;
     let activeModel = model;
     let activeProviderType = providerType;
