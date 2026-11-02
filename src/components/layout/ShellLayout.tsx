@@ -18,6 +18,7 @@ import { usePathname } from "next/navigation";
 export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
   const isLandingPage = pathname === "/";
+  const isLoginPage = pathname === "/login";
   const {
     currentRepo,
     setIsImportModalOpen,
@@ -26,11 +27,11 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
     authStatus
   } = useRepository();
 
-  if (isLandingPage) {
+  if (isLandingPage || isLoginPage) {
     return (
       <div className="min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-theme-bg text-theme-text font-sans antialiased selection:bg-theme-blue/20 selection:text-theme-blue flex flex-col pt-safe pb-safe">
         <TopColorBar />
-        {/* Landing Top Navigation Bar */}
+        {/* Landing / Auth Top Navigation Bar */}
         <header className="h-14 bg-theme-surface border-b border-theme-border px-4 sm:px-6 flex items-center justify-between shrink-0 select-none shadow-xs">
           <div className="flex items-center gap-3">
             <Link href="/" className="min-h-[44px] flex items-center gap-2.5 py-2 group cursor-pointer">
@@ -59,7 +60,7 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
           </div>
 
           <div className="flex items-center gap-2 sm:gap-2.5">
-            <GoogleUserNav size="md" />
+            {!isLoginPage && <GoogleUserNav size="md" />}
             <ThemeSwitcher size="sm" />
             <Button
               variant="primary"

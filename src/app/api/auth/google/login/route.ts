@@ -76,20 +76,22 @@ export async function GET(req: NextRequest) {
         activeOrigin: origin,
         redirectUri,
         resolution: {
-          step1: "Open Google Cloud Console Credentials",
+          step1: "Open Google Cloud Console Credentials or Supabase Auth Configuration",
           directUrl: "https://console.cloud.google.com/apis/credentials",
           step2: "Create OAuth 2.0 Client ID for Web application",
           step3: `Add Authorized JavaScript origins: ${origin}`,
           step4: `Add Authorized redirect URIs: ${redirectUri}`,
           step5:
-            "Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to environment variables (.env.local locally or Vercel Project Settings for production)."
+            "Add credentials in /login or set GOOGLE_CLIENT_ID or NEXT_PUBLIC_SUPABASE_URL in .env.local."
         }
       },
       { status: 503 }
     );
   }
 
-  const fallbackUrl = new URL("/settings", origin);
+  // Gracefully fallback to dedicated /login page (never dump to /settings)
+  const fallbackUrl = new URL("/login", origin);
   fallbackUrl.searchParams.set("auth_error", "google_credentials_missing");
+  fallbackUrl.searchParams.set("returnUrl", returnUrl);
   return NextResponse.redirect(fallbackUrl.toString());
 }

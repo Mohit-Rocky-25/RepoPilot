@@ -54,7 +54,8 @@ function LoginContent() {
 
   useEffect(() => {
     if (authErrorParam === "google_credentials_missing") {
-      setError("Please configure your Google Cloud or Supabase credentials below to complete sign-in.");
+      setError("Please connect your Supabase project or Google Cloud credentials below to enable One-Click Google Sign-In.");
+      setActiveTab("supabase");
     }
   }, [authErrorParam]);
 

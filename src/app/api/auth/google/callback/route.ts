@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
         success: false,
         error: `Google OAuth Error: ${errorDesc || errorParam}`,
         resolution,
-        returnUrl: "/settings"
+        returnUrl: "/login"
       }),
       {
         status: 400,
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
         success: false,
         error: "Missing required authorization code or state from Google.",
         resolution: "Please initiate the login flow again.",
-        returnUrl: "/settings"
+        returnUrl: "/login"
       }),
       {
         status: 400,
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
         success: false,
         error: "OAuth session expired or missing state cookie.",
         resolution: "Please click Sign in with Google again.",
-        returnUrl: "/settings"
+        returnUrl: "/login"
       }),
       {
         status: 400,
@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
   }
 
   const [expectedState, codeVerifier, encodedReturnUrl] = stateCookie.split(":");
-  const returnUrl = encodedReturnUrl ? decodeURIComponent(encodedReturnUrl) : "/settings";
+  const returnUrl = encodedReturnUrl ? decodeURIComponent(encodedReturnUrl) : "/login";
 
   if (state !== expectedState) {
     return new NextResponse(
@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
         success: false,
         error: "CSRF state verification failed (state mismatch).",
         resolution: "Potential cross-site request forgery detected. Request blocked.",
-        returnUrl: "/settings"
+        returnUrl: "/login"
       }),
       {
         status: 400,
@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
         success: false,
         error: "Server configuration missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET.",
         resolution: "Configure Google credentials in .env.local and restart the server.",
-        returnUrl: "/settings"
+        returnUrl: "/login"
       }),
       {
         status: 500,
@@ -239,7 +239,7 @@ function renderCallbackHtml(props: {
   returnUrl?: string;
 }): string {
   const safeUser = JSON.stringify(props.user || null);
-  const safeReturnUrl = JSON.stringify(props.returnUrl || "/settings");
+  const safeReturnUrl = JSON.stringify(props.returnUrl || "/login");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -332,7 +332,7 @@ function renderCallbackHtml(props: {
       <h1>Authentication Failed</h1>
       <p>${props.error || "Unable to complete Google authentication."}</p>
       ${props.resolution ? `<div class="res-box"><strong>Resolution:</strong><br/>${props.resolution}</div>` : ""}
-      <a href="${props.returnUrl || "/settings"}" class="btn">Return to Settings</a>
+      <a href="${props.returnUrl || "/login"}" class="btn">Return to Login</a>
     `
     }
   </div>
