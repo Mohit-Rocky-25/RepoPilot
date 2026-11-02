@@ -45,6 +45,9 @@ export interface WorkspaceSnapshot {
   commitSha: string;
   defaultBranch: string;
   isLocal?: boolean;
+  isDraft?: boolean;
+  draftType?: "investigation" | "assistant" | "patch" | "general";
+  userEmail?: string;
   createdAt: string;
   updatedAt: string;
   tags: string[];
@@ -312,4 +315,22 @@ export function exportSnapshotAsMarkdown(snapshot: WorkspaceSnapshot): string {
 
   md += `*Generated automatically by [RepoPilot](https://repopilot.dev) — Evidence-First Codebase Intelligence.*`;
   return md;
+}
+
+/**
+ * Quick save or update a user draft in workplace storage.
+ */
+export async function saveDraftSnapshot(
+  draft: Omit<WorkspaceSnapshot, "id" | "createdAt" | "updatedAt"> & { id?: string }
+): Promise<WorkspaceSnapshot> {
+  const now = new Date().toISOString();
+  const snapshot: WorkspaceSnapshot = {
+    ...draft,
+    id: draft.id || `draft_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    isDraft: true,
+    createdAt: now,
+    updatedAt: now
+  };
+  await saveSnapshot(snapshot);
+  return snapshot;
 }

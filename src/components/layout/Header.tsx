@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/Button";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { FourDots } from "@/components/ui/signature/FourDots";
 import { RepoPilotLogo } from "@/components/ui/RepoPilotLogo";
+import { GoogleUserNav } from "@/components/auth/GoogleUserNav";
 
 interface HeaderProps {
   currentRepo?: {
@@ -71,6 +72,8 @@ const getSectionDetails = (path: string) => {
       return path.includes("/ai")
         ? { name: "Local AI (Ollama)", href: "/settings/ai" }
         : { name: "Settings", href: "/settings" };
+    case "workplace":
+      return { name: "My Workplace", href: "/workplace" };
     case "history":
       return { name: "Saved Workspaces", href: "/history" };
     case "docs":
@@ -85,6 +88,7 @@ const DRAWER_NAV_SECTIONS = [
     title: "Workspace",
     items: [
       { name: "Home / Overview", href: "/", icon: Home },
+      { name: "My Workplace & Drafts", href: "/workplace", icon: FolderArchive },
       { name: "Code Explorer", href: "/explore", icon: FolderTree },
       { name: "Search & Symbols", href: "/search", icon: Search },
       { name: "Architecture & 3D Map", href: "/architecture", icon: Cpu },
@@ -276,8 +280,11 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* Global Actions: Theme Switcher & Status Badges */}
+        {/* Global Actions: Google Login / User Profile, Theme Switcher & Status Badges */}
         <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Stylish Google User Nav & Login Button */}
+          <GoogleUserNav size="sm" />
+
           {/* Theme Switcher Segmented Control (Always reachable on mobile & desktop) */}
           <ThemeSwitcher size="sm" />
 
@@ -304,14 +311,14 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </div>
 
-          {/* Saved Workspaces Link (Desktop/Tablet) */}
+          {/* My Workplace & Drafts Link (Desktop/Tablet) */}
           <Link
-            href="/history"
+            href="/workplace"
             className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-theme-surface-alt hover:bg-theme-surface border border-theme-border text-xs font-mono transition-colors text-theme-text-muted hover:text-theme-text"
-            title="View saved workspaces & investigation history"
+            title="View saved workplace drafts & history"
           >
             <FolderArchive className="w-3.5 h-3.5 text-theme-blue" />
-            <span>Workspaces</span>
+            <span>Workplace</span>
           </Link>
 
           {/* GitHub API Rate Limit & Auth status (Desktop/Tablet) */}

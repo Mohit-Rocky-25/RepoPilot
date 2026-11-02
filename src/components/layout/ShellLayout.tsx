@@ -9,6 +9,7 @@ import { ImportModal } from "@/components/modals/ImportModal";
 import { TopColorBar } from "@/components/ui/signature/TopColorBar";
 import { FourDots } from "@/components/ui/signature/FourDots";
 import { RepoPilotLogo } from "@/components/ui/RepoPilotLogo";
+import { GoogleUserNav } from "@/components/auth/GoogleUserNav";
 import { Button } from "@/components/ui/Button";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { useRepository } from "@/context/RepositoryContext";
@@ -39,6 +40,9 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
               </span>
             </Link>
             <nav className="hidden sm:flex items-center gap-1 ml-4 text-xs font-mono text-theme-text-muted">
+              <Link href="/workplace" className="px-2.5 py-1 rounded hover:text-theme-text hover:bg-theme-surface-alt transition-colors">
+                My Workplace
+              </Link>
               <Link href="/explore" className="px-2.5 py-1 rounded hover:text-theme-text hover:bg-theme-surface-alt transition-colors">
                 Explorer
               </Link>
@@ -54,7 +58,8 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
             </nav>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <GoogleUserNav size="sm" />
             <ThemeSwitcher size="sm" />
             <Button
               variant="primary"

@@ -40,6 +40,12 @@ export const Sidebar: React.FC = () => {
           icon: <Home className="w-4 h-4" />
         },
         {
+          name: "My Workplace",
+          href: "/workplace",
+          icon: <FolderArchive className="w-4 h-4 text-theme-blue" />,
+          badge: "Drafts"
+        },
+        {
           name: "Code Explorer",
           href: "/explore",
           icon: <FolderTree className="w-4 h-4" />
