@@ -39,6 +39,8 @@ import { GoogleUserNav } from "@/components/auth/GoogleUserNav";
 import type { GoogleUser } from "@/lib/googleAuth";
 import type { WorkspaceSnapshot } from "@/lib/workspaceStore";
 
+export const dynamic = "force-dynamic";
+
 export default function WorkplacePage() {
   const router = useRouter();
   const { currentRepo } = useRepository();

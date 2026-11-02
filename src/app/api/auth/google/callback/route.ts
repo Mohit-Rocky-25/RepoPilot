@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   isGoogleAuthConfigured,
   resolveGoogleRedirectUri,
+  getRequestOrigin,
   encodeSignedSession,
   GOOGLE_OAUTH_CONFIG,
   GoogleUser,
@@ -11,7 +12,11 @@ import {
 /**
  * Handles Google OAuth 2.0 Authorization Callback.
  */
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
+  const origin = getRequestOrigin(req);
+  const redirectUri = resolveGoogleRedirectUri(origin);
   const searchParams = req.nextUrl.searchParams;
   const code = searchParams.get("code");
   const state = searchParams.get("state");
@@ -26,7 +31,7 @@ export async function GET(req: NextRequest) {
         "Google Cloud Consent Screen Error: If your app is in 'Testing' publishing status, you must add your Google email address under 'Test users' in the Google Cloud Console (APIs & Services > OAuth consent screen > Test users).";
     } else if (errorParam === "redirect_uri_mismatch") {
       resolution =
-        "Redirect URI Mismatch: Verify that your Authorized redirect URI in Google Cloud Console exactly matches http://localhost:3000/api/auth/google/callback";
+        "Redirect URI Mismatch: Verify that your Authorized redirect URI in Google Cloud Console exactly matches ${redirectUri}";
     }
 
     return new NextResponse(
@@ -96,7 +101,7 @@ export async function GET(req: NextRequest) {
   // 2. Exchange Authorization Code for Google Tokens
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
-  const redirectUri = resolveGoogleRedirectUri(req.nextUrl.origin);
+  // redirectUri computed dynamically above
 
   if (!clientId || !clientSecret) {
     return new NextResponse(

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   ShieldCheck,
@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import type { GoogleUser } from "@/lib/googleAuth";
 
-export const GoogleAuthCard: React.FC = () => {
+const GoogleAuthCardInner: React.FC = () => {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [configured, setConfigured] = useState(false);
@@ -330,5 +330,20 @@ GOOGLE_CLIENT_SECRET=GOCSPX-your_client_secret_here`}
         </div>
       )}
     </Card>
+  );
+};
+
+
+export const GoogleAuthCard: React.FC = () => {
+  return (
+    <Suspense
+      fallback={
+        <Card className="p-6 bg-theme-surface border-theme-border shadow-xs animate-pulse">
+          <div className="h-24 bg-theme-surface-alt rounded-lg" />
+        </Card>
+      }
+    >
+      <GoogleAuthCardInner />
+    </Suspense>
   );
 };

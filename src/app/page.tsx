@@ -43,6 +43,8 @@ import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { RepoPilotLogo } from "@/components/ui/RepoPilotLogo";
 import { clientFetch } from "@/lib/api";
 
+export const dynamic = "force-dynamic";
+
 export default function HomePage() {
   const router = useRouter();
   const { currentRepo, setIsImportModalOpen, saveRecentRepo, recentRepos } = useRepository();

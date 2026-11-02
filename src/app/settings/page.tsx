@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -50,7 +50,9 @@ interface TokenValidationInfo {
   error?: string;
 }
 
-export default function GeneralSettingsPage() {
+export const dynamic = "force-dynamic";
+
+function GeneralSettingsContent() {
   const router = useRouter();
   const { rateLimit, setRateLimit, authStatus, refreshRateLimit } = useRepository();
 
@@ -612,5 +614,20 @@ export default function GeneralSettingsPage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+
+export default function GeneralSettingsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-xs font-mono text-theme-text-muted">
+          Loading Settings...
+        </div>
+      }
+    >
+      <GeneralSettingsContent />
+    </Suspense>
   );
 }

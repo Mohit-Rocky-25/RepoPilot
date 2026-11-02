@@ -42,11 +42,26 @@ export function isGoogleAuthConfigured(): boolean {
 }
 
 /**
- * Resolves the OAuth redirect URI for Google callback.
+ * Resolves the OAuth redirect URI for Google callback dynamically from origin.
  */
-export function resolveGoogleRedirectUri(origin: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || origin;
+export function resolveGoogleRedirectUri(origin?: string): string {
+  if (origin && (origin.startsWith("http://") || origin.startsWith("https://"))) {
+    return new URL("/api/auth/google/callback", origin).toString();
+  }
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   return new URL("/api/auth/google/callback", baseUrl).toString();
+}
+
+/**
+ * Derives request origin dynamically accounting for reverse proxies (e.g. Vercel, Cloudflare).
+ */
+export function getRequestOrigin(req: { headers: { get: (name: string) => string | null }; nextUrl?: { origin: string } }): string {
+  const forwardedHost = req.headers.get("x-forwarded-host");
+  const forwardedProto = req.headers.get("x-forwarded-proto") || "https";
+  if (forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`;
+  }
+  return req.nextUrl?.origin || "http://localhost:3000";
 }
 
 /**

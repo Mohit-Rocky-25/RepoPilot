@@ -3,19 +3,25 @@ import crypto from "node:crypto";
 import {
   isGoogleAuthConfigured,
   resolveGoogleRedirectUri,
+  getRequestOrigin,
   generatePKCE,
   GOOGLE_OAUTH_CONFIG
 } from "@/lib/googleAuth";
+
+export const dynamic = "force-dynamic";
 
 /**
  * Initiates Official Google OAuth 2.0 / OpenID Connect authorization flow with PKCE (RFC 7636).
  */
 export async function GET(req: NextRequest) {
+  const origin = getRequestOrigin(req);
   const returnUrl = req.nextUrl.searchParams.get("returnUrl") || "/settings";
+  const redirectUri = resolveGoogleRedirectUri(origin);
 
   // 1. Verify if Google OAuth credentials exist in environment
   if (!isGoogleAuthConfigured()) {
-    const wantsJson = req.headers.get("accept")?.includes("application/json") ||
+    const wantsJson =
+      req.headers.get("accept")?.includes("application/json") ||
       req.nextUrl.searchParams.get("format") === "json";
 
     if (wantsJson) {
@@ -23,26 +29,28 @@ export async function GET(req: NextRequest) {
         {
           error: "Google OAuth credentials not configured.",
           configured: false,
+          activeOrigin: origin,
+          redirectUri,
           resolution: {
             step1: "Open Google Cloud Console Credentials",
             directUrl: "https://console.cloud.google.com/apis/credentials",
             step2: "Create OAuth 2.0 Client ID for Web application",
-            step3: "Add Authorized JavaScript origins: http://localhost:3000",
-            step4: "Add Authorized redirect URIs: http://localhost:3000/api/auth/google/callback",
-            step5: "Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env.local and restart server."
+            step3: `Add Authorized JavaScript origins: ${origin}`,
+            step4: `Add Authorized redirect URIs: ${redirectUri}`,
+            step5:
+              "Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to environment variables (.env.local locally or Vercel Project Settings for production)."
           }
         },
         { status: 503 }
       );
     }
 
-    const fallbackUrl = new URL(returnUrl, req.nextUrl.origin);
+    const fallbackUrl = new URL(returnUrl, origin);
     fallbackUrl.searchParams.set("auth_error", "google_credentials_missing");
     return NextResponse.redirect(fallbackUrl.toString());
   }
 
   const clientId = process.env.GOOGLE_CLIENT_ID!.trim();
-  const redirectUri = resolveGoogleRedirectUri(req.nextUrl.origin);
 
   // 2. High-entropy state for CSRF protection
   const state = crypto.randomBytes(32).toString("base64url");
