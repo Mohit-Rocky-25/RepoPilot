@@ -23,15 +23,8 @@ import {
   GitPullRequest,
   Activity,
   Settings as SettingsIcon,
-  BookOpen,
-  Cloud,
-  RefreshCw,
-  LogIn,
-  LogOut,
-  User as UserIcon,
-  Check
+  BookOpen
 } from "lucide-react";
-import { useWorkspace } from "@/context/WorkspaceContext";
 import { Button } from "@/components/ui/Button";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { FourDots } from "@/components/ui/signature/FourDots";
@@ -126,38 +119,13 @@ export const Header: React.FC<HeaderProps> = ({
   const pathname = usePathname();
   const section = getSectionDetails(pathname);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const userMenuRef = useRef<HTMLDivElement>(null);
 
-  const {
-    user,
-    isSyncing,
-    syncNow,
-    loginWithGoogle,
-    loginDemo,
-    logout,
-    isGoogleConfigured
-  } = useWorkspace();
-
-  // Close menus on route change
+  // Close drawer on route change
   useEffect(() => {
     setDrawerOpen(false);
-    setUserMenuOpen(false);
   }, [pathname]);
-
-  // Click outside listener for user menu
-  useEffect(() => {
-    if (!userMenuOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
-        setUserMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [userMenuOpen]);
 
   // Handle body scroll lock & Escape key listener
   useEffect(() => {
@@ -390,116 +358,6 @@ export const Header: React.FC<HeaderProps> = ({
               Switch
             </Button>
           )}
-
-          {/* User Profile / Google Auth Dropdown (Desktop/Tablet) */}
-          <div className="relative hidden sm:block" ref={userMenuRef}>
-            {user ? (
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setUserMenuOpen((prev) => !prev)}
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-theme-surface-alt hover:bg-theme-surface border border-theme-border text-xs font-mono transition-colors text-theme-text cursor-pointer"
-                  aria-expanded={userMenuOpen}
-                  aria-haspopup="true"
-                  title={`Signed in as ${user.email}. Click for account options.`}
-                >
-                  {user.picture ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={user.picture}
-                      alt={user.name}
-                      className="w-5 h-5 rounded-full object-cover border border-theme-border"
-                    />
-                  ) : (
-                    <div className="w-5 h-5 rounded-full bg-theme-blue-surface text-theme-blue border border-theme-blue/30 flex items-center justify-center text-[10px] font-bold">
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <span className="truncate max-w-[100px]">{user.name.split(" ")[0]}</span>
-                  {isSyncing ? (
-                    <RefreshCw className="w-3 h-3 text-theme-blue animate-spin" />
-                  ) : (
-                    <Cloud className="w-3 h-3 text-theme-green" />
-                  )}
-                </button>
-
-                {userMenuOpen && (
-                  <div className="absolute right-0 mt-1.5 w-64 rounded-xl bg-theme-surface border border-theme-border shadow-xl p-3 z-50 space-y-3 font-mono text-xs">
-                    <div className="pb-2 border-b border-theme-border space-y-0.5">
-                      <div className="font-semibold text-theme-text truncate">{user.name}</div>
-                      <div className="text-[11px] text-theme-text-muted truncate">{user.email}</div>
-                      <div className="pt-1 flex items-center gap-1.5 text-[10px] text-theme-blue">
-                        <span className="w-1.5 h-1.5 rounded-full bg-theme-green" />
-                        <span>Google Sync Connected</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <Link
-                        href="/history"
-                        onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-2.5 py-2 rounded-lg hover:bg-theme-surface-alt text-theme-text transition-colors"
-                      >
-                        <FolderArchive className="w-3.5 h-3.5 text-theme-blue" />
-                        <span>Saved Workspaces</span>
-                      </Link>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          syncNow();
-                          setUserMenuOpen(false);
-                        }}
-                        className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-theme-surface-alt text-theme-text transition-colors text-left cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2">
-                          <RefreshCw className={`w-3.5 h-3.5 text-theme-green ${isSyncing ? "animate-spin" : ""}`} />
-                          <span>Sync Cloud Now</span>
-                        </div>
-                        {isSyncing && <span className="text-[10px] text-theme-text-muted">Syncing...</span>}
-                      </button>
-                    </div>
-
-                    <div className="pt-2 border-t border-theme-border">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          logout();
-                          setUserMenuOpen(false);
-                        }}
-                        className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg hover:bg-theme-danger-surface text-theme-danger text-xs transition-colors text-left cursor-pointer"
-                      >
-                        <LogOut className="w-3.5 h-3.5" />
-                        <span>Sign Out</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  icon={<LogIn className="w-3.5 h-3.5 text-theme-blue" />}
-                  onClick={() => loginWithGoogle()}
-                  title="Sign in with Google to sync workspaces across devices"
-                >
-                  Sign in
-                </Button>
-                {!isGoogleConfigured && (
-                  <button
-                    type="button"
-                    onClick={() => loginDemo()}
-                    className="text-[10px] font-mono text-theme-text-subtle hover:text-theme-blue transition-colors px-1 cursor-pointer"
-                    title="1-Click Demo Login for quick testing without Google credentials"
-                  >
-                    (Demo)
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
         </div>
       </header>
 
@@ -591,83 +449,6 @@ export const Header: React.FC<HeaderProps> = ({
                   }}
                 >
                   Connect Repository
-                </Button>
-              </div>
-            )}
-
-            {/* User Account / Google Sync Section (Mobile) */}
-            {user ? (
-              <div className="p-3 mx-3 mt-2 rounded-lg bg-theme-surface-alt border border-theme-border text-xs font-mono space-y-2 shrink-0">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 truncate">
-                    {user.picture ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={user.picture}
-                        alt={user.name}
-                        className="w-6 h-6 rounded-full object-cover border border-theme-border shrink-0"
-                      />
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-theme-blue-surface text-theme-blue border border-theme-blue/30 flex items-center justify-center text-xs font-bold shrink-0">
-                        {user.name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="truncate">
-                      <div className="font-semibold text-theme-text truncate text-xs">{user.name}</div>
-                      <div className="text-[10px] text-theme-text-muted truncate">{user.email}</div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      logout();
-                      setDrawerOpen(false);
-                    }}
-                    className="text-theme-danger hover:underline text-[11px] font-mono shrink-0 cursor-pointer"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-                <div className="flex items-center justify-between pt-1 border-t border-theme-border text-[11px]">
-                  <span className="text-theme-text-muted flex items-center gap-1">
-                    <Cloud className="w-3 h-3 text-theme-green" />
-                    <span>Google Sync</span>
-                  </span>
-                  <button
-                    onClick={() => syncNow()}
-                    className="text-theme-blue hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <RefreshCw className={`w-3 h-3 ${isSyncing ? "animate-spin" : ""}`} />
-                    <span>{isSyncing ? "Syncing..." : "Sync Now"}</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="p-3 mx-3 mt-2 rounded-lg bg-theme-surface-alt border border-theme-border text-xs font-mono space-y-2 shrink-0">
-                <div className="flex items-center justify-between">
-                  <span className="text-theme-text-muted text-[11px]">Cloud Sync</span>
-                  {!isGoogleConfigured && (
-                    <button
-                      onClick={() => {
-                        loginDemo();
-                        setDrawerOpen(false);
-                      }}
-                      className="text-theme-blue hover:underline text-[10px] cursor-pointer"
-                    >
-                      Use Demo Login
-                    </button>
-                  )}
-                </div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="w-full min-h-[44px]"
-                  icon={<LogIn className="w-4 h-4 text-theme-blue" />}
-                  onClick={() => {
-                    setDrawerOpen(false);
-                    loginWithGoogle();
-                  }}
-                >
-                  Sign in with Google
                 </Button>
               </div>
             )}

@@ -32,7 +32,7 @@ export const SaveSnapshotModal: React.FC<SaveSnapshotModalProps> = ({
   activeLine
 }) => {
   const { currentRepo, activeInvestigation } = useRepository();
-  const { saveCurrentSession, user } = useWorkspace();
+  const { saveCurrentSession } = useWorkspace();
 
   const [title, setTitle] = useState("");
   const [tagsInput, setTagsInput] = useState("");
@@ -135,9 +135,7 @@ export const SaveSnapshotModal: React.FC<SaveSnapshotModalProps> = ({
                 Save Workspace Snapshot
               </h2>
               <p className="text-[11px] text-theme-text-muted">
-                {user
-                  ? `Persisted locally and synced to Google account (${user.email}).`
-                  : "Persisted locally in IndexedDB. Sign in with Google to sync across devices."}
+                Persist your investigation notes and context locally.
               </p>
             </div>
           </div>

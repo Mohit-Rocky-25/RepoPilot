@@ -7,25 +7,14 @@ import {
   getAllSnapshots,
   saveSnapshot as persistSnapshot,
   deleteSnapshot as removeSnapshot,
-  exportSnapshotAsMarkdown,
-  syncWithCloud
+  exportSnapshotAsMarkdown
 } from "@/lib/workspaceStore";
-import type { AuthUser } from "@/lib/auth";
 import { useRepository } from "./RepositoryContext";
 
 interface WorkspaceContextType {
   snapshots: WorkspaceSnapshot[];
   loading: boolean;
-  user: AuthUser | null;
-  authLoading: boolean;
-  isSyncing: boolean;
-  lastSyncedAt: string | null;
-  isGoogleConfigured: boolean;
   refreshSnapshots: () => Promise<void>;
-  syncNow: () => Promise<void>;
-  loginWithGoogle: (returnTo?: string) => void;
-  loginDemo: (email?: string, name?: string) => void;
-  logout: () => Promise<void>;
   saveCurrentSession: (params: {
     title: string;
     tags?: string[];
@@ -48,13 +37,6 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [snapshots, setSnapshots] = useState<WorkspaceSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Authentication & Cloud Sync State
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
-  const [isGoogleConfigured, setIsGoogleConfigured] = useState(false);
-
   const refreshSnapshots = useCallback(async () => {
     try {
       const items = await getAllSnapshots();
@@ -66,68 +48,9 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, []);
 
-  // Fetch authenticated session
-  const checkSession = useCallback(async () => {
-    try {
-      const res = await fetch("/api/auth/session");
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user || null);
-        setIsGoogleConfigured(Boolean(data.isGoogleConfigured));
-      }
-    } catch (err) {
-      console.warn("Failed to check auth session:", err);
-    } finally {
-      setAuthLoading(false);
-    }
-  }, []);
-
-  // Synchronize snapshots with cloud
-  const syncNow = useCallback(async () => {
-    if (isSyncing) return;
-    setIsSyncing(true);
-    try {
-      const result = await syncWithCloud();
-      if (result.success) {
-        setLastSyncedAt(result.lastSyncTime);
-        await refreshSnapshots();
-      }
-    } catch (err) {
-      console.warn("Cloud sync failed:", err);
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [isSyncing, refreshSnapshots]);
-
   useEffect(() => {
     refreshSnapshots();
-    checkSession();
-  }, [refreshSnapshots, checkSession]);
-
-  // When user signs in, trigger automatic cloud sync
-  useEffect(() => {
-    if (user) {
-      syncNow();
-    }
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const loginWithGoogle = (returnTo = "/history") => {
-    window.location.href = `/api/auth/google/login?returnTo=${encodeURIComponent(returnTo)}`;
-  };
-
-  const loginDemo = (email = "developer@repopilot.local", name = "RepoPilot Developer") => {
-    window.location.href = `/api/auth/google/demo?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&returnTo=${encodeURIComponent(window.location.pathname)}`;
-  };
-
-  const logout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      setUser(null);
-      router.refresh();
-    } catch (err) {
-      console.warn("Logout failed:", err);
-    }
-  };
+  }, [refreshSnapshots]);
 
   const saveCurrentSession = async ({
     title,
@@ -184,14 +107,6 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     await persistSnapshot(newSnapshot);
     await refreshSnapshots();
-
-    // If signed in, sync immediately to cloud in background
-    if (user) {
-      syncWithCloud().then((res) => {
-        if (res.success) setLastSyncedAt(res.lastSyncTime);
-      }).catch(() => {});
-    }
-
     return newSnapshot;
   };
 
@@ -261,11 +176,6 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const deleteSnapshot = async (id: string): Promise<void> => {
     await removeSnapshot(id);
     await refreshSnapshots();
-
-    // If user is authenticated, remove from cloud in background
-    if (user) {
-      fetch(`/api/workspaces?id=${encodeURIComponent(id)}`, { method: "DELETE" }).catch(() => {});
-    }
   };
 
   const downloadSnapshotMarkdown = (id: string): void => {
@@ -299,16 +209,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       value={{
         snapshots,
         loading,
-        user,
-        authLoading,
-        isSyncing,
-        lastSyncedAt,
-        isGoogleConfigured,
         refreshSnapshots,
-        syncNow,
-        loginWithGoogle,
-        loginDemo,
-        logout,
         saveCurrentSession,
         resumeSnapshot,
         deleteSnapshot,

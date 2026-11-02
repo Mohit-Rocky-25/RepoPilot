@@ -86,6 +86,4 @@ Prior to this mobile overhaul, RepoPilot was engineered primarily for desktop de
 | **Phase 4** | Capabilities & Limits | Folder picker feature-detection, mobile memory caps, tree-sitter wasm status, manifest.json | ✅ Completed (`daf4c79`) |
 | **Phase 5** | Performance Budgets | Code-splitting map & code viewer, performance audit documentation (`performance.md`) | ✅ Completed (`c144c08`) |
 | **Phase 6** | Automated Proof | Playwright mobile projects, Tests A–F, axe-core scans, screenshot contact sheet, landing theme banner | ✅ Completed (`d636207`) |
-| **Phase 7** | Documentation | DESIGN.md responsive design section, README.md browser support & mobile limits, inventory resolution | ✅ Completed (`9009a62`) |
-| **Phase A** | Workspace Store | Local-first IndexedDB snapshot engine, `/history` dashboard, bookmarking across modules | ✅ Completed (`6959cd1`) |
-| **Phase B** | Cloud Sync & Auth | Google OAuth 2.0 PKCE, secure HMAC session cookies, multi-device cloud workspace sync | ✅ Completed (Current) |
+| **Phase 7** | Documentation | DESIGN.md responsive design section, README.md browser support & mobile limits, inventory resolution | ✅ Completed (Current) |
