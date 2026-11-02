@@ -17,7 +17,8 @@ const ALLOWED_HEX_FILES = new Set([
   "themeResolver.test.ts",
   "ArchitectureMap3D.tsx", // Canvas 2D/3D renderer drawing constants
   "MermaidViewer.tsx",    // Mermaid SVG runtime styling overrides
-  "layout.tsx"            // Viewport themeColor metadata & inline blocking script
+  "layout.tsx",           // Viewport themeColor metadata & inline blocking script
+  "RepoPilotLogo.tsx"     // Official SVG brand mark gradients & assets
 ]);
 
 const HEX_COLOR_REGEX = /#(?:[0-9a-fA-F]{3,4}){1,2}\b/g;

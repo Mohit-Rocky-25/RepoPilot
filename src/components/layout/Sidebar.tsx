@@ -18,6 +18,7 @@ import {
   Home
 } from "lucide-react";
 import { FourDots } from "@/components/ui/signature/FourDots";
+import { RepoPilotLogo } from "@/components/ui/RepoPilotLogo";
 
 interface NavItem {
   name: string;
@@ -111,8 +112,8 @@ export const Sidebar: React.FC = () => {
         title="Go to RepoPilot Home"
         className="h-14 flex items-center px-4 border-b border-theme-border gap-2.5 hover:bg-theme-surface-alt transition-colors group cursor-pointer"
       >
-        <div className="w-7 h-7 rounded-lg bg-theme-blue-surface border border-theme-blue/30 flex items-center justify-center text-theme-blue group-hover:bg-theme-blue/20 transition-all">
-          <Compass className="w-4 h-4" />
+        <div className="w-8 h-8 rounded-lg bg-theme-surface-alt border border-theme-border flex items-center justify-center group-hover:border-theme-blue/40 transition-all shrink-0">
+          <RepoPilotLogo size={20} variant="mark" withGlow />
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">

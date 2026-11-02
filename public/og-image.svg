@@ -1,0 +1,73 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ogBg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#080A0F" />
+      <stop offset="50%" stop-color="#0F1422" />
+      <stop offset="100%" stop-color="#07090E" />
+    </linearGradient>
+    <radialGradient id="ogGlow" cx="600" cy="240" r="450" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#3B82F6" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="ogGrid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#1E283D" stroke-width="0.8" stroke-opacity="0.5" />
+    </pattern>
+    <linearGradient id="titleGrad" x1="400" y1="280" x2="800" y2="340" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#93C5FD" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#ogBg)" />
+  <rect width="1200" height="630" fill="url(#ogGrid)" />
+  <circle cx="600" cy="240" r="450" fill="url(#ogGlow)" />
+  <rect x="1" y="1" width="1198" height="628" rx="20" stroke="#1E2638" stroke-width="2" />
+
+  <!-- Central Aerospace Delta & Git Branch Mark -->
+  <g transform="translate(540, 100)">
+    <rect width="120" height="120" rx="28" fill="#0E131F" stroke="#25324B" stroke-width="2" />
+    <g transform="translate(10, 10) scale(0.195)">
+      <path d="M256 68 L100 354 L208 322 L256 220 Z" fill="#3B82F6" />
+      <path d="M256 68 L256 220 L304 322 L412 354 Z" fill="#60A5FA" />
+      <path d="M256 266 L304 322 L256 444 L208 322 Z" fill="#818CF8" />
+      <circle cx="256" cy="220" r="26" fill="#FFFFFF" />
+      <circle cx="256" cy="220" r="14" fill="#0284C7" />
+      <circle cx="100" cy="354" r="12" fill="#60A5FA" />
+      <circle cx="412" cy="354" r="12" fill="#93C5FD" />
+    </g>
+  </g>
+
+  <!-- Title -->
+  <text x="600" y="300" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif" font-size="52" font-weight="800" letter-spacing="-1" fill="url(#titleGrad)">
+    REPO<tspan fill="#60A5FA">PILOT</tspan>
+  </text>
+
+  <!-- Subtitle -->
+  <text x="600" y="356" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif" font-size="22" font-weight="500" fill="#94A3B8" letter-spacing="-0.2">
+    Autonomous Codebase Intelligence &amp; 3D Architecture Exploration
+  </text>
+
+  <!-- Feature Pills -->
+  <g transform="translate(260, 420)">
+    <!-- Pill 1 -->
+    <rect x="0" y="0" width="180" height="36" rx="18" fill="#111625" stroke="#222E46" stroke-width="1.2" />
+    <text x="90" y="23" text-anchor="middle" font-family="monospace" font-size="12" font-weight="600" fill="#60A5FA">3D ARCHITECTURE</text>
+
+    <!-- Pill 2 -->
+    <rect x="195" y="0" width="160" height="36" rx="18" fill="#111625" stroke="#222E46" stroke-width="1.2" />
+    <text x="275" y="23" text-anchor="middle" font-family="monospace" font-size="12" font-weight="600" fill="#38BDF8">AST INDEXER</text>
+
+    <!-- Pill 3 -->
+    <rect x="370" y="0" width="170" height="36" rx="18" fill="#111625" stroke="#222E46" stroke-width="1.2" />
+    <text x="455" y="23" text-anchor="middle" font-family="monospace" font-size="12" font-weight="600" fill="#818CF8">LOCAL OLLAMA AI</text>
+
+    <!-- Pill 4 -->
+    <rect x="555" y="0" width="130" height="36" rx="18" fill="#111625" stroke="#222E46" stroke-width="1.2" />
+    <text x="620" y="23" text-anchor="middle" font-family="monospace" font-size="12" font-weight="600" fill="#22C55E">ZERO API FEES</text>
+  </g>
+
+  <!-- Bottom URL -->
+  <text x="600" y="530" text-anchor="middle" font-family="monospace" font-size="15" font-weight="600" fill="#64748B">
+    github.com/Mohit-Rocky-25/RepoPilot
+  </text>
+</svg>

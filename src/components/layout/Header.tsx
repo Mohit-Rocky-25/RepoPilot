@@ -28,6 +28,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { FourDots } from "@/components/ui/signature/FourDots";
+import { RepoPilotLogo } from "@/components/ui/RepoPilotLogo";
 
 interface HeaderProps {
   currentRepo?: {
@@ -180,8 +181,8 @@ export const Header: React.FC<HeaderProps> = ({
             <Menu className="w-5 h-5 text-theme-text" />
           </button>
 
-          <Link href="/" className="flex items-center gap-1.5 font-mono text-xs font-semibold text-theme-text">
-            <FourDots size="xs" />
+          <Link href="/" className="flex items-center gap-2 font-mono text-xs font-semibold text-theme-text group">
+            <RepoPilotLogo size={18} variant="mark" withGlow />
             <span className="truncate max-w-[120px]">{section.name}</span>
           </Link>
         </div>
@@ -383,8 +384,8 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => setDrawerOpen(false)}
                 className="flex items-center gap-2"
               >
-                <div className="w-7 h-7 rounded-lg bg-theme-blue-surface border border-theme-blue/30 flex items-center justify-center text-theme-blue">
-                  <Compass className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-lg bg-theme-surface-alt border border-theme-border flex items-center justify-center shrink-0">
+                  <RepoPilotLogo size={20} variant="mark" withGlow />
                 </div>
                 <div className="flex flex-col">
                   <span className="font-semibold text-sm tracking-tight text-theme-text font-sans">

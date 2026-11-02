@@ -1,0 +1,34 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="rp-left" x1="100" y1="80" x2="256" y2="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+    <linearGradient id="rp-right" x1="256" y1="80" x2="410" y2="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60A5FA" />
+      <stop offset="100%" stop-color="#2563EB" />
+    </linearGradient>
+    <linearGradient id="rp-keel" x1="256" y1="260" x2="256" y2="450" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#818CF8" />
+      <stop offset="100%" stop-color="#4F46E5" />
+    </linearGradient>
+    <linearGradient id="rp-core" x1="230" y1="198" x2="282" y2="250" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+    <filter id="rp-glow" x="60" y="30" width="392" height="430" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#3B82F6" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <g filter="url(#rp-glow)">
+    <path d="M256 68 L100 354 L208 322 L256 220 Z" fill="url(#rp-left)" />
+    <path d="M256 68 L256 220 L304 322 L412 354 Z" fill="url(#rp-right)" />
+    <path d="M256 266 L304 322 L256 444 L208 322 Z" fill="url(#rp-keel)" />
+    <circle cx="256" cy="220" r="26" fill="#FFFFFF" />
+    <circle cx="256" cy="220" r="14" fill="url(#rp-core)" />
+    <circle cx="100" cy="354" r="12" fill="#60A5FA" />
+    <circle cx="100" cy="354" r="5" fill="#FFFFFF" />
+    <circle cx="412" cy="354" r="12" fill="#93C5FD" />
+    <circle cx="412" cy="354" r="5" fill="#FFFFFF" />
+  </g>
+</svg>

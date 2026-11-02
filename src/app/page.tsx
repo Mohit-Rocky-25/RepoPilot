@@ -40,6 +40,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { FourDots, AccentCard } from "@/components/ui/signature";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
+import { RepoPilotLogo } from "@/components/ui/RepoPilotLogo";
 import { clientFetch } from "@/lib/api";
 
 export default function HomePage() {
@@ -86,7 +87,7 @@ export default function HomePage() {
           {/* Badge with Google/GDG signature 4-dot motif & Landing Page Theme Switcher */}
           <div className="flex flex-wrap items-center justify-center gap-3">
             <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-theme-surface border border-theme-border text-theme-text text-xs font-mono shadow-xs">
-              <FourDots size="xs" animated />
+              <RepoPilotLogo size={16} variant="mark" withGlow />
               <span className="font-semibold text-theme-text">RepoPilot v1.0</span>
               <span className="text-theme-border">|</span>
               <span className="text-theme-text-muted">Evidence-First Codebase Intelligence</span>

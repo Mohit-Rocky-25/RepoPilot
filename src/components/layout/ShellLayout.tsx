@@ -8,6 +8,7 @@ import { BottomTabBar } from "./BottomTabBar";
 import { ImportModal } from "@/components/modals/ImportModal";
 import { TopColorBar } from "@/components/ui/signature/TopColorBar";
 import { FourDots } from "@/components/ui/signature/FourDots";
+import { RepoPilotLogo } from "@/components/ui/RepoPilotLogo";
 import { Button } from "@/components/ui/Button";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { useRepository } from "@/context/RepositoryContext";
@@ -31,9 +32,9 @@ export const ShellLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         {/* Landing Top Navigation Bar */}
         <header className="h-14 bg-theme-surface border-b border-theme-border px-4 sm:px-6 flex items-center justify-between shrink-0 select-none shadow-xs">
           <div className="flex items-center gap-3">
-            <Link href="/" className="min-h-[44px] flex items-center gap-2 py-2">
-              <FourDots size="xs" />
-              <span className="font-bold text-sm tracking-tight text-theme-text font-mono">
+            <Link href="/" className="min-h-[44px] flex items-center gap-2.5 py-2 group cursor-pointer">
+              <RepoPilotLogo size={22} variant="mark" withGlow />
+              <span className="font-bold text-sm tracking-tight text-theme-text font-mono group-hover:text-theme-blue transition-colors">
                 RepoPilot
               </span>
             </Link>

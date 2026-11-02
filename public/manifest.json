@@ -4,22 +4,26 @@
   "description": "Zero-budget developer platform for exploring codebases, 3D architecture, AST symbol search, and debugging.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFFFFF",
-  "theme_color": "#FFFFFF",
+  "background_color": "#0B0E17",
+  "theme_color": "#3B82F6",
   "orientation": "any",
   "icons": [
     {
-      "src": "/logo.jpg",
+      "src": "/logo-192.png",
       "sizes": "192x192",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/logo.jpg",
+      "src": "/logo-512.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
   ]
 }
-

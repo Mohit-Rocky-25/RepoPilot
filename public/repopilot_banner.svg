@@ -62,17 +62,18 @@
     <circle cx="1080" cy="80" r="5" fill="#022C22" stroke="#27A644" stroke-width="2" />
   </g>
 
-  <!-- Central Brand Icon (Compass / Navigation Node) -->
-  <g transform="translate(568, 48)">
-    <rect width="64" height="64" rx="16" fill="#13151D" stroke="#34394B" stroke-width="1.5" />
-    <!-- Node Diamond -->
-    <polygon points="32,16 48,32 32,48 16,32" fill="none" stroke="#5E6AD2" stroke-width="2.5" />
-    <circle cx="32" cy="32" r="5" fill="#38BDF8" />
-    <!-- Ray Accents -->
-    <line x1="32" y1="10" x2="32" y2="14" stroke="#828FFF" stroke-width="2" stroke-linecap="round" />
-    <line x1="32" y1="50" x2="32" y2="54" stroke="#828FFF" stroke-width="2" stroke-linecap="round" />
-    <line x1="10" y1="32" x2="14" y2="32" stroke="#828FFF" stroke-width="2" stroke-linecap="round" />
-    <line x1="50" y1="32" x2="54" y2="32" stroke="#828FFF" stroke-width="2" stroke-linecap="round" />
+  <!-- Central Brand Icon (Aerospace Delta & Git Branch Mark) -->
+  <g transform="translate(564, 40)">
+    <rect width="72" height="72" rx="18" fill="#0D111A" stroke="#1E283D" stroke-width="1.5" />
+    <g transform="translate(4, 4) scale(0.125)">
+      <path d="M256 68 L100 354 L208 322 L256 220 Z" fill="#3B82F6" />
+      <path d="M256 68 L256 220 L304 322 L412 354 Z" fill="#60A5FA" />
+      <path d="M256 266 L304 322 L256 444 L208 322 Z" fill="#818CF8" />
+      <circle cx="256" cy="220" r="26" fill="#FFFFFF" />
+      <circle cx="256" cy="220" r="14" fill="#0284C7" />
+      <circle cx="100" cy="354" r="12" fill="#60A5FA" />
+      <circle cx="412" cy="354" r="12" fill="#93C5FD" />
+    </g>
   </g>
 
   <!-- Title: REPOPILOT -->
