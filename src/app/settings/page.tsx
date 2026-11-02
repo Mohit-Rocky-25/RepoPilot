@@ -546,13 +546,7 @@ function GeneralSettingsContent() {
         ) : (
           <div className="p-2.5 rounded bg-theme-surface-alt border border-theme-border text-[11px] text-theme-text-muted space-y-1">
             <p>
-              To enable GitHub App OAuth authentication in self-hosted or production deployments, set:
-            </p>
-            <code className="block p-1.5 rounded bg-theme-surface text-theme-blue border border-theme-border">
-              ENABLE_GITHUB_APP_OAUTH=true
-            </code>
-            <p>
-              Full architecture specification: see <Link href="/docs" className="text-theme-blue underline">docs/OAUTH_DESIGN.md</Link>.
+              GitHub App OAuth is available for enterprise or self-hosted deployments. See <Link href="/docs" className="text-theme-blue underline">Documentation</Link> for configuration.
             </p>
           </div>
         )}
