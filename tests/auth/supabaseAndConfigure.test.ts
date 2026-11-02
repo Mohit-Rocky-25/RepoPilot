@@ -66,3 +66,4 @@ describe("Supabase & Authentication Configuration API", () => {
     expect(data.supabase).toBeDefined();
   });
 });
+

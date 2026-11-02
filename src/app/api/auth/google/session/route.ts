@@ -4,14 +4,12 @@ import {
   decodeSignedSession,
   GOOGLE_OAUTH_CONFIG
 } from "@/lib/googleAuth";
+import { getSupabaseConfig } from "@/lib/supabaseClient";
 
-/**
- * Returns the current authenticated Google user session state.
- */
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const configured = isGoogleAuthConfigured();
+  const configured = isGoogleAuthConfigured() || getSupabaseConfig().isConfigured;
   const sessionCookie = req.cookies.get(GOOGLE_OAUTH_CONFIG.cookieSessionName)?.value;
 
   if (!sessionCookie) {
