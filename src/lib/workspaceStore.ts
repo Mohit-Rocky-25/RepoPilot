@@ -313,3 +313,105 @@ export function exportSnapshotAsMarkdown(snapshot: WorkspaceSnapshot): string {
   md += `*Generated automatically by [RepoPilot](https://repopilot.dev) — Evidence-First Codebase Intelligence.*`;
   return md;
 }
+
+export interface CloudSyncResult {
+  success: boolean;
+  syncedCount: number;
+  pulledCount: number;
+  pushedCount: number;
+  lastSyncTime: string;
+  error?: string;
+}
+
+/**
+ * Bi-directional Cloud Sync Engine
+ *
+ * Merges local IndexedDB snapshots with authenticated cloud storage.
+ * Resolves conflicts automatically using last-write-wins (ISO updatedAt comparison).
+ */
+export async function syncWithCloud(): Promise<CloudSyncResult> {
+  const nowIso = new Date().toISOString();
+  try {
+    const res = await fetch("/api/workspaces", {
+      method: "GET",
+      headers: { Accept: "application/json" }
+    });
+
+    if (res.status === 401) {
+      return {
+        success: false,
+        syncedCount: 0,
+        pulledCount: 0,
+        pushedCount: 0,
+        lastSyncTime: nowIso,
+        error: "Not authenticated with Google / Cloud Account"
+      };
+    }
+
+    if (!res.ok) {
+      throw new Error(`Cloud sync error HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const cloudSnapshots: WorkspaceSnapshot[] = Array.isArray(data.snapshots) ? data.snapshots : [];
+    const localSnapshots = await getAllSnapshots();
+
+    const localMap = new Map<string, WorkspaceSnapshot>();
+    localSnapshots.forEach((s) => localMap.set(s.id, s));
+
+    const cloudMap = new Map<string, WorkspaceSnapshot>();
+    cloudSnapshots.forEach((s) => cloudMap.set(s.id, s));
+
+    let pulledCount = 0;
+    const toPushToCloud: WorkspaceSnapshot[] = [];
+
+    // 1. Pull missing or newer cloud items into local IndexedDB
+    for (const cloudSnap of cloudSnapshots) {
+      const local = localMap.get(cloudSnap.id);
+      if (!local || new Date(cloudSnap.updatedAt) > new Date(local.updatedAt)) {
+        await saveSnapshot(cloudSnap);
+        pulledCount++;
+      }
+    }
+
+    // 2. Identify local snapshots that need to be pushed up to cloud
+    for (const localSnap of localSnapshots) {
+      const cloud = cloudMap.get(localSnap.id);
+      if (!cloud || new Date(localSnap.updatedAt) > new Date(cloud.updatedAt)) {
+        toPushToCloud.push(localSnap);
+      }
+    }
+
+    let pushedCount = 0;
+    if (toPushToCloud.length > 0) {
+      const pushRes = await fetch("/api/workspaces", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ snapshots: toPushToCloud })
+      });
+
+      if (pushRes.ok) {
+        pushedCount = toPushToCloud.length;
+      }
+    }
+
+    const finalSnapshots = await getAllSnapshots();
+
+    return {
+      success: true,
+      syncedCount: finalSnapshots.length,
+      pulledCount,
+      pushedCount,
+      lastSyncTime: nowIso
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      syncedCount: 0,
+      pulledCount: 0,
+      pushedCount: 0,
+      lastSyncTime: nowIso,
+      error: err.message || "Failed to complete cloud synchronization"
+    };
+  }
+}

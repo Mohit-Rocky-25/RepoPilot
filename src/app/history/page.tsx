@@ -19,7 +19,13 @@ import {
   Plus,
   ExternalLink,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Cloud,
+  RefreshCw,
+  LogIn,
+  LogOut,
+  Check,
+  ShieldCheck
 } from "lucide-react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { Button } from "@/components/ui/Button";
@@ -31,6 +37,14 @@ export default function HistoryPage() {
   const {
     snapshots,
     loading,
+    user,
+    isSyncing,
+    lastSyncedAt,
+    syncNow,
+    loginWithGoogle,
+    loginDemo,
+    logout,
+    isGoogleConfigured,
     resumeSnapshot,
     deleteSnapshot,
     downloadSnapshotMarkdown,
@@ -126,6 +140,98 @@ export default function HistoryPage() {
           </Link>
         </div>
       </div>
+
+      {/* Cloud Sync & Google Auth Status Banner */}
+      {user ? (
+        <Card className="p-4 bg-theme-surface border-theme-border rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            {user.picture ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.picture}
+                alt={user.name}
+                className="w-10 h-10 rounded-full object-cover border border-theme-border shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-theme-blue-surface text-theme-blue border border-theme-blue/30 flex items-center justify-center font-bold font-mono text-sm shrink-0">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold font-mono text-theme-text">{user.name}</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-theme-green-surface text-theme-green-text border border-theme-green/30 flex items-center gap-1">
+                  <Cloud className="w-3 h-3 text-theme-green" />
+                  <span>Google Synced</span>
+                </span>
+              </div>
+              <div className="text-[11px] font-mono text-theme-text-muted">
+                {user.email} · {lastSyncedAt ? `Last synced ${new Date(lastSyncedAt).toLocaleTimeString()}` : "Ready to sync"}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<RefreshCw className={`w-3.5 h-3.5 text-theme-green ${isSyncing ? "animate-spin" : ""}`} />}
+              onClick={() => syncNow()}
+              isLoading={isSyncing}
+              title="Synchronize local snapshots with cloud storage"
+            >
+              Sync Now
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<LogOut className="w-3.5 h-3.5 text-theme-danger" />}
+              onClick={() => logout()}
+              title="Sign out of Google account"
+            >
+              Sign Out
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <Card className="p-4 sm:p-5 bg-theme-surface border border-theme-blue/30 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm font-semibold font-mono text-theme-text flex items-center gap-1.5">
+                <Cloud className="w-4 h-4 text-theme-blue" />
+                <span>Multi-Device Cloud Synchronization</span>
+              </span>
+              <Badge variant="primary" size="sm" className="font-mono">
+                Optional
+              </Badge>
+            </div>
+            <p className="text-xs text-theme-text-muted leading-relaxed max-w-2xl">
+              Sign in with your Google account to automatically back up your workspace snapshots, code highlights, and assistant citations so you can resume investigations on any laptop or device.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<LogIn className="w-3.5 h-3.5" />}
+              onClick={() => loginWithGoogle()}
+            >
+              Sign in with Google
+            </Button>
+            {!isGoogleConfigured && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => loginDemo()}
+                title="1-Click Demo Login to preview cloud sync without Google Cloud keys"
+              >
+                1-Click Demo Login
+              </Button>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -386,3 +492,4 @@ export default function HistoryPage() {
     </div>
   );
 }
+
