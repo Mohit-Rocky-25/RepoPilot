@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
+import { GoogleAuthCard } from "@/components/auth/GoogleAuthCard";
 
 interface TokenValidationInfo {
   tested: boolean;
@@ -554,6 +555,9 @@ export default function GeneralSettingsPage() {
           </div>
         )}
       </Card>
+
+      {/* Google Account & Single Sign-On */}
+      <GoogleAuthCard />
 
       {/* Security & Execution Policy Card */}
       <Card className="p-5 space-y-3 font-mono text-xs bg-theme-surface border-theme-border shadow-xs">
