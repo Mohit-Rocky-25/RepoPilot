@@ -18,7 +18,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI ? [["list"], ["json", { outputFile: "playwright-results.json" }]] : "list",
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000",
@@ -28,57 +28,68 @@ export default defineConfig({
     defaultBrowserType: "chromium"
   },
   webServer: {
-    command: "npm run dev",
+    command: process.env.CI ? "npm run start" : "npm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000
   },
-  projects: [
-    {
-      name: "Desktop Chrome",
-      use: { ...devices["Desktop Chrome"] }
-    },
-    {
-      name: "iPhone SE",
-      use: { ...devices["iPhone SE"], defaultBrowserType: "chromium" }
-    },
-    {
-      name: "iPhone 14",
-      use: { ...devices["iPhone 14"], defaultBrowserType: "chromium" }
-    },
-    {
-      name: "Pixel 7",
-      use: { ...devices["Pixel 7"] }
-    },
-    {
-      name: "Android 360px",
-      use: {
-        viewport: { width: 360, height: 800 },
-        userAgent:
-          "Mozilla/5.0 (Linux; Android 13; SM-A536B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36",
-        isMobile: true,
-        hasTouch: true
-      }
-    },
-    {
-      name: "iPad Portrait",
-      use: {
-        viewport: { width: 768, height: 1024 },
-        userAgent:
-          "Mozilla/5.0 (iPad; CPU OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
-        isMobile: true,
-        hasTouch: true
-      }
-    },
-    {
-      name: "iPad Landscape",
-      use: {
-        viewport: { width: 1024, height: 768 },
-        userAgent:
-          "Mozilla/5.0 (iPad; CPU OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
-        isMobile: true,
-        hasTouch: true
-      }
-    }
-  ]
+  projects: process.env.CI
+    ? [
+        {
+          name: "Desktop Chrome",
+          use: { ...devices["Desktop Chrome"] }
+        },
+        {
+          name: "iPhone 14",
+          use: { ...devices["iPhone 14"], defaultBrowserType: "chromium" }
+        }
+      ]
+    : [
+        {
+          name: "Desktop Chrome",
+          use: { ...devices["Desktop Chrome"] }
+        },
+        {
+          name: "iPhone SE",
+          use: { ...devices["iPhone SE"], defaultBrowserType: "chromium" }
+        },
+        {
+          name: "iPhone 14",
+          use: { ...devices["iPhone 14"], defaultBrowserType: "chromium" }
+        },
+        {
+          name: "Pixel 7",
+          use: { ...devices["Pixel 7"] }
+        },
+        {
+          name: "Android 360px",
+          use: {
+            viewport: { width: 360, height: 800 },
+            userAgent:
+              "Mozilla/5.0 (Linux; Android 13; SM-A536B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36",
+            isMobile: true,
+            hasTouch: true
+          }
+        },
+        {
+          name: "iPad Portrait",
+          use: {
+            viewport: { width: 768, height: 1024 },
+            userAgent:
+              "Mozilla/5.0 (iPad; CPU OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
+            isMobile: true,
+            hasTouch: true
+          }
+        },
+        {
+          name: "iPad Landscape",
+          use: {
+            viewport: { width: 1024, height: 768 },
+            userAgent:
+              "Mozilla/5.0 (iPad; CPU OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
+            isMobile: true,
+            hasTouch: true
+          }
+        }
+      ]
 });

@@ -105,7 +105,7 @@ export const GoogleUserNav: React.FC<GoogleUserNavProps> = ({
     }
   };
 
-  const loginUrl = `/api/auth/google/login?returnUrl=${encodeURIComponent(pathname || "/")}`;
+  const loginUrl = `/login?returnUrl=${encodeURIComponent(pathname || "/")}`;
 
   // 1. SIGNED OUT: Official Google Sign-In Link (takes user directly to Google OAuth)
   if (!user) {
