@@ -183,7 +183,8 @@ export async function GET() {
     },
     supabase: {
       isConfigured: supabase.isConfigured,
-      url: supabase.url ? `${supabase.url.slice(0, 20)}...` : null
+      url: supabase.url || null,
+      anonKey: supabase.anonKey || null
     }
   });
 }

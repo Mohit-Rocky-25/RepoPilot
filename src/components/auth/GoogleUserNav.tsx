@@ -12,7 +12,7 @@ import {
   User,
   CheckCircle2
 } from "lucide-react";
-import type { GoogleUser } from "@/lib/googleAuth";
+import { useAuth } from "@/context/AuthContext";
 import { useWorkspace } from "@/context/WorkspaceContext";
 
 export interface GoogleUserNavProps {
@@ -26,44 +26,9 @@ export const GoogleUserNav: React.FC<GoogleUserNavProps> = ({
 }) => {
   const pathname = usePathname();
   const { snapshots } = useWorkspace();
+  const { user, signOut } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Synchronously initialize user from sessionStorage to eliminate any loading flash
-  const [user, setUser] = useState<GoogleUser | null>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = sessionStorage.getItem("REPOPILOT_GOOGLE_USER");
-        if (stored) return JSON.parse(stored);
-      } catch {}
-    }
-    return null;
-  });
-
-  // Verify server-side session in background without hiding the button
-  const verifySession = async () => {
-    try {
-      const res = await fetch("/api/auth/google/session");
-      const data = await res.json();
-      if (data.authenticated && data.user) {
-        setUser(data.user);
-        try {
-          sessionStorage.setItem("REPOPILOT_GOOGLE_USER", JSON.stringify(data.user));
-        } catch {}
-      } else {
-        setUser(null);
-        try {
-          sessionStorage.removeItem("REPOPILOT_GOOGLE_USER");
-        } catch {}
-      }
-    } catch {
-      // Fallback to existing client state
-    }
-  };
-
-  useEffect(() => {
-    verifySession();
-  }, []);
 
   // Close dropdown on click outside or route change
   useEffect(() => {
@@ -91,26 +56,12 @@ export const GoogleUserNav: React.FC<GoogleUserNavProps> = ({
     };
   }, [dropdownOpen]);
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/google/logout", { method: "POST" });
-      try {
-        sessionStorage.removeItem("REPOPILOT_GOOGLE_USER");
-      } catch {}
-      setUser(null);
-      setDropdownOpen(false);
-      window.location.reload();
-    } catch {
-      // Logout failure fallback
-    }
-  };
-
   const loginUrl = `/login?returnUrl=${encodeURIComponent(pathname || "/")}`;
 
-  // 1. SIGNED OUT: Official Google Sign-In Link (takes user directly to Google OAuth)
+  // 1. SIGNED OUT: Official Google Sign-In Link (routes to /login)
   if (!user) {
     return (
-      <a
+      <Link
         href={loginUrl}
         title="Sign in with your Google Account"
         className={`inline-flex items-center gap-2 rounded-lg font-medium text-xs select-none transition-all duration-200 cursor-pointer shadow-xs border bg-theme-surface hover:bg-theme-surface-alt border-theme-border hover:border-theme-blue/50 hover:shadow-sm group shrink-0 ${
@@ -143,7 +94,7 @@ export const GoogleUserNav: React.FC<GoogleUserNavProps> = ({
         <span className="text-theme-text group-hover:text-theme-blue transition-colors font-medium">
           <span className="hidden sm:inline">Sign in with </span>Google
         </span>
-      </a>
+      </Link>
     );
   }
 
@@ -251,7 +202,7 @@ export const GoogleUserNav: React.FC<GoogleUserNavProps> = ({
           <div className="border-t border-theme-border pt-1">
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={signOut}
               className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg hover:bg-theme-red-surface text-theme-text-muted hover:text-theme-red transition-colors text-xs font-medium cursor-pointer"
             >
               <LogOut className="w-4 h-4" />

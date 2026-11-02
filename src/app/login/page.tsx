@@ -4,7 +4,6 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  ShieldCheck,
   ExternalLink,
   Sparkles,
   Database,
@@ -12,18 +11,16 @@ import {
   Check,
   AlertCircle,
   Loader2,
-  Lock,
   ArrowRight,
   UserCheck,
-  FolderArchive,
   ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { RepoPilotLogo } from "@/components/ui/RepoPilotLogo";
-import { createClient } from "@supabase/supabase-js";
+import { useAuth } from "@/context/AuthContext";
+import { setDynamicSupabaseConfig } from "@/lib/supabaseClient";
 
 export const dynamic = "force-dynamic";
 
@@ -33,16 +30,19 @@ function LoginContent() {
   const returnUrl = searchParams.get("returnUrl") || "/";
   const authErrorParam = searchParams.get("auth_error");
 
-  const [activeTab, setActiveTab] = useState<"oauth" | "supabase" | "keys">("oauth");
+  const {
+    user,
+    signInWithGoogle,
+    signInWithSupabase,
+    signInWithEmail,
+    googleConfigured,
+    supabaseConfigured
+  } = useAuth();
+
+  const [activeTab, setActiveTab] = useState<"supabase" | "keys" | "email">("supabase");
   const [loading, setLoading] = useState(false);
-  const [checkingStatus, setCheckingStatus] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-
-  // Status from server
-  const [googleConfigured, setGoogleConfigured] = useState(false);
-  const [supabaseConfigured, setSupabaseConfigured] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Form states
   const [supabaseUrl, setSupabaseUrl] = useState("");
@@ -52,70 +52,15 @@ function LoginContent() {
   const [quickEmail, setQuickEmail] = useState("");
   const [quickName, setQuickName] = useState("");
 
-  const checkStatus = async () => {
-    setCheckingStatus(true);
-    try {
-      // Check active user session
-      const sessRes = await fetch("/api/auth/google/session");
-      if (sessRes.ok) {
-        const sessData = await sessRes.json();
-        if (sessData.authenticated && sessData.user) {
-          setCurrentUser(sessData.user);
-        }
-      }
-
-      // Check config status
-      const confRes = await fetch("/api/auth/configure");
-      if (confRes.ok) {
-        const confData = await confRes.json();
-        setGoogleConfigured(Boolean(confData.google?.isConfigured));
-        setSupabaseConfigured(Boolean(confData.supabase?.isConfigured));
-      }
-    } catch {
-      // Ignore
-    } finally {
-      setCheckingStatus(false);
-    }
-  };
-
   useEffect(() => {
-    checkStatus();
     if (authErrorParam === "google_credentials_missing") {
-      setError("Google OAuth credentials need to be configured below to complete Google login.");
+      setError("Please configure your Google Cloud or Supabase credentials below to complete sign-in.");
     }
   }, [authErrorParam]);
 
   // Launch Direct Official Google Login
-  const handleLaunchGoogleLogin = () => {
-    window.location.href = `/api/auth/google/login?returnUrl=${encodeURIComponent(returnUrl)}`;
-  };
-
-  // Launch Supabase Google OAuth
-  const handleLaunchSupabaseOAuth = async (url: string, key: string) => {
-    try {
-      const client = createClient(url, key);
-      const redirectUri = `${window.location.origin}/api/auth/supabase/callback?returnUrl=${encodeURIComponent(returnUrl)}`;
-      const { data, error: sbError } = await client.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: redirectUri,
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent"
-          }
-        }
-      });
-
-      if (sbError) throw new Error(sbError.message);
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error("No authorization URL returned by Supabase.");
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to initiate Supabase Google OAuth.");
-      setLoading(false);
-    }
+  const handleLaunchGoogle = () => {
+    signInWithGoogle(returnUrl);
   };
 
   // Save Supabase & Launch
@@ -143,8 +88,9 @@ function LoginContent() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save Supabase keys.");
 
+      setDynamicSupabaseConfig(supabaseUrl.trim(), supabaseKey.trim());
       setSuccessMsg("Supabase connected! Launching Google login...");
-      await handleLaunchSupabaseOAuth(supabaseUrl.trim(), supabaseKey.trim());
+      await signInWithSupabase(returnUrl);
     } catch (err: any) {
       setError(err.message || "Could not connect to Supabase.");
       setLoading(false);
@@ -178,7 +124,7 @@ function LoginContent() {
 
       setSuccessMsg("Google Cloud keys saved! Redirecting to Google...");
       setTimeout(() => {
-        handleLaunchGoogleLogin();
+        signInWithGoogle(returnUrl);
       }, 500);
     } catch (err: any) {
       setError(err.message || "Could not save credentials.");
@@ -186,8 +132,8 @@ function LoginContent() {
     }
   };
 
-  // Instant Login with Email
-  const handleQuickLogin = async (e: React.FormEvent) => {
+  // Email Sign In
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const emailToUse = quickEmail.trim() || "developer@google.com";
     const nameToUse = quickName.trim() || emailToUse.split("@")[0];
@@ -196,27 +142,11 @@ function LoginContent() {
     setError(null);
 
     try {
-      const res = await fetch("/api/auth/configure", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          provider: "demo",
-          email: emailToUse,
-          name: nameToUse
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Login failed.");
-
-      try {
-        sessionStorage.setItem("REPOPILOT_GOOGLE_USER", JSON.stringify(data.user));
-      } catch {}
-
-      setSuccessMsg(`Signed in as ${emailToUse}! Redirecting...`);
+      await signInWithEmail(emailToUse, nameToUse);
+      setSuccessMsg(`Signed in as ${emailToUse}!`);
       setTimeout(() => {
         router.push(returnUrl);
-      }, 600);
+      }, 500);
     } catch (err: any) {
       setError(err.message || "Could not sign in.");
       setLoading(false);
@@ -224,23 +154,23 @@ function LoginContent() {
   };
 
   // If already signed in
-  if (currentUser) {
+  if (user) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center p-4">
         <Card className="max-w-md w-full p-8 text-center space-y-5 bg-theme-surface border-theme-border shadow-card rounded-2xl">
           <div className="w-16 h-16 rounded-full mx-auto overflow-hidden border-2 border-theme-blue shadow-xs">
-            {currentUser.picture ? (
-              <img src={currentUser.picture} alt={currentUser.name} className="w-full h-full object-cover" />
+            {user.picture ? (
+              <img src={user.picture} alt={user.name} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-theme-blue text-white flex items-center justify-center font-bold text-xl">
-                {currentUser.name?.charAt(0) || "U"}
+                {user.name?.charAt(0) || "U"}
               </div>
             )}
           </div>
 
           <div>
-            <h2 className="text-lg font-bold text-theme-text">Signed In as {currentUser.name}</h2>
-            <p className="text-xs text-theme-text-muted mt-1">{currentUser.email}</p>
+            <h2 className="text-lg font-bold text-theme-text">Signed In as {user.name}</h2>
+            <p className="text-xs text-theme-text-muted mt-1">{user.email}</p>
           </div>
 
           <div className="pt-2 flex flex-col gap-2.5">
@@ -304,7 +234,7 @@ function LoginContent() {
           {/* PRIMARY: One-Click Google Sign-In Button */}
           <div>
             <button
-              onClick={handleLaunchGoogleLogin}
+              onClick={handleLaunchGoogle}
               disabled={loading}
               className="w-full py-3 px-4 rounded-xl font-medium text-xs sm:text-sm select-none transition-all duration-200 cursor-pointer shadow-xs border bg-theme-surface hover:bg-theme-surface-alt border-theme-border hover:border-theme-blue/50 hover:shadow-md flex items-center justify-center gap-3 group active:scale-[0.99]"
             >
@@ -370,15 +300,15 @@ function LoginContent() {
             </button>
 
             <button
-              onClick={() => setActiveTab("oauth")}
+              onClick={() => setActiveTab("email")}
               className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-mono font-medium transition-all flex items-center justify-center gap-1.5 ${
-                activeTab === "oauth"
+                activeTab === "email"
                   ? "bg-theme-surface text-theme-text shadow-xs border border-theme-border"
                   : "text-theme-text-muted hover:text-theme-text"
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-theme-yellow" />
-              <span>Quick Login</span>
+              <span>Email Sign-In</span>
             </button>
           </div>
 
@@ -386,7 +316,7 @@ function LoginContent() {
           {activeTab === "supabase" && (
             <form onSubmit={handleSaveAndLaunchSupabase} className="space-y-3.5">
               <p className="text-xs text-theme-text-muted leading-relaxed">
-                Connect your Supabase project (with Google Auth enabled) to sign in seamlessly:
+                Connect your Supabase project (with Google Provider enabled):
               </p>
 
               <div>
@@ -520,11 +450,11 @@ function LoginContent() {
             </form>
           )}
 
-          {/* TAB 3: QUICK SIGN IN */}
-          {activeTab === "oauth" && (
-            <form onSubmit={handleQuickLogin} className="space-y-3.5">
+          {/* TAB 3: EMAIL SIGN IN */}
+          {activeTab === "email" && (
+            <form onSubmit={handleEmailLogin} className="space-y-3.5">
               <p className="text-xs text-theme-text-muted leading-relaxed">
-                Sign in with your Google email to start saving drafts and investigating immediately:
+                Sign in with your Google email address:
               </p>
 
               <div>
