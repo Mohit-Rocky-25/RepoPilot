@@ -140,3 +140,4 @@ export function getGoogleAuthUrl(origin: string, state: string, codeChallenge: s
 
   return authUrl.toString();
 }
+

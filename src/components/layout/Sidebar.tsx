@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   FolderTree,
   FolderArchive,
+  Database,
   Search,
   Cpu,
   Bug,
@@ -57,6 +58,11 @@ export const Sidebar: React.FC = () => {
           name: "Saved Workspaces",
           href: "/history",
           icon: <FolderArchive className="w-4 h-4" />
+        },
+        {
+          name: "Supabase Storage",
+          href: "/supabase",
+          icon: <Database className="w-4 h-4" />
         }
       ]
     },

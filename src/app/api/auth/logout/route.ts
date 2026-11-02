@@ -13,3 +13,4 @@ export async function GET(req: NextRequest) {
   response.cookies.delete(SESSION_COOKIE_NAME);
   return response;
 }
+

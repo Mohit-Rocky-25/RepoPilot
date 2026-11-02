@@ -25,6 +25,7 @@ import {
   Settings as SettingsIcon,
   BookOpen,
   Cloud,
+  Database,
   RefreshCw,
   LogIn,
   LogOut,
@@ -94,7 +95,8 @@ const DRAWER_NAV_SECTIONS = [
       { name: "Code Explorer", href: "/explore", icon: FolderTree },
       { name: "Search & Symbols", href: "/search", icon: Search },
       { name: "Architecture & 3D Map", href: "/architecture", icon: Cpu },
-      { name: "Saved Workspaces", href: "/history", icon: FolderArchive }
+      { name: "Saved Workspaces", href: "/history", icon: FolderArchive },
+      { name: "Supabase Storage", href: "/supabase", icon: Database }
     ]
   },
   {
@@ -442,6 +444,15 @@ export const Header: React.FC<HeaderProps> = ({
                       >
                         <FolderArchive className="w-3.5 h-3.5 text-theme-blue" />
                         <span>Saved Workspaces</span>
+                      </Link>
+
+                      <Link
+                        href="/supabase"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-2.5 py-2 rounded-lg hover:bg-theme-surface-alt text-theme-text transition-colors"
+                      >
+                        <Database className="w-3.5 h-3.5 text-theme-green" />
+                        <span>Supabase Storage</span>
                       </Link>
 
                       <button
