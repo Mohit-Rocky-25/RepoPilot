@@ -4,7 +4,6 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   FolderArchive,
-  Database,
   Search,
   Tag,
   GitBranch,
@@ -173,16 +172,6 @@ export default function HistoryPage() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <Link href="/supabase">
-              <Button
-                variant="ghost"
-                size="sm"
-                icon={<Database className="w-3.5 h-3.5 text-theme-blue" />}
-                title="View local Supabase storage buckets & files"
-              >
-                Supabase Storage
-              </Button>
-            </Link>
             <Button
               variant="secondary"
               size="sm"
@@ -240,16 +229,6 @@ export default function HistoryPage() {
                 1-Click Demo Login
               </Button>
             )}
-            <Link href="/supabase">
-              <Button
-                variant="ghost"
-                size="sm"
-                icon={<Database className="w-3.5 h-3.5 text-theme-blue" />}
-                title="View local Supabase storage explorer"
-              >
-                Supabase Storage
-              </Button>
-            </Link>
           </div>
         </Card>
       )}

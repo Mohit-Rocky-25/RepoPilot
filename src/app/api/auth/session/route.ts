@@ -10,4 +10,3 @@ export async function GET(req: NextRequest) {
     isGoogleConfigured: isGoogleAuthConfigured()
   });
 }
-

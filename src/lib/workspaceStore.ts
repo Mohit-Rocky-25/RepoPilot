@@ -323,8 +323,6 @@ export interface CloudSyncResult {
   error?: string;
 }
 
-import { uploadSnapshotToSupabaseStorage } from "./supabase";
-
 /**
  * Bi-directional Cloud Sync Engine
  *
@@ -394,10 +392,6 @@ export async function syncWithCloud(): Promise<CloudSyncResult> {
 
       if (pushRes.ok) {
         pushedCount = toPushToCloud.length;
-        // Mirror to Local Supabase Storage bucket
-        toPushToCloud.forEach((snap) => {
-          uploadSnapshotToSupabaseStorage(snap).catch(() => {});
-        });
       }
     }
 

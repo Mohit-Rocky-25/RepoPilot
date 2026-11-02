@@ -125,4 +125,3 @@ describe("Cloud Sync Conflict Resolution Engine", () => {
     expect(all[0].tags).toContain("fixed");
   });
 });
-
