@@ -45,8 +45,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const fallbackUrl = new URL(returnUrl, origin);
+    const fallbackUrl = new URL("/settings", origin);
     fallbackUrl.searchParams.set("auth_error", "google_credentials_missing");
+    fallbackUrl.searchParams.set("open_auth", "true");
     return NextResponse.redirect(fallbackUrl.toString());
   }
 
