@@ -2,6 +2,8 @@ import type { ExtractedRepository } from "./tarballExtractor";
 
 export interface IRepositoryCache {
   get(key: string): ExtractedRepository | null;
+  getByOwnerRepo(owner: string, repo: string): ExtractedRepository | null;
+  entries(): IterableIterator<[string, ExtractedRepository]>;
   set(key: string, data: ExtractedRepository): void;
   has(key: string): boolean;
   clear(): void;
@@ -24,6 +26,23 @@ export class InMemoryLruRepositoryCache implements IRepositoryCache {
     this.cache.delete(key);
     this.cache.set(key, item);
     return item;
+  }
+
+  getByOwnerRepo(owner: string, repo: string): ExtractedRepository | null {
+    const target = `${owner.toLowerCase()}/${repo.toLowerCase()}@`;
+    for (const [key, item] of this.cache.entries()) {
+      if (key.toLowerCase().startsWith(target)) {
+        // Refresh LRU order
+        this.cache.delete(key);
+        this.cache.set(key, item);
+        return item;
+      }
+    }
+    return null;
+  }
+
+  entries(): IterableIterator<[string, ExtractedRepository]> {
+    return this.cache.entries();
   }
 
   set(key: string, data: ExtractedRepository): void {

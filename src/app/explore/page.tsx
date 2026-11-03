@@ -222,7 +222,12 @@ function ExploreContent() {
   // Handle file selection from URL query param
   useEffect(() => {
     if (fileParam && files.length > 0) {
-      const targetFile = files.find((f) => f.path === fileParam);
+      const cleanParam = fileParam.trim();
+      const targetFile =
+        files.find((f) => f.path === cleanParam) ||
+        files.find((f) => f.path.toLowerCase() === cleanParam.toLowerCase()) ||
+        (cleanParam.toLowerCase().includes("readme") ? findReadmeFile(files) : undefined);
+
       if (targetFile) {
         handleFileSelect(targetFile);
         if (initialLine) {
@@ -233,7 +238,7 @@ function ExploreContent() {
       setSelectedDirectory(dirParam);
       setViewMode("directory");
     } else if (files.length > 0 && !selectedFile && !selectedDirectory) {
-      const readme = files.find((f) => f.path.toLowerCase().startsWith("readme"));
+      const readme = findReadmeFile(files);
       if (readme) {
         handleFileSelect(readme);
       } else {
@@ -269,10 +274,15 @@ function ExploreContent() {
 
     setLoadingContent(true);
     try {
+      const commitSha =
+        file.sha && file.sha.trim() !== ""
+          ? file.sha
+          : (currentRepo as any)?.selectedRevision || (currentRepo as any)?.commitSha || shaParam || "HEAD";
+
       const res = await clientFetch(
         `/api/github/file?owner=${encodeURIComponent(currentRepo.owner)}&repo=${encodeURIComponent(
           currentRepo.repo
-        )}&path=${encodeURIComponent(file.path)}&sha=${encodeURIComponent(file.sha || "")}`
+        )}&path=${encodeURIComponent(file.path)}&sha=${encodeURIComponent(commitSha)}`
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load file content");
@@ -599,8 +609,10 @@ function ExploreContent() {
                 onClick={() => {
                   setSelectedDirectory(null);
                   if (files.length > 0) {
-                    const readme = files.find((f) => f.path.toLowerCase().startsWith("readme"));
-                    if (readme) setSelectedFile(readme);
+                    const readme = findReadmeFile(files);
+                    if (readme) {
+                      handleFileSelect(readme);
+                    }
                   }
                   setViewMode("code");
                 }}
@@ -908,16 +920,16 @@ function ExploreContent() {
                     </div>
                     {files.length > 0 && (
                       <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-                        {files.find((f) => f.path.toLowerCase().startsWith("readme")) && (
+                        {findReadmeFile(files) && (
                           <Button
                             variant="secondary"
                             size="sm"
                             onClick={() => {
-                              const r = files.find((f) => f.path.toLowerCase().startsWith("readme"));
+                              const r = findReadmeFile(files);
                               if (r) handleFileSelect(r);
                             }}
                           >
-                            Open README
+                            View README
                           </Button>
                         )}
                         <Link href="/architecture">
@@ -942,6 +954,22 @@ function ExploreContent() {
         activeLine={highlightRange ? highlightRange[0] : undefined}
       />
     </div>
+  );
+}
+
+function findReadmeFile(fileList: RepositoryFile[]): RepositoryFile | undefined {
+  if (!fileList || fileList.length === 0) return undefined;
+  return (
+    fileList.find((f) => f.path.toLowerCase() === "readme.md") ||
+    fileList.find((f) => {
+      const p = f.path.toLowerCase();
+      return p === "readme" || p === "readme.txt" || p.startsWith("readme.");
+    }) ||
+    fileList.find((f) => {
+      const base = f.path.split("/").pop()?.toLowerCase();
+      return base === "readme.md" || base === "readme" || base?.startsWith("readme.");
+    }) ||
+    fileList.find((f) => f.path.toLowerCase().includes("readme"))
   );
 }
 

@@ -283,13 +283,22 @@ export default function ExamplesPage() {
               <p className="text-xs text-theme-text-muted mt-1">{currentRepo.description}</p>
             </div>
 
-            <Link
-              href={`/explore?owner=${currentRepo.owner}&repo=${currentRepo.repo}`}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-theme-blue hover:bg-theme-blue-hover text-white font-mono text-xs font-semibold shadow-xs transition-all"
-            >
-              <Compass className="w-4 h-4" />
-              <span>Explore {currentRepo.repo}</span>
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/explore?owner=${currentRepo.owner}&repo=${currentRepo.repo}&file=README.md`}
+                className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-theme-surface hover:bg-theme-surface-alt border border-theme-border text-theme-text font-mono text-xs font-semibold shadow-xs transition-all cursor-pointer"
+              >
+                <FileCode className="w-4 h-4 text-theme-blue" />
+                <span>View README</span>
+              </Link>
+              <Link
+                href={`/explore?owner=${currentRepo.owner}&repo=${currentRepo.repo}`}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-theme-blue hover:bg-theme-blue-hover text-white font-mono text-xs font-semibold shadow-xs transition-all cursor-pointer"
+              >
+                <Compass className="w-4 h-4" />
+                <span>Explore {currentRepo.repo}</span>
+              </Link>
+            </div>
           </div>
         </Card>
 

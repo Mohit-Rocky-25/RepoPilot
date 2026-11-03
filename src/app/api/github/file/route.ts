@@ -20,12 +20,17 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const owner = searchParams.get("owner");
     const repo = searchParams.get("repo");
-    const sha = searchParams.get("sha");
+    let sha = searchParams.get("sha")?.trim();
     const path = searchParams.get("path");
 
-    if (!owner || !repo || !sha || !path) {
+    // Default sha to HEAD if empty, missing, or literal undefined/null string
+    if (!sha || sha === "undefined" || sha === "null") {
+      sha = "HEAD";
+    }
+
+    if (!owner || !repo || !path) {
       return NextResponse.json(
-        { error: "Missing required parameters: owner, repo, sha, path" },
+        { error: "Missing required parameters: owner, repo, path" },
         { status: 400 }
       );
     }

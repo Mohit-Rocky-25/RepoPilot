@@ -111,6 +111,21 @@ export async function initTreeSitter(): Promise<boolean> {
 
   treeSitterInitPromise = (async () => {
     try {
+      // In browser environments, verify /tree-sitter.wasm is available before initializing
+      // to prevent Emscripten runtime abort crashes if wasm binary is not served.
+      if (typeof window !== "undefined") {
+        try {
+          const check = await fetch("/tree-sitter.wasm", { method: "HEAD" });
+          if (!check.ok) {
+            setWasmState("fallback", null);
+            return false;
+          }
+        } catch {
+          setWasmState("fallback", null);
+          return false;
+        }
+      }
+
       // In browser or non-node environments, check if tree-sitter is present
       const Parser = (await import("web-tree-sitter")).default || (await import("web-tree-sitter"));
       ParserConstructor = Parser;

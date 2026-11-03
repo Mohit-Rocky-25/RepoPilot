@@ -296,6 +296,9 @@ export class GitHubClient {
     });
 
     globalRepoCache.set(repoCacheKey, extracted);
+    if (commitSha !== "HEAD") {
+      globalRepoCache.set(`${owner}/${repo}@HEAD`, extracted);
+    }
     return extracted;
   }
 
@@ -386,13 +389,47 @@ export class GitHubClient {
     commitSha: string,
     path: string
   ): Promise<string> {
-    // Check in-memory repository archive cache (Zero API Calls!)
+    // 1. Check in-memory repository archive cache (Zero API Calls!)
     const repoCacheKey = `${owner}/${repo}@${commitSha}`;
-    const cachedRepo = globalRepoCache.get(repoCacheKey);
+    let cachedRepo = globalRepoCache.get(repoCacheKey);
+
+    // If exact commitSha key not found (e.g. "HEAD" or different revision alias), check any cached entry for this repo
+    if (!cachedRepo) {
+      cachedRepo = globalRepoCache.getByOwnerRepo(owner, repo);
+    }
+
     if (cachedRepo) {
-      const content = cachedRepo.contents.get(path);
-      if (content !== undefined) {
-        return content;
+      // 1a. Direct path match
+      const direct = cachedRepo.contents.get(path);
+      if (direct !== undefined) {
+        return direct;
+      }
+
+      // 1b. Normalized path match without leading ./ or /
+      const normalizedPath = path.replace(/^\.?\//, "");
+      const normalized = cachedRepo.contents.get(normalizedPath);
+      if (normalized !== undefined) {
+        return normalized;
+      }
+
+      // 1c. Case-insensitive path match (e.g. readme.md vs README.md)
+      const lower = normalizedPath.toLowerCase();
+      for (const [entryPath, entryContent] of cachedRepo.contents.entries()) {
+        const cleanEntry = entryPath.replace(/^\.?\//, "").toLowerCase();
+        if (cleanEntry === lower) {
+          return entryContent;
+        }
+      }
+
+      // 1d. If searching for README or index, match basename
+      const baseName = lower.split("/").pop();
+      if (baseName === "readme.md" || baseName === "readme" || baseName === "readme.txt") {
+        for (const [entryPath, entryContent] of cachedRepo.contents.entries()) {
+          const entryBase = entryPath.split("/").pop()?.toLowerCase();
+          if (entryBase === baseName || entryBase === "readme.md" || entryBase === "readme") {
+            return entryContent;
+          }
+        }
       }
     }
 
@@ -400,23 +437,36 @@ export class GitHubClient {
     const cached = gitHubCache.get<string>(cacheKey);
     if (cached !== null) return cached;
 
-    // Official GitHub REST API contents endpoint (strictly allowlisted api.github.com)
-    try {
-      const apiUrl = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(commitSha)}`;
-      const res = await this.fetchWithTimeout(apiUrl, { headers: this.getHeaders() }, 6000);
-      this.updateRateLimit(res);
+    // 2. Official GitHub REST API contents endpoint (strictly allowlisted api.github.com)
+    const pathsToTry = [path];
+    const normalized = path.replace(/^\.?\//, "");
+    if (normalized !== path) pathsToTry.push(normalized);
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.content && data.encoding === "base64") {
-          const decoded = Buffer.from(data.content, "base64").toString("utf-8");
-          const safeText = decoded.slice(0, 2 * 1024 * 1024);
-          gitHubCache.set(cacheKey, safeText, 600);
-          return safeText;
+    const base = normalized.toLowerCase().split("/").pop();
+    if (base === "readme.md" || base === "readme") {
+      pathsToTry.push("README.md", "readme.md", "README", "README.txt");
+    }
+
+    const uniquePaths = Array.from(new Set(pathsToTry));
+
+    for (const testPath of uniquePaths) {
+      try {
+        const apiUrl = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(testPath)}?ref=${encodeURIComponent(commitSha)}`;
+        const res = await this.fetchWithTimeout(apiUrl, { headers: this.getHeaders() }, 6000);
+        this.updateRateLimit(res);
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.content && data.encoding === "base64") {
+            const decoded = Buffer.from(data.content, "base64").toString("utf-8");
+            const safeText = decoded.slice(0, 2 * 1024 * 1024);
+            gitHubCache.set(cacheKey, safeText, 600);
+            return safeText;
+          }
         }
+      } catch {
+        // Fall through to next path candidate
       }
-    } catch {
-      // Fall through
     }
 
     throw new Error(`Failed to load file content for "${path}" at revision ${commitSha.slice(0, 7)}`);
