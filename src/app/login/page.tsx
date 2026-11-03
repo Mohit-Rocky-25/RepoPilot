@@ -13,7 +13,8 @@ import {
   Loader2,
   ArrowRight,
   UserCheck,
-  ArrowLeft
+  ArrowLeft,
+  Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -51,6 +52,7 @@ function LoginContent() {
   const [googleClientSecret, setGoogleClientSecret] = useState("");
   const [quickEmail, setQuickEmail] = useState("");
   const [quickName, setQuickName] = useState("");
+  const [copiedRedirect, setCopiedRedirect] = useState(false);
 
   useEffect(() => {
     if (authErrorParam === "google_credentials_missing") {
@@ -348,6 +350,32 @@ function LoginContent() {
                 />
               </div>
 
+              <div className="p-3 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1.5 text-[11px] font-mono text-theme-text-muted">
+                <div className="flex items-center justify-between text-theme-text font-semibold">
+                  <span>Authorized Redirect URL:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        navigator.clipboard.writeText(`${window.location.origin}/api/auth/supabase/callback`);
+                        setCopiedRedirect(true);
+                        setTimeout(() => setCopiedRedirect(false), 2000);
+                      }
+                    }}
+                    className="text-[10px] text-theme-blue hover:underline inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <Copy className="w-3 h-3" />
+                    <span>{copiedRedirect ? "Copied!" : "Copy URL"}</span>
+                  </button>
+                </div>
+                <div className="p-1.5 rounded bg-theme-surface border border-theme-border text-theme-blue break-all select-all">
+                  {typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"}/api/auth/supabase/callback
+                </div>
+                <p className="text-[10px] text-theme-text-subtle">
+                  Add to Supabase Dashboard &rarr; Authentication &rarr; URL Configuration &rarr; Redirect URLs.
+                </p>
+              </div>
+
               <div className="pt-2 flex items-center justify-between">
                 <a
                   href="https://supabase.com/dashboard"
@@ -415,6 +443,32 @@ function LoginContent() {
                   className="font-mono text-xs"
                   required
                 />
+              </div>
+
+              <div className="p-3 rounded-lg bg-theme-surface-alt border border-theme-border space-y-1.5 text-[11px] font-mono text-theme-text-muted">
+                <div className="flex items-center justify-between text-theme-text font-semibold">
+                  <span>Authorized Redirect URI:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        navigator.clipboard.writeText(`${window.location.origin}/api/auth/google/callback`);
+                        setCopiedRedirect(true);
+                        setTimeout(() => setCopiedRedirect(false), 2000);
+                      }
+                    }}
+                    className="text-[10px] text-theme-blue hover:underline inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <Copy className="w-3 h-3" />
+                    <span>{copiedRedirect ? "Copied!" : "Copy URI"}</span>
+                  </button>
+                </div>
+                <div className="p-1.5 rounded bg-theme-surface border border-theme-border text-theme-blue break-all select-all">
+                  {typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"}/api/auth/google/callback
+                </div>
+                <p className="text-[10px] text-theme-text-subtle">
+                  Add to Google Cloud Console &rarr; APIs &amp; Services &rarr; Credentials &rarr; Authorized redirect URIs.
+                </p>
               </div>
 
               <div className="pt-2 flex items-center justify-between">

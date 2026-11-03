@@ -23,7 +23,11 @@ import {
   ShieldCheck,
   Zap,
   Share2,
-  Check
+  Check,
+  CornerLeftUp,
+  ArrowUpDown,
+  FolderOpen,
+  ArrowUp
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRepository } from "@/context/RepositoryContext";
@@ -334,18 +338,112 @@ function ExploreContent() {
     });
   };
 
-  const currentDirFiles = useMemo(() => {
-    if (!selectedDirectory) return [];
-    return files.filter(
-      (f) => f.path === selectedDirectory || f.path.startsWith(selectedDirectory + "/")
-    );
-  }, [files, selectedDirectory]);
+  const [dirViewType, setDirViewType] = useState<"hierarchical" | "flat">("hierarchical");
+  const [dirSortBy, setDirSortBy] = useState<"name-asc" | "name-desc" | "size-desc" | "size-asc">("name-asc");
 
-  const filteredDirFiles = useMemo(() => {
-    if (!dirSearchQuery.trim()) return currentDirFiles;
-    const q = dirSearchQuery.toLowerCase();
-    return currentDirFiles.filter((f) => f.path.toLowerCase().includes(q));
-  }, [currentDirFiles, dirSearchQuery]);
+  // Active directory path ("" represents repository root)
+  const activeDirectoryPath = selectedDirectory || "";
+
+  // Parent directory of activeDirectoryPath ("" for root, null if already at root)
+  const parentDirectoryPath = useMemo(() => {
+    if (!activeDirectoryPath) return null;
+    const lastSlash = activeDirectoryPath.lastIndexOf("/");
+    if (lastSlash === -1) return ""; // Parent is root
+    return activeDirectoryPath.slice(0, lastSlash);
+  }, [activeDirectoryPath]);
+
+  // All files under current directory (recursive)
+  const currentDirFiles = useMemo(() => {
+    if (!activeDirectoryPath) return files;
+    const prefix = activeDirectoryPath + "/";
+    return files.filter((f) => f.path === activeDirectoryPath || f.path.startsWith(prefix));
+  }, [files, activeDirectoryPath]);
+
+  // Hierarchical breakdown: Direct subfolders and Direct files in activeDirectoryPath
+  const { directSubfolders, directFiles } = useMemo(() => {
+    const prefix = activeDirectoryPath ? activeDirectoryPath + "/" : "";
+    const foldersMap = new Map<string, { totalFiles: number; totalBytes: number }>();
+    const fileList: RepositoryFile[] = [];
+
+    for (const file of files) {
+      if (activeDirectoryPath && !file.path.startsWith(prefix)) {
+        continue;
+      }
+      const relative = activeDirectoryPath ? file.path.slice(prefix.length) : file.path;
+      const slashIndex = relative.indexOf("/");
+
+      if (slashIndex === -1) {
+        fileList.push(file);
+      } else {
+        const folderName = relative.slice(0, slashIndex);
+        const existing = foldersMap.get(folderName) || { totalFiles: 0, totalBytes: 0 };
+        existing.totalFiles += 1;
+        existing.totalBytes += (file.size || 0);
+        foldersMap.set(folderName, existing);
+      }
+    }
+
+    const folderList = Array.from(foldersMap.entries()).map(([name, data]) => ({
+      name,
+      fullPath: activeDirectoryPath ? `${activeDirectoryPath}/${name}` : name,
+      totalFiles: data.totalFiles,
+      totalBytes: data.totalBytes
+    }));
+
+    return { directSubfolders: folderList, directFiles: fileList };
+  }, [files, activeDirectoryPath]);
+
+  // Sorted and filtered hierarchical subfolders
+  const filteredSubfolders = useMemo(() => {
+    let list = [...directSubfolders];
+    if (dirSearchQuery.trim()) {
+      const q = dirSearchQuery.toLowerCase();
+      list = list.filter((folder) => folder.name.toLowerCase().includes(q) || folder.fullPath.toLowerCase().includes(q));
+    }
+    list.sort((a, b) => {
+      if (dirSortBy === "name-desc") return b.name.localeCompare(a.name);
+      if (dirSortBy === "size-desc") return b.totalBytes - a.totalBytes;
+      if (dirSortBy === "size-asc") return a.totalBytes - b.totalBytes;
+      return a.name.localeCompare(b.name);
+    });
+    return list;
+  }, [directSubfolders, dirSearchQuery, dirSortBy]);
+
+  // Sorted and filtered direct files
+  const filteredDirectFiles = useMemo(() => {
+    let list = [...directFiles];
+    if (dirSearchQuery.trim()) {
+      const q = dirSearchQuery.toLowerCase();
+      list = list.filter((file) => file.path.toLowerCase().includes(q));
+    }
+    list.sort((a, b) => {
+      const nameA = a.path.split("/").pop() || a.path;
+      const nameB = b.path.split("/").pop() || b.path;
+      if (dirSortBy === "name-desc") return nameB.localeCompare(nameA);
+      if (dirSortBy === "size-desc") return (b.size || 0) - (a.size || 0);
+      if (dirSortBy === "size-asc") return (a.size || 0) - (b.size || 0);
+      return nameA.localeCompare(nameB);
+    });
+    return list;
+  }, [directFiles, dirSearchQuery, dirSortBy]);
+
+  // Flat (all nested files) filtered list
+  const filteredFlatFiles = useMemo(() => {
+    let list = [...currentDirFiles];
+    if (dirSearchQuery.trim()) {
+      const q = dirSearchQuery.toLowerCase();
+      list = list.filter((f) => f.path.toLowerCase().includes(q));
+    }
+    list.sort((a, b) => {
+      const nameA = a.path.split("/").pop() || a.path;
+      const nameB = b.path.split("/").pop() || b.path;
+      if (dirSortBy === "name-desc") return nameB.localeCompare(nameA);
+      if (dirSortBy === "size-desc") return (b.size || 0) - (a.size || 0);
+      if (dirSortBy === "size-asc") return (a.size || 0) - (b.size || 0);
+      return nameA.localeCompare(nameB);
+    });
+    return list;
+  }, [currentDirFiles, dirSearchQuery, dirSortBy]);
 
   const dirLanguages = useMemo(() => {
     const counts = new Map<string, number>();
@@ -359,13 +457,13 @@ function ExploreContent() {
 
   const breadcrumbSegments = useMemo(() => {
     const segments: { label: string; fullPath: string; isFolder: boolean }[] = [];
-    const activePath = selectedFile?.path || selectedDirectory;
+    const activePath = viewMode === "directory" ? selectedDirectory : (selectedFile?.path || selectedDirectory);
     if (!activePath) return segments;
 
     const parts = activePath.split("/");
     for (let i = 0; i < parts.length; i++) {
       const isLast = i === parts.length - 1;
-      const isFolder = selectedFile ? !isLast : true;
+      const isFolder = viewMode === "directory" ? true : (!selectedFile ? true : !isLast);
       segments.push({
         label: parts[i],
         fullPath: parts.slice(0, i + 1).join("/"),
@@ -373,7 +471,7 @@ function ExploreContent() {
       });
     }
     return segments;
-  }, [selectedFile, selectedDirectory]);
+  }, [selectedFile, selectedDirectory, viewMode]);
 
   if (!currentRepo) {
     return (
@@ -603,22 +701,31 @@ function ExploreContent() {
         <div className={`md:col-span-8 lg:col-span-9 h-full flex flex-col space-y-2 overflow-hidden ${activeMobileTab === "code" ? "flex" : "hidden md:flex"}`}>
           {/* Breadcrumb Navigation Bar & Mode Switcher */}
           <div className="flex items-center justify-between px-3 py-2 bg-theme-surface border border-theme-border rounded-lg text-xs font-mono shrink-0 shadow-xs">
-            {/* Clickable Breadcrumbs */}
+            {/* Clickable Breadcrumbs & Directions */}
             <div className="flex items-center gap-1.5 overflow-x-auto text-theme-text-muted truncate">
               <button
                 onClick={() => {
-                  setSelectedDirectory(null);
-                  if (files.length > 0) {
-                    const readme = findReadmeFile(files);
-                    if (readme) {
-                      handleFileSelect(readme);
+                  if (viewMode === "directory") {
+                    handleDirectorySelect("");
+                  } else {
+                    setSelectedDirectory(null);
+                    if (files.length > 0) {
+                      const readme = findReadmeFile(files);
+                      if (readme) {
+                        handleFileSelect(readme);
+                      }
                     }
                   }
-                  setViewMode("code");
                 }}
-                className="hover:text-theme-text transition-colors shrink-0"
+                className={`hover:text-theme-text transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                  !selectedDirectory && (viewMode === "directory" || !selectedFile)
+                    ? "text-theme-text font-bold"
+                    : "text-theme-text-muted font-medium"
+                }`}
+                title="Go to repository root"
               >
-                {currentRepo.repo}
+                <Folder className="w-3.5 h-3.5 text-theme-blue shrink-0" />
+                <span>{currentRepo.repo}</span>
               </button>
 
               {breadcrumbSegments.map((seg, idx) => {
@@ -635,10 +742,10 @@ function ExploreContent() {
                           if (target) handleFileSelect(target);
                         }
                       }}
-                      className={`truncate transition-colors ${
+                      className={`truncate transition-colors cursor-pointer ${
                         isLast
-                          ? "text-theme-text font-semibold"
-                          : "text-theme-text-muted hover:text-theme-blue"
+                          ? "text-theme-text font-bold"
+                          : "text-theme-text-muted hover:text-theme-blue font-medium"
                       }`}
                       title={seg.fullPath}
                     >
@@ -649,74 +756,104 @@ function ExploreContent() {
               })}
             </div>
 
-            {/* View Mode Toggle (Code vs Directory) */}
-            {selectedDirectory && (
+            {/* View Mode Toggle (Directory vs Code) */}
+            {files.length > 0 && (
               <div className="flex items-center gap-1 shrink-0 ml-3">
                 <button
                   onClick={() => setViewMode("directory")}
-                  className={`px-2 py-1 rounded text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs ${
                     viewMode === "directory"
-                      ? "bg-theme-blue text-white"
+                      ? "bg-theme-blue text-white shadow-xs font-semibold"
                       : "bg-theme-surface-alt text-theme-text-muted hover:text-theme-text border border-theme-border"
                   }`}
-                  title="View all files in this directory"
+                  title="View directory folders & files"
                 >
                   <Folder className="w-3 h-3" />
-                  <span>Folder ({currentDirFiles.length})</span>
+                  <span>Directory ({currentDirFiles.length})</span>
                 </button>
-                {selectedFile && (
-                  <button
-                    onClick={() => setViewMode("code")}
-                    className={`px-2 py-1 rounded text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
-                      viewMode === "code"
-                        ? "bg-theme-blue text-white"
-                        : "bg-theme-surface-alt text-theme-text-muted hover:text-theme-text border border-theme-border"
-                    }`}
-                    title="View file source code"
-                  >
-                    <Code2 className="w-3 h-3" />
-                    <span>Code</span>
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    if (!selectedFile) {
+                      const r = findReadmeFile(files) || files.find((f) => !f.isBinary && f.type === "blob");
+                      if (r) handleFileSelect(r);
+                    }
+                    setViewMode("code");
+                  }}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                    viewMode === "code"
+                      ? "bg-theme-blue text-white shadow-xs font-semibold"
+                      : "bg-theme-surface-alt text-theme-text-muted hover:text-theme-text border border-theme-border"
+                  }`}
+                  title="View source code"
+                >
+                  <Code2 className="w-3 h-3" />
+                  <span>Code {selectedFile ? `(${selectedFile.path.split("/").pop()})` : ""}</span>
+                </button>
               </div>
             )}
           </div>
 
-          {/* Mode 1: Directory Overview View */}
-          {viewMode === "directory" && selectedDirectory ? (
+          {/* Mode 1: Perfected Directory & Sub-module Overview */}
+          {viewMode === "directory" ? (
             <div className="flex-1 flex flex-col space-y-3 overflow-hidden bg-theme-surface border border-theme-border rounded-xl p-4 shadow-xs">
               {/* Directory Header Banner */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-theme-border gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-theme-blue/10 border border-theme-blue/30 flex items-center justify-center text-theme-blue shadow-xs">
-                    <Folder className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-lg bg-theme-blue/10 border border-theme-blue/30 flex items-center justify-center text-theme-blue shadow-xs shrink-0">
+                    <FolderOpen className="w-4 h-4" />
                   </div>
                   <div>
-                    <h2 className="text-sm font-semibold text-theme-text font-mono">
-                      {selectedDirectory}
-                    </h2>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-sm font-semibold text-theme-text font-mono truncate max-w-md">
+                        {activeDirectoryPath ? `/${activeDirectoryPath}` : `Root Directory (/)`}
+                      </h2>
+                      <Badge variant="neutral" size="sm" className="text-[10px] font-mono">
+                        {dirViewType === "hierarchical" ? `${directSubfolders.length} folders, ${directFiles.length} files` : `${currentDirFiles.length} files`}
+                      </Badge>
+                    </div>
                     <div className="flex items-center gap-2 text-xs font-mono text-theme-text-muted mt-0.5">
-                      <span>{currentDirFiles.length} files in this module</span>
+                      <span>{currentDirFiles.length} total files in this branch</span>
                       <span>·</span>
-                      <span>
-                        {formatFileSize(
-                          currentDirFiles.reduce((acc, f) => acc + (f.size || 0), 0)
-                        )}
-                      </span>
+                      <span>{formatFileSize(currentDirFiles.reduce((acc, f) => acc + (f.size || 0), 0))}</span>
                     </div>
                   </div>
                 </div>
 
-                {selectedFile && (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    icon={<Code2 className="w-3.5 h-3.5" />}
-                    onClick={() => setViewMode("code")}
-                  >
-                    Open {selectedFile.path.split("/").pop()} →
-                  </Button>
-                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  {parentDirectoryPath !== null && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      icon={<CornerLeftUp className="w-3.5 h-3.5" />}
+                      onClick={() => handleDirectorySelect(parentDirectoryPath)}
+                    >
+                      Up to {parentDirectoryPath ? `/${parentDirectoryPath.split("/").pop()}` : "Root"}
+                    </Button>
+                  )}
+                  {findReadmeFile(currentDirFiles) && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={<FileText className="w-3.5 h-3.5 text-theme-blue" />}
+                      onClick={() => {
+                        const r = findReadmeFile(currentDirFiles);
+                        if (r) handleFileSelect(r);
+                      }}
+                    >
+                      View README
+                    </Button>
+                  )}
+                  {selectedFile && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      icon={<Code2 className="w-3.5 h-3.5" />}
+                      onClick={() => setViewMode("code")}
+                    >
+                      Inspect {selectedFile.path.split("/").pop()} →
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {/* Language Tags in this directory */}
@@ -725,102 +862,176 @@ function ExploreContent() {
                   <span className="text-[11px] text-theme-text-muted uppercase font-semibold shrink-0">
                     Languages:
                   </span>
-                  {dirLanguages.map(([lang, count]) => (
-                    <Badge key={lang} variant="neutral" size="sm">
+                  {dirLanguages.slice(0, 8).map(([lang, count]) => (
+                    <Badge key={lang} variant="neutral" size="sm" className="text-[10px]">
                       {lang} ({count})
                     </Badge>
                   ))}
                 </div>
               )}
 
-              {/* In-folder Search Filter */}
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-theme-text-muted" />
-                <input
-                  type="text"
-                  placeholder={`Search files in ${selectedDirectory}...`}
-                  value={dirSearchQuery}
-                  onChange={(e) => setDirSearchQuery(e.target.value)}
-                  className="w-full bg-theme-surface-alt border border-theme-border rounded-lg pl-9 pr-3 py-1.5 text-xs font-mono text-theme-text placeholder:text-theme-text-muted focus:outline-none focus:border-theme-blue"
-                />
+              {/* In-folder Search & Arrangement Toolbar */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                {/* Search Box */}
+                <div className="relative flex-1">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-theme-text-muted" />
+                  <input
+                    type="text"
+                    placeholder={`Filter items in ${activeDirectoryPath ? `/${activeDirectoryPath}` : "root"}...`}
+                    value={dirSearchQuery}
+                    onChange={(e) => setDirSearchQuery(e.target.value)}
+                    className="w-full bg-theme-surface-alt border border-theme-border rounded-lg pl-9 pr-3 py-1.5 text-xs font-mono text-theme-text placeholder:text-theme-text-muted focus:outline-none focus:border-theme-blue"
+                  />
+                </div>
+
+                {/* Arrangement Controls: Hierarchy vs Flat & Sort By */}
+                <div className="flex items-center gap-1.5 shrink-0 text-xs font-mono">
+                  {/* View Style Toggle */}
+                  <div className="flex items-center rounded-lg border border-theme-border bg-theme-surface-alt p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setDirViewType("hierarchical")}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer ${
+                        dirViewType === "hierarchical"
+                          ? "bg-theme-surface text-theme-text shadow-xs border border-theme-border font-semibold"
+                          : "text-theme-text-muted hover:text-theme-text"
+                      }`}
+                      title="Show direct folders and files"
+                    >
+                      Folders &amp; Files
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDirViewType("flat")}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer ${
+                        dirViewType === "flat"
+                          ? "bg-theme-surface text-theme-text shadow-xs border border-theme-border font-semibold"
+                          : "text-theme-text-muted hover:text-theme-text"
+                      }`}
+                      title="Show all nested files in this tree"
+                    >
+                      All Files ({currentDirFiles.length})
+                    </button>
+                  </div>
+
+                  {/* Sort By Selector */}
+                  <select
+                    value={dirSortBy}
+                    onChange={(e) => setDirSortBy(e.target.value as any)}
+                    className="bg-theme-surface-alt border border-theme-border rounded-lg px-2 py-1.5 text-[11px] font-mono text-theme-text focus:outline-none focus:border-theme-blue cursor-pointer"
+                  >
+                    <option value="name-asc">Sort: Name (A-Z)</option>
+                    <option value="name-desc">Sort: Name (Z-A)</option>
+                    <option value="size-desc">Sort: Size (Largest)</option>
+                    <option value="size-asc">Sort: Size (Smallest)</option>
+                  </select>
+                </div>
               </div>
 
-              {/* Directory Files Table */}
+              {/* Directory Items Table */}
               <div className="flex-1 overflow-y-auto border border-theme-border rounded-lg bg-theme-surface">
-                {filteredDirFiles.length === 0 ? (
-                  <div className="p-8 text-center text-xs font-mono text-theme-text-muted">
-                    No files found matching &quot;{dirSearchQuery}&quot; in this directory.
-                  </div>
-                ) : (
-                  <>
-                    {/* Mobile View: Stacked Cards below 640px */}
-                    <div className="block sm:hidden divide-y divide-theme-border">
-                      {filteredDirFiles.map((file) => {
-                        const fileName = file.path.split("/").pop() || file.path;
-                        const isCurrent = selectedFile?.path === file.path;
-                        return (
-                          <div
-                            key={file.path}
-                            onClick={() => handleFileSelect(file)}
-                            className={`p-3 space-y-1.5 transition-colors cursor-pointer min-h-[44px] ${
-                              isCurrent ? "bg-theme-blue-surface/40" : "hover:bg-theme-surface-alt"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2 truncate">
-                                <FileCode className="w-4 h-4 text-theme-blue shrink-0" />
-                                <span className={`font-semibold text-xs ${isCurrent ? "text-theme-blue" : "text-theme-text"}`}>
-                                  {fileName}
-                                </span>
-                              </div>
-                              <span className="text-theme-blue text-xs font-semibold shrink-0">Inspect →</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-[11px] text-theme-text-muted pl-6">
-                              <span>{file.language || "Plain Text"}</span>
-                              <span>·</span>
-                              <span>{formatFileSize(file.size || 0)}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
+                {dirViewType === "hierarchical" ? (
+                  /* Hierarchical View: Folders First, then Direct Files */
+                  (filteredSubfolders.length === 0 && filteredDirectFiles.length === 0 && parentDirectoryPath === null) ? (
+                    <div className="p-8 text-center text-xs font-mono text-theme-text-muted">
+                      No files or folders found matching &quot;{dirSearchQuery}&quot; in this directory.
                     </div>
-
-                    {/* Tablet/Desktop View: Standard Table */}
-                    <table className="hidden sm:table w-full text-left font-mono text-xs">
-                      <thead className="bg-theme-surface-alt text-theme-text-muted text-[11px] border-b border-theme-border sticky top-0">
+                  ) : (
+                    <table className="w-full text-left font-mono text-xs">
+                      <thead className="bg-theme-surface-alt text-theme-text-muted text-[11px] border-b border-theme-border sticky top-0 z-10">
                         <tr>
-                          <th className="py-2 px-3 font-medium">File Name</th>
-                          <th className="py-2 px-3 font-medium hidden sm:table-cell">Language</th>
-                          <th className="py-2 px-3 font-medium hidden sm:table-cell text-right">Size</th>
+                          <th className="py-2 px-3 font-medium">Name</th>
+                          <th className="py-2 px-3 font-medium hidden sm:table-cell">Type / Language</th>
+                          <th className="py-2 px-3 font-medium text-right hidden sm:table-cell">Items / Size</th>
                           <th className="py-2 px-3 font-medium text-right">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-theme-border">
-                        {filteredDirFiles.map((file) => {
+                        {/* Parent Directory Link */}
+                        {parentDirectoryPath !== null && !dirSearchQuery && (
+                          <tr
+                            onClick={() => handleDirectorySelect(parentDirectoryPath)}
+                            className="hover:bg-theme-surface-alt cursor-pointer transition-colors bg-theme-surface-alt/40"
+                          >
+                            <td className="py-2.5 px-3" colSpan={3}>
+                              <div className="flex items-center gap-2 text-theme-blue font-semibold">
+                                <CornerLeftUp className="w-4 h-4 shrink-0" />
+                                <span>.. (Go up to {parentDirectoryPath ? `/${parentDirectoryPath}` : "Root"})</span>
+                              </div>
+                            </td>
+                            <td className="py-2.5 px-3 text-right">
+                              <span className="text-[11px] text-theme-blue font-medium hover:underline">
+                                Up ↑
+                              </span>
+                            </td>
+                          </tr>
+                        )}
+
+                        {/* Subdirectories Rows */}
+                        {filteredSubfolders.map((folder) => (
+                          <tr
+                            key={folder.fullPath}
+                            onClick={() => handleDirectorySelect(folder.fullPath)}
+                            className="hover:bg-theme-surface-alt cursor-pointer transition-colors group"
+                          >
+                            <td className="py-2.5 px-3">
+                              <div className="flex items-center gap-2">
+                                <Folder className="w-4 h-4 text-theme-blue shrink-0 group-hover:scale-105 transition-transform" />
+                                <span className="font-semibold text-theme-text group-hover:text-theme-blue transition-colors">
+                                  {folder.name}
+                                </span>
+                                <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-theme-blue/10 text-theme-blue border border-theme-blue/20">
+                                  Folder
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-2.5 px-3 text-theme-text-muted hidden sm:table-cell">
+                              Directory
+                            </td>
+                            <td className="py-2.5 px-3 text-theme-text-muted text-right hidden sm:table-cell">
+                              <span>{folder.totalFiles} items</span>
+                              <span className="text-theme-text-subtle ml-1.5">({formatFileSize(folder.totalBytes)})</span>
+                            </td>
+                            <td className="py-2.5 px-3 text-right">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDirectorySelect(folder.fullPath);
+                                }}
+                                className="text-[11px] text-theme-blue hover:underline font-semibold cursor-pointer inline-flex items-center gap-1"
+                              >
+                                <span>Open</span>
+                                <span>→</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+
+                        {/* Direct Files Rows */}
+                        {filteredDirectFiles.map((file) => {
                           const fileName = file.path.split("/").pop() || file.path;
                           const isCurrent = selectedFile?.path === file.path;
                           return (
                             <tr
                               key={file.path}
                               onClick={() => handleFileSelect(file)}
-                              className={`hover:bg-theme-surface-alt cursor-pointer transition-colors ${
+                              className={`hover:bg-theme-surface-alt cursor-pointer transition-colors group ${
                                 isCurrent ? "bg-theme-blue/10" : ""
                               }`}
                             >
                               <td className="py-2.5 px-3">
                                 <div className="flex items-center gap-2">
-                                  <FileCode className="w-3.5 h-3.5 text-theme-blue shrink-0" />
-                                  <span
-                                    className={`font-medium ${
-                                      isCurrent ? "text-theme-blue" : "text-theme-text"
-                                    }`}
-                                  >
+                                  <FileCode className="w-4 h-4 text-theme-text-muted group-hover:text-theme-blue shrink-0 transition-colors" />
+                                  <span className={`font-medium ${isCurrent ? "text-theme-blue font-semibold" : "text-theme-text group-hover:text-theme-blue transition-colors"}`}>
                                     {fileName}
                                   </span>
                                 </div>
                               </td>
                               <td className="py-2.5 px-3 text-theme-text-muted hidden sm:table-cell">
-                                {file.language || "Plain Text"}
+                                <span className="px-1.5 py-0.5 rounded bg-theme-surface-alt border border-theme-border text-[10px]">
+                                  {file.language || "Plain Text"}
+                                </span>
                               </td>
                               <td className="py-2.5 px-3 text-theme-text-muted text-right hidden sm:table-cell">
                                 {formatFileSize(file.size || 0)}
@@ -832,9 +1043,10 @@ function ExploreContent() {
                                     e.stopPropagation();
                                     handleFileSelect(file);
                                   }}
-                                  className="text-[11px] text-theme-blue hover:underline font-medium cursor-pointer"
+                                  className="text-[11px] text-theme-blue hover:underline font-semibold cursor-pointer inline-flex items-center gap-1"
                                 >
-                                  Inspect →
+                                  <span>Inspect</span>
+                                  <span>→</span>
                                 </button>
                               </td>
                             </tr>
@@ -842,7 +1054,69 @@ function ExploreContent() {
                         })}
                       </tbody>
                     </table>
-                  </>
+                  )
+                ) : (
+                  /* Flat View: All Files in Tree */
+                  filteredFlatFiles.length === 0 ? (
+                    <div className="p-8 text-center text-xs font-mono text-theme-text-muted">
+                      No files found matching &quot;{dirSearchQuery}&quot;.
+                    </div>
+                  ) : (
+                    <table className="w-full text-left font-mono text-xs">
+                      <thead className="bg-theme-surface-alt text-theme-text-muted text-[11px] border-b border-theme-border sticky top-0 z-10">
+                        <tr>
+                          <th className="py-2 px-3 font-medium">Relative Path</th>
+                          <th className="py-2 px-3 font-medium hidden sm:table-cell">Language</th>
+                          <th className="py-2 px-3 font-medium text-right hidden sm:table-cell">Size</th>
+                          <th className="py-2 px-3 font-medium text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-theme-border">
+                        {filteredFlatFiles.map((file) => {
+                          const isCurrent = selectedFile?.path === file.path;
+                          return (
+                            <tr
+                              key={file.path}
+                              onClick={() => handleFileSelect(file)}
+                              className={`hover:bg-theme-surface-alt cursor-pointer transition-colors group ${
+                                isCurrent ? "bg-theme-blue/10" : ""
+                              }`}
+                            >
+                              <td className="py-2.5 px-3">
+                                <div className="flex items-center gap-2">
+                                  <FileCode className="w-4 h-4 text-theme-text-muted group-hover:text-theme-blue shrink-0 transition-colors" />
+                                  <span className={`font-medium ${isCurrent ? "text-theme-blue font-semibold" : "text-theme-text group-hover:text-theme-blue transition-colors"}`}>
+                                    {file.path}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-2.5 px-3 text-theme-text-muted hidden sm:table-cell">
+                                <span className="px-1.5 py-0.5 rounded bg-theme-surface-alt border border-theme-border text-[10px]">
+                                  {file.language || "Plain Text"}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3 text-theme-text-muted text-right hidden sm:table-cell">
+                                {formatFileSize(file.size || 0)}
+                              </td>
+                              <td className="py-2.5 px-3 text-right">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleFileSelect(file);
+                                  }}
+                                  className="text-[11px] text-theme-blue hover:underline font-semibold cursor-pointer inline-flex items-center gap-1"
+                                >
+                                  <span>Inspect</span>
+                                  <span>→</span>
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )
                 )}
               </div>
             </div>
