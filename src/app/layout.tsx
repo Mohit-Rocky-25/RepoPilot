@@ -6,6 +6,7 @@ import { RepositoryProvider } from "@/context/RepositoryContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import { ShellLayout } from "@/components/layout/ShellLayout";
+import { Analytics } from "@vercel/analytics/next";
 
 const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
@@ -186,6 +187,7 @@ export default function RootLayout({
           </WorkspaceProvider>
           </AuthProvider>
         </RepositoryProvider>
+        <Analytics />
       </body>
     </html>
   );
