@@ -65,7 +65,7 @@ export const GoogleUserNav: React.FC<GoogleUserNavProps> = ({
         href={loginUrl}
         title="Sign in with your Google Account"
         className={`inline-flex items-center gap-2 rounded-lg font-medium text-xs select-none transition-all duration-200 cursor-pointer shadow-xs border bg-theme-surface hover:bg-theme-surface-alt border-theme-border hover:border-theme-blue/50 hover:shadow-sm group shrink-0 ${
-          size === "sm" ? "px-2.5 py-1.5" : "px-3 py-1.5"
+          size === "sm" ? "px-2.5 py-1.5 min-h-[36px]" : "px-3 py-2 sm:py-1.5 min-h-[36px]"
         } ${className}`}
       >
         {/* Google 4-Color "G" Emblem */}
@@ -108,7 +108,7 @@ export const GoogleUserNav: React.FC<GoogleUserNavProps> = ({
         onClick={() => setDropdownOpen((prev) => !prev)}
         aria-expanded={dropdownOpen}
         aria-haspopup="true"
-        className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-theme-surface hover:bg-theme-surface-alt border border-theme-border hover:border-theme-blue/40 transition-all cursor-pointer shadow-xs group"
+        className="inline-flex items-center gap-2 px-2.5 py-2 sm:py-1.5 min-h-[36px] rounded-lg bg-theme-surface hover:bg-theme-surface-alt border border-theme-border hover:border-theme-blue/40 transition-all cursor-pointer shadow-xs group"
       >
         {/* User Avatar with Online Dot */}
         <div className="relative w-6 h-6 shrink-0">
