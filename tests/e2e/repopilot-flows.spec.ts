@@ -130,7 +130,7 @@ test.describe("RepoPilot E2E Core Workflows", () => {
     await expect(title).toBeVisible();
 
     // Verify 2D / 3D mode controls or module overview container
-    const mapContainer = page.locator(".relative, canvas, svg, [role='region'], main").first();
+    const mapContainer = page.locator("main, canvas, [role='region']").first();
     await expect(mapContainer).toBeVisible();
   });
 
