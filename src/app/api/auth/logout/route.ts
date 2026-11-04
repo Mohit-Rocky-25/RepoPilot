@@ -1,15 +1,27 @@
-import { NextRequest } from "next/server";
-import { POST as logoutPost, GET as logoutGet, dynamic as logoutDynamic } from "../google/logout/route";
+import { NextRequest, NextResponse } from "next/server";
+import { GOOGLE_OAUTH_CONFIG } from "@/lib/googleAuth";
 
-export const dynamic = logoutDynamic;
+export const dynamic = "force-dynamic";
 
 /**
- * Global /api/auth/logout alias route delegating to google/logout.
+ * Global /api/auth/logout route.
+ * Clears the session cookie and either redirects or responds with JSON.
  */
 export async function POST(req: NextRequest) {
-  return logoutPost(req);
+  const returnUrl = req.nextUrl.searchParams.get("returnUrl") || "/login";
+  const wantsRedirect = req.nextUrl.searchParams.get("redirect") === "true";
+
+  let response: NextResponse;
+  if (wantsRedirect) {
+    response = NextResponse.redirect(new URL(returnUrl, req.nextUrl.origin));
+  } else {
+    response = NextResponse.json({ success: true, authenticated: false });
+  }
+
+  response.cookies.delete(GOOGLE_OAUTH_CONFIG.cookieSessionName);
+  return response;
 }
 
 export async function GET(req: NextRequest) {
-  return logoutGet(req);
+  return POST(req);
 }

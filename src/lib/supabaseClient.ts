@@ -1,3 +1,27 @@
+// Ensure WebSocket is defined in Node.js / test environments to prevent RealtimeClient crashes
+if (typeof globalThis !== "undefined" && typeof (globalThis as any).WebSocket === "undefined") {
+  class MockWebSocket {
+    static readonly CONNECTING = 0;
+    static readonly OPEN = 1;
+    static readonly CLOSING = 2;
+    static readonly CLOSED = 3;
+    readonly CONNECTING = 0;
+    readonly OPEN = 1;
+    readonly CLOSING = 2;
+    readonly CLOSED = 3;
+    readyState = 3;
+    onopen = null;
+    onclose = null;
+    onerror = null;
+    onmessage = null;
+    close() {}
+    send() {}
+    addEventListener() {}
+    removeEventListener() {}
+  }
+  (globalThis as any).WebSocket = MockWebSocket;
+}
+
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 export interface SupabaseConfig {
